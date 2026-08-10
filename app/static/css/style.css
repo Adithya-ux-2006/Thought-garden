@@ -1,0 +1,306 @@
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-card: #ffffff;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #adb5bd;
+    --border-color: #dee2e6;
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #06b6d4;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --transition: all 0.2s ease;
+}
+
+[data-bs-theme="dark"] {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-card: #1f2937;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: #374151;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card {
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.note-card {
+    transition: var(--transition);
+    position: relative;
+}
+
+.note-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn {
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.form-control, .form-select {
+    border-radius: var(--radius-md);
+    border-color: var(--border-color);
+    transition: var(--transition);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.65em;
+    border-radius: var(--radius-sm);
+}
+
+.navbar {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+}
+
+.list-group-item {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+.list-group-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+.alert {
+    border-radius: var(--radius-md);
+}
+
+.hero-section {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: white;
+}
+
+.feature-icon i {
+    font-size: 2rem;
+}
+
+.garden-container {
+    height: calc(100vh - 56px);
+    overflow: hidden;
+}
+
+.garden-container > .row,
+.garden-container .col-lg-9,
+.garden-container .col-lg-3 {
+    height: 100%;
+}
+
+.garden-container .col-lg-9 {
+    display: flex;
+    flex-direction: column;
+}
+
+.garden-graph {
+    background: var(--bg-secondary);
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+}
+
+.note-panel {
+    background: var(--bg-card);
+    border-left: 1px solid var(--border-color);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.connection-item {
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    margin-bottom: 0.5rem;
+    transition: var(--transition);
+}
+
+.connection-item:hover {
+    background: var(--border-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.search-result {
+    border-left: 3px solid transparent;
+    transition: var(--transition);
+}
+
+.search-result:hover {
+    border-left-color: var(--primary-color);
+}
+
+#heroGraph {
+    height: 300px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+#featureGraph {
+    height: 400px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.footer {
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: auto;
+        padding: 2rem 0;
+    }
+    
+    .garden-container {
+        height: auto;
+        overflow: visible;
+    }
+
+    .garden-container > .row,
+    .garden-container .col-lg-9,
+    .garden-container .col-lg-3 {
+        height: auto;
+    }
+    
+    .garden-graph {
+        flex: none;
+        height: 60vh;
+        min-height: 400px;
+    }
+    
+    .note-panel {
+        height: auto;
+        min-height: 300px;
+    }
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    text-align: center;
+    color: white;
+}
+
+.loading-spinner i {
+    font-size: 3rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.text-purple {
+    color: #8b5cf6 !important;
+}
+
+.vis-tooltip {
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-md) !important;
+}

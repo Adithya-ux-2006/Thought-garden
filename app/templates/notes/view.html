@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ note.title }} - Thought Garden{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if note.category %}
+                        <span class="badge bg-primary">{{ note.category }}</span>
+                        {% endif %}
+                        <span class="badge bg-secondary">{{ note.source_type }}</span>
+                        {% if note.is_pinned %}
+                        <span class="badge bg-warning"><i class="bi bi-pin-fill"></i> Pinned</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('notes.edit', note_id=note.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </a>
+                        <form method="POST" action="{{ url_for('notes.pin', note_id=note.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if note.is_pinned else 'secondary' }}">
+                                <i class="bi bi-pin{{ '-fill' if note.is_pinned else '' }}"></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('notes.archive', note_id=note.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-archive"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title mb-3">{{ note.title }}</h2>
+                    <div class="note-content mb-4">
+                        {{ note.content }}
+                    </div>
+                    
+                    {% if note.tags %}
+                    <div class="mb-3">
+                        <strong class="me-2">Tags:</strong>
+                        {% for tag in note.tags %}
+                        <a href="{{ url_for('notes.list_notes', tag=tag.name) }}" class="badge bg-light text-dark text-decoration-none me-1">
+                            {{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-muted small">
+                        <i class="bi bi-clock me-1"></i>Created {{ note.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        {% if note.updated_at != note.created_at %}
+                        <span class="ms-2"><i class="bi bi-pencil me-1"></i>Updated {{ note.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        {% endif %}
+                        {% if note.source_filename %}
+                        <span class="ms-2"><i class="bi bi-file me-1"></i>{{ note.source_filename }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Related Knowledge</h5>
+                </div>
+                <div class="card-body">
+                    {% if related %}
+                    {% for related_note, score, rel_type in related %}
+                    <div class="related-item mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <a href="{{ url_for('notes.view', note_id=related_note.id) }}" class="text-decoration-none">
+                                <h6 class="mb-1">{{ related_note.title }}</h6>
+                            </a>
+                            <span class="badge bg-{{ 'success' if score > 0.8 else 'primary' if score > 0.7 else 'secondary' }} ms-2">
+                                {{ (score * 100)|round }}%
+                            </span>
+                        </div>
+                        <p class="small text-muted mb-1">
+                            {{ related_note.content[:100] }}{% if related_note.content|length > 100 %}...{% endif %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ rel_type }}</small>
+                            {% if related_note.tags %}
+                            <div>
+                                {% for tag in related_note.tags[:2] %}
+                                <span class="badge bg-light text-dark small">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-link-45deg display-6 text-muted"></i>
+                        <p class="mt-2 text-muted small">No connections discovered yet. Add more notes to build your knowledge garden.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-zoom-in me-2"></i>Explore Connections</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p class="text-muted small mb-3">See this note in the knowledge graph.</p>
+                    <a href="{{ url_for('garden.focus', note_id=note.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-diagram-3 me-1"></i>Focus in Graph
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

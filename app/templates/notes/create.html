@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Create Note - Thought Garden{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Create New Note</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Give your note a title") }}
+                            {% for error in form.title.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows="10", placeholder="Write your thoughts...") }}
+                            {% for error in form.content.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.category.label(class="form-label") }}
+                                {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.tags.label(class="form-label") }}
+                                {{ form.tags(class="form-control" + (" is-invalid" if form.tags.errors else ""), placeholder="AI, Research, Ideas") }}
+                                <div class="form-text">Separate tags with commas</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4 form-check">
+                            {{ form.is_pinned(class="form-check-input") }}
+                            {{ form.is_pinned.label(class="form-check-label") }}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('notes.list_notes') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="bi bi-file-earmark me-2"></i>Or Import a Document</h6>
+                    <p class="text-muted small mb-3">Upload PDF, Markdown, or text files and let AI connect them to your existing knowledge.</p>
+                    <form method="POST" action="{{ url_for('notes.import_document') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="input-group">
+                            <input type="file" class="form-control" name="file" accept=".txt,.md,.pdf" required>
+                            <button type="submit" class="btn btn-outline-primary">Import</button>
+                        </div>
+                        <div class="form-text">Max file size: 10MB</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
