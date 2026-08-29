@@ -1,7 +1,43 @@
-from flask import render_template, jsonify, request
+from collections import Counter
+
+from flask import render_template, jsonify, request, url_for
 from flask_login import login_required, current_user
 from app.garden import bp
 from app.models import Note, Relationship, db
+from app.services.growth_service import (
+    compute_growth_stage,
+    growth_icon_filename,
+    was_recently_watered,
+)
+
+
+def growth_icon_url(stage):
+    return url_for('static', filename=f'img/garden/{growth_icon_filename(stage)}')
+
+
+def build_note_node(note, connection_count, extra=None):
+    """Shared node-dict builder so the main garden view and the focus
+    view render notes the same way: a growth-stage icon with a
+    category-colored ring around it."""
+    stage = compute_growth_stage(note.created_at, connection_count)
+    color = get_category_color(note.category)
+
+    node = {
+        'id': note.id,
+        'label': note.title[:30] + ('...' if len(note.title) > 30 else ''),
+        'title': note.title,
+        'category': note.category or 'Uncategorized',
+        'shape': 'circularImage',
+        'image': growth_icon_url(stage),
+        'color': {'border': color, 'background': color},
+        'stage': stage,
+        'watered': was_recently_watered(note.updated_at),
+        'is_pinned': note.is_pinned,
+        'created_at': note.created_at.isoformat() if note.created_at else None,
+    }
+    if extra:
+        node.update(extra)
+    return node
 
 
 @bp.route('/')
@@ -19,19 +55,19 @@ def data():
     relationships = Relationship.query.join(Note, Relationship.source_note_id == Note.id)\
         .filter(Note.user_id == current_user.id).all()
     
+    # Count each note's connections from the relationships already fetched
+    # above instead of running a fresh query per note.
+    connection_counts = Counter()
+    for rel in relationships:
+        connection_counts[rel.source_note_id] += 1
+        connection_counts[rel.target_note_id] += 1
+
     nodes = []
     for note in notes:
-        color = get_category_color(note.category)
-        nodes.append({
-            'id': note.id,
-            'label': note.title[:30] + ('...' if len(note.title) > 30 else ''),
-            'title': note.title,
-            'category': note.category or 'Uncategorized',
-            'color': color,
-            'size': 20 + min(len(note.get_all_relationships()) * 3, 30),
-            'is_pinned': note.is_pinned,
-            'created_at': note.created_at.isoformat() if note.created_at else None
-        })
+        connection_count = connection_counts.get(note.id, 0)
+        nodes.append(build_note_node(note, connection_count, extra={
+            'size': 20 + min(connection_count * 3, 30),
+        }))
     
     edges = []
     for rel in relationships:
@@ -64,17 +100,12 @@ def focus(note_id):
         if n.id in visited or level > depth:
             return
         visited.add(n.id)
-        color = get_category_color(n.category)
-        nodes.append({
-            'id': n.id,
-            'label': n.title[:30] + ('...' if len(n.title) > 30 else ''),
-            'title': n.title,
-            'category': n.category or 'Uncategorized',
-            'color': color,
+        connection_count = len(n.get_all_relationships())
+        nodes.append(build_note_node(n, connection_count, extra={
             'size': 30 if n.id == note_id else 20,
             'level': level,
-            'is_focus': n.id == note_id
-        })
+            'is_focus': n.id == note_id,
+        }))
         
         related = n.get_related_notes(limit=10, min_similarity=min_similarity)
         for related_note, sim, rel_type in related:

@@ -60,6 +60,21 @@
                         </label>
                     </div>
                 </div>
+                <div class="d-flex align-items-center gap-3 mt-2 growth-legend">
+                    <span class="text-muted small me-1">Growth:</span>
+                    <span class="d-flex align-items-center gap-1 small text-muted">
+                        <img src="{{ url_for('static', filename='img/garden/seed.svg') }}" alt="" width="18" height="18"> Seed
+                    </span>
+                    <span class="d-flex align-items-center gap-1 small text-muted">
+                        <img src="{{ url_for('static', filename='img/garden/sprout.svg') }}" alt="" width="18" height="18"> Sprout
+                    </span>
+                    <span class="d-flex align-items-center gap-1 small text-muted">
+                        <img src="{{ url_for('static', filename='img/garden/sapling.svg') }}" alt="" width="18" height="18"> Sapling
+                    </span>
+                    <span class="d-flex align-items-center gap-1 small text-muted">
+                        <img src="{{ url_for('static', filename='img/garden/tree.svg') }}" alt="" width="18" height="18"> Tree
+                    </span>
+                </div>
             </div>
             <div id="gardenGraph" class="garden-graph"></div>
         </div>
