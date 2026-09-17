@@ -3,6 +3,11 @@ let allNodes = [];
 let allEdges = [];
 let selectedNode = null;
 
+function themeColor(varName, fallback) {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    return value || fallback;
+}
+
 function initGarden() {
     fetch('/garden/data')
         .then(response => response.json())
@@ -24,7 +29,7 @@ function renderGraph(nodes, edges) {
             size: 20,
             font: {
                 size: 12,
-                color: '#333',
+                color: themeColor('--text-primary', '#23281f'),
                 face: 'Inter, sans-serif'
             },
             borderWidth: 2,
@@ -36,9 +41,9 @@ function renderGraph(nodes, edges) {
                 roundness: 0.5
             },
             color: {
-                color: '#ccc',
-                highlight: '#666',
-                hover: '#333',
+                color: themeColor('--border-color', '#ccc'),
+                highlight: themeColor('--primary-color', '#3f6b4f'),
+                hover: themeColor('--text-secondary', '#666'),
                 opacity: 0.6
             },
             shadow: false
@@ -67,12 +72,12 @@ function renderGraph(nodes, edges) {
             multiselect: false
         }
     };
-    
+
     const dataset = {
         nodes: new vis.DataSet(nodes),
         edges: new vis.DataSet(edges)
     };
-    
+
     gardenNetwork = new vis.Network(container, dataset, options);
     
     gardenNetwork.on('click', function(params) {
@@ -199,7 +204,7 @@ function renderFocusGraph(container, nodes, edges) {
             shape: 'dot',
             font: {
                 size: 12,
-                color: '#333',
+                color: themeColor('--text-primary', '#23281f'),
                 face: 'Inter, sans-serif'
             },
             borderWidth: 2,
@@ -211,9 +216,9 @@ function renderFocusGraph(container, nodes, edges) {
                 roundness: 0.5
             },
             color: {
-                color: '#ccc',
-                highlight: '#666',
-                hover: '#333'
+                color: themeColor('--border-color', '#ccc'),
+                highlight: themeColor('--primary-color', '#3f6b4f'),
+                hover: themeColor('--text-secondary', '#666')
             }
         },
         physics: {

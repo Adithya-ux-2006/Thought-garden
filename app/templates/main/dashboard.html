@@ -3,57 +3,76 @@
 {% block title %}Dashboard - Thought Garden{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="mb-0">Welcome back, {{ current_user.name }}</h2>
-            <p class="text-muted">Your knowledge garden is growing.</p>
-        </div>
+<div class="container-fluid page-shell py-4">
+    <div class="page-header">
+        <span class="page-eyebrow"><i class="bi bi-flower1"></i>Dashboard</span>
+        <h2 class="mb-1">Welcome back, {{ current_user.name.split(' ')[0] }}</h2>
+        <p class="text-muted mb-0">Your knowledge garden is growing.</p>
     </div>
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-4 col-lg-2">
             <div class="card stat-card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-journal-text display-6 text-primary"></i>
-                    <h3 class="mb-0 mt-2">{{ stats.total_notes }}</h3>
-                    <small class="text-muted">Total Notes</small>
+                <div class="card-body">
+                    <div class="stat-figure">
+                        <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+                        <div>
+                            <p class="stat-number">{{ stats.total_notes }}</p>
+                            <p class="stat-label mb-0">Notes</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="card stat-card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-file-earmark display-6 text-success"></i>
-                    <h3 class="mb-0 mt-2">{{ stats.documents }}</h3>
-                    <small class="text-muted">Documents</small>
+                <div class="card-body">
+                    <div class="stat-figure">
+                        <div class="stat-icon"><i class="bi bi-file-earmark"></i></div>
+                        <div>
+                            <p class="stat-number">{{ stats.documents }}</p>
+                            <p class="stat-label mb-0">Documents</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="card stat-card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-diagram-3 display-6 text-info"></i>
-                    <h3 class="mb-0 mt-2">{{ stats.connections }}</h3>
-                    <small class="text-muted">Connections</small>
+                <div class="card-body">
+                    <div class="stat-figure">
+                        <div class="stat-icon"><i class="bi bi-diagram-3"></i></div>
+                        <div>
+                            <p class="stat-number">{{ stats.connections }}</p>
+                            <p class="stat-label mb-0">Connections</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="card stat-card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-tag display-6 text-warning"></i>
-                    <h3 class="mb-0 mt-2">{{ stats.tags }}</h3>
-                    <small class="text-muted">Tags</small>
+                <div class="card-body">
+                    <div class="stat-figure">
+                        <div class="stat-icon"><i class="bi bi-tag"></i></div>
+                        <div>
+                            <p class="stat-number">{{ stats.tags }}</p>
+                            <p class="stat-label mb-0">Tags</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <div class="card stat-card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-pin display-6 text-danger"></i>
-                    <h3 class="mb-0 mt-2">{{ stats.pinned }}</h3>
-                    <small class="text-muted">Pinned</small>
+                <div class="card-body">
+                    <div class="stat-figure">
+                        <div class="stat-icon"><i class="bi bi-pin"></i></div>
+                        <div>
+                            <p class="stat-number">{{ stats.pinned }}</p>
+                            <p class="stat-label mb-0">Pinned</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
