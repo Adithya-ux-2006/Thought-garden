@@ -11,8 +11,8 @@ from sqlalchemy import or_
 @login_required
 def search():
     form = SearchForm()
-    form.category.choices = [('', 'All Categories')] + [(c, c) for c in 
-        db.session.query(Note.category).filter_by(user_id=current_user.id).distinct().all() if c[0]]
+    categories = db.session.query(Note.category).filter_by(user_id=current_user.id).distinct().all()
+    form.category.choices = [('', 'All Categories')] + [(c[0], c[0]) for c in categories if c[0]]
     form.tag.choices = [('', 'All Tags')] + [(t.name, t.name) for t in 
         Tag.query.join(Note.tags).filter(Note.user_id == current_user.id).distinct().all()]
     
