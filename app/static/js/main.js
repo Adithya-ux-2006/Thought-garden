@@ -295,4 +295,35 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => flashMessages.remove(), 500);
         }
     }, 5000);
+
+    // Loading state for forms that trigger AI analysis (note create/edit,
+    // document import). These block on server-side relationship scoring
+    // (and, for the first search after startup, full embedding
+    // generation) with no prior visual feedback - the page just appeared
+    // to hang. Any form tagged data-ai-processing shows a spinner on its
+    // submit button and disables it, so a slow save/import reads as
+    // "working" rather than "broken". The disabled attribute also guards
+    // against duplicate submits from an impatient double-click.
+    document.querySelectorAll('form[data-ai-processing]').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            if (form.dataset.aiProcessingSubmitted) return;
+            form.dataset.aiProcessingSubmitted = 'true';
+
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (!submitBtn) return;
+
+            const loadingText = submitBtn.dataset.loadingText || 'Processing...';
+            submitBtn.disabled = true;
+
+            if (submitBtn.tagName === 'BUTTON') {
+                submitBtn.dataset.originalHtml = submitBtn.innerHTML;
+                submitBtn.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
+                    loadingText;
+            } else {
+                submitBtn.dataset.originalValue = submitBtn.value;
+                submitBtn.value = loadingText;
+            }
+        });
+    });
 });

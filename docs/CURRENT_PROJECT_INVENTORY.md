@@ -1,221 +1,212 @@
 # Thought Garden — Current Project Inventory
 
-## Repository Root (`D:\thoughtgarden\`)
+> Rewritten 2026-09-18 against the actual codebase (routes, models, and
+> file tree verified directly, not transcribed from memory). The
+> previous version of this file was significantly wrong — see
+> `docs/SELF_AUDIT.md` and `CLAUDE.md` for how that was discovered.
+> Keep this in sync: if you add a route, model field, or template,
+> update it here too, or delete the claim rather than let it drift.
+
+## Repository Root
 
 ### Application Code (`app/`)
 ```
-app/__init__.py          - App factory, CSRFProtect, note_embeddings SQL
-app/models.py            - User, Note, Tag, Relationship models
-app/forms.py             - Flask-WTF forms (Register, Login, Profile, Note, Search, DocumentUpload)
-app/notes/routes.py      - Note CRUD, import_document, edit, delete, pin, archive
-app/main/routes.py       - Landing page, dashboard, insights, user_profile
-app/garden/routes.py     - Knowledge graph data, focus mode, note detail API
-app/search/routes.py     - Search results with hybrid search
-app/auth/routes.py       - Login, register, logout, profile
-app/services/embedding_service.py   - SentenceTransformer model loading, embedding generation
-app/services/similarity_service.py  - cosine_similarity, relationship management
-app/services/keyword_service.py     - TF-IDF keyword extraction, tag suggestions
-app/services/search_service.py      - keyword_search, semantic_search, hybrid_search
-app/services/document_service.py    - PDF/TXT/MD extraction, chunking, note creation
-app/services/__init__.py            - Re-exports (shadowing warnings)
+app/__init__.py                      - App factory: CSRFProtect, SQLAlchemy, Flask-Login, db.create_all()
+app/models.py                        - User, Note, Tag, Relationship, NoteEmbedding
+app/forms.py                         - Flask-WTF forms (Register, Login, Profile, Note, Search, DocumentUpload)
+app/notes/routes.py                  - Note CRUD, import_document, edit, delete, pin, archive
+app/main/routes.py                   - Landing page, dashboard, insights
+app/garden/routes.py                 - Knowledge graph data, focus mode, note detail API
+app/search/routes.py                 - Hybrid search results, autocomplete suggest API
+app/auth/routes.py                   - Login, register, logout, profile
+app/services/embedding_service.py    - SentenceTransformer model loading, embedding storage/retrieval
+app/services/similarity_service.py   - lightweight + embedding similarity, relationship management
+app/services/keyword_service.py      - stopword-filtered keyword extraction, tag suggestions
+app/services/search_service.py       - keyword_search, semantic_search, hybrid_search (RRF-merged)
+app/services/document_service.py     - PDF/TXT/MD extraction, chunking, note creation
+app/services/pagination.py           - SimplePagination (shared by semantic/hybrid search)
+app/services/onboarding_service.py   - starter-garden seeding for new users
+app/services/__init__.py             - re-exports of the above (not exhaustive - some callers import directly)
 ```
+There is no `config.py` — config lives entirely in `create_app()` in `app/__init__.py`, reading from environment variables with inline defaults.
 
 ### Templates (`app/templates/`)
 ```
-templates/base.html                    - Main layout, navbar, dark mode toggle
-templates/landing.html                 - Public landing page
-templates/dashboard.html               - Authenticated dashboard
-templates/insights.html                - Learning insights page
-templates/auth/login.html              - Login form
-templates/auth/register.html           - Registration form
-templates/auth/profile.html            - User profile
-templates/notes/index.html             - Notes list with filters
-templates/notes/create.html            - Create note form
-templates/notes/edit.html              - Edit note form
-templates/notes/view.html              - View note with connections panel
-templates/garden/index.html            - Knowledge graph page with vis-network
-templates/search/index.html            - Search results
+templates/base.html                  - Main layout, navbar, dark mode toggle
+templates/main/landing.html          - Public landing page
+templates/main/dashboard.html        - Authenticated dashboard
+templates/main/insights.html         - Learning insights page
+templates/auth/login.html            - Login form
+templates/auth/register.html         - Registration form
+templates/auth/profile.html          - User profile
+templates/notes/list.html            - Notes list with filters (NOT notes/index.html)
+templates/notes/create.html          - Create note form + document import
+templates/notes/edit.html            - Edit note form + delete
+templates/notes/view.html            - View note with connections panel
+templates/garden/index.html          - Knowledge graph page with vis-network
+templates/search/search.html         - Search form + results (NOT search/index.html)
 ```
 
 ### Static Assets (`app/static/`)
 ```
-static/css/style.css                   - CSS custom properties, responsive design
-static/js/main.js                      - vis-network graph, search, physics toggle
+static/css/style.css                 - CSS custom properties, responsive design, dark mode
+static/js/main.js                    - vis-network graph rendering, search, filters, physics toggle
 ```
 
-### Configuration
+### Root files
 ```
-config.py                  - Config classes (base, dev, production)
-requirements.txt           - Python dependencies
-seed.py                    - Demo data generator
-run.py                     - Application entry point
+requirements.txt                     - Python dependencies
+seed.py                              - Demo data generator
+run.py                               - Application entry point (auto-seed, backfill relationships)
 ```
 
 ---
 
-## Routes (12 Endpoints)
+## Routes (21 endpoints, verified via `app.url_map`)
 
-### Authentication
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET/POST | `/auth/login` | `login()` | User login |
-| GET/POST | `/auth/register` | `register()` | New user registration |
-| GET | `/auth/logout` | `logout()` | User logout |
-| GET/POST | `/auth/profile` | `profile()` | User profile (login required) |
+### Authentication (`app/auth/routes.py`)
+| Method | Path | Endpoint |
+|--------|------|---------|
+| GET/POST | `/auth/login` | `auth.login` |
+| GET/POST | `/auth/register` | `auth.register` |
+| GET | `/auth/logout` | `auth.logout` |
+| GET/POST | `/auth/profile` | `auth.profile` |
 
-### Notes
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET | `/notes/` | `notes()` | List all notes (login required) |
-| GET/POST | `/notes/create` | `create_note()` | Create new note (login required) |
-| GET | `/notes/<id>` | `note_detail()` | View note with connections |
-| GET/POST | `/notes/<id>/edit` | `edit_note()` | Edit note (owner only) |
-| POST | `/notes/<id>/delete` | `delete_note()` | Delete note (owner only) |
-| POST | `/notes/<id>/pin` | `pin_note()` | Toggle pin (owner only) |
-| POST | `/notes/<id>/archive` | `archive_note()` | Toggle archive (owner only) |
-| POST | `/notes/import` | `import_document()` | Import PDF/TXT/MD (login required) |
+### Notes (`app/notes/routes.py`)
+| Method | Path | Endpoint |
+|--------|------|---------|
+| GET | `/notes/` | `notes.list_notes` |
+| GET/POST | `/notes/create` | `notes.create` |
+| GET | `/notes/<id>` | `notes.view` |
+| GET/POST | `/notes/<id>/edit` | `notes.edit` |
+| POST | `/notes/<id>/delete` | `notes.delete` |
+| POST | `/notes/<id>/pin` | `notes.pin` |
+| POST | `/notes/<id>/archive` | `notes.archive` |
+| POST | `/notes/import` | `notes.import_document` |
+| GET | `/notes/archived` | `notes.archived` (redirects to `list_notes?archived=1`) |
 
-### Garden
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET | `/garden/` | `garden()` | Knowledge graph page |
-| GET | `/garden/data` | `garden_data()` | JSON API for vis-network |
-| GET | `/garden/note/<id>` | `garden_note_detail()` | Note detail for garden |
-| GET | `/garden/focus/<id>` | `focus_mode()` | Focus mode centered on note |
+### Garden (`app/garden/routes.py`)
+| Method | Path | Endpoint |
+|--------|------|---------|
+| GET | `/garden/` | `garden.index` |
+| GET | `/garden/data` | `garden.data` (JSON for vis-network) |
+| GET | `/garden/note/<id>` | `garden.note_detail` (JSON) |
+| GET | `/garden/focus/<id>` | `garden.focus` (JSON, depth-limited subgraph) |
 
-### Search
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET | `/search/` | `search()` | Hybrid search results |
+### Search (`app/search/routes.py`)
+| Method | Path | Endpoint |
+|--------|------|---------|
+| GET/POST | `/search/` | `search.search` |
+| GET | `/search/api/suggest` | `search.suggest` (autocomplete JSON) |
 
-### Main
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET | `/` | `landing()` | Public landing page |
-| GET | `/dashboard` | `dashboard()` | User dashboard (login required) |
-| GET | `/insights` | `insights()` | Learning insights (login required) |
+### Main (`app/main/routes.py`)
+| Method | Path | Endpoint |
+|--------|------|---------|
+| GET | `/` | `main.index` |
+| GET | `/dashboard` | `main.dashboard` |
+| GET | `/insights` | `main.insights` |
 
 ---
 
-## Database Tables (6)
+## Database Tables (5, all real SQLAlchemy models — see `app/models.py`)
 
-### users
+### user
 | Column | Type | Notes |
 |--------|------|-------|
-| id | INTEGER PK | Auto-increment |
-| username | VARCHAR(80) UNIQUE | Not null |
-| email | VARCHAR(120) UNIQUE | Not null |
-| password_hash | VARCHAR(128) | Not null |
-| bio | TEXT | Optional |
-| avatar_url | VARCHAR(200) | Optional |
-| created_at | DATETIME | Default now |
-| last_login | DATETIME | Nullable |
+| id | INTEGER PK | |
+| name | VARCHAR(100) | Not null |
+| email | VARCHAR(120) UNIQUE, indexed | Not null |
+| password_hash | VARCHAR(255) | Werkzeug hash, not plaintext |
+| created_at | DATETIME | Default utcnow |
 
-### notes
+### note
 | Column | Type | Notes |
 |--------|------|-------|
-| id | INTEGER PK | Auto-increment |
+| id | INTEGER PK | |
+| user_id | INTEGER FK → user.id, indexed | Not null |
 | title | VARCHAR(200) | Not null |
 | content | TEXT | Not null |
-| user_id | INTEGER FK | References users.id |
-| category | VARCHAR(50) | Default 'General' |
-| source_type | VARCHAR(20) | Default 'manual' |
-| source_url | VARCHAR(500) | Optional |
-| is_pinned | BOOLEAN | Default false |
-| is_archived | BOOLEAN | Default false |
-| embedding_generated | BOOLEAN | Default false |
-| created_at | DATETIME | Default now |
-| updated_at | DATETIME | Auto-update |
+| summary | TEXT | Nullable, currently unused by any route |
+| category | VARCHAR(50) | Nullable, no index (despite prior docs claiming one) |
+| source_type | VARCHAR(20) | Default `'manual'`; also `pdf`/`txt`/`md`/`starter` |
+| source_filename | VARCHAR(255) | Nullable |
+| is_pinned | BOOLEAN | Default False |
+| is_archived | BOOLEAN | Default False |
+| created_at | DATETIME, indexed | Default utcnow |
+| updated_at | DATETIME | Default/onupdate utcnow |
 
-### tags
+### tag
 | Column | Type | Notes |
 |--------|------|-------|
-| id | INTEGER PK | Auto-increment |
-| name | VARCHAR(50) UNIQUE | Not null |
+| id | INTEGER PK | |
+| name | VARCHAR(50) UNIQUE, indexed | Not null |
 
-### note_tags (association)
+### note_tags (association table, no model class)
 | Column | Type | Notes |
 |--------|------|-------|
-| note_id | INTEGER FK | References notes.id |
-| tag_id | INTEGER FK | References tags.id |
-| PK | (note_id, tag_id) | Composite |
+| note_id | INTEGER FK → note.id | Composite PK |
+| tag_id | INTEGER FK → tag.id | Composite PK |
 
-### relationships
+### relationship
 | Column | Type | Notes |
 |--------|------|-------|
-| id | INTEGER PK | Auto-increment |
-| note1_id | INTEGER FK | References notes.id |
-| note2_id | INTEGER FK | References notes.id |
-| similarity | FLOAT | 0.0-1.0 |
-| relationship_type | VARCHAR(50) | 'related' |
-| created_at | DATETIME | Default now |
-| UNIQUE | (note1_id, note2_id) | Prevents duplicates |
+| id | INTEGER PK | |
+| source_note_id | INTEGER FK → note.id, indexed | Not null |
+| target_note_id | INTEGER FK → note.id, indexed | Not null |
+| similarity_score | FLOAT | Not null, 0.0–1.0 |
+| relationship_type | VARCHAR(20) | Default `'semantic'` |
+| created_at | DATETIME | Default utcnow |
+| updated_at | DATETIME | Default/onupdate utcnow |
 
-### note_embeddings
+Constraints: `UNIQUE(source_note_id, target_note_id)`, `CHECK(source_note_id != target_note_id)`.
+Field names are `source_note_id`/`target_note_id` — **not** `note1_id`/`note2_id` as earlier docs claimed.
+
+### note_embeddings (`NoteEmbedding` model)
 | Column | Type | Notes |
 |--------|------|-------|
-| note_id | INTEGER PK | References notes.id |
-| embedding | BLOB | Pickled numpy array |
-| model_name | VARCHAR(100) | Default 'all-MiniLM-L6-v2' |
-| created_at | DATETIME | Default now |
-*Note: Created via raw SQL in __init__.py, not SQLAlchemy model*
+| note_id | INTEGER PK, FK → note.id (CASCADE) | |
+| embedding | BLOB | Raw `float32.tobytes()`, **not** pickle (pickle rows from before this change still decode via a fallback) |
+| updated_at | DATETIME | Default/onupdate utcnow |
+
+No `model_name` column exists — the model name is an env var (`EMBEDDING_MODEL`), not stored per-row. There is no `embedding_generated` column on `note` either; embedding presence is determined by whether a `note_embeddings` row exists.
 
 ---
 
 ## Services
 
-### EmbeddingService
-- Loads sentence-transformers model (all-MiniLM-L6-v2)
-- Generates embeddings from text
-- Stores/loads embeddings from note_embeddings table
-- Batch processing for multiple texts
+### embedding_service.py
+- Lazy-loads `sentence-transformers` model (`all-MiniLM-L6-v2` by default, `EMBEDDING_MODEL` env override)
+- `generate_embedding(note)` — encodes title+content+tags+category, stores as raw bytes via the `NoteEmbedding` model
+- `get_embedding(note_id, generate_if_missing=...)` — in-process cache, falls back to DB, optionally generates
+- `get_all_embeddings(user_id, generate_if_missing=...)` — bulk fetch for a user's notes
+- `invalidate_embedding_cache(note_id)` — drops one note's cached vector (called on delete)
 
-### SimilarityService
-- cosine_similarity between embeddings
-- Threshold: 0.45 (default)
-- find_related_notes: returns notes above threshold
-- manage_relationships: creates/updates Relationship records
-- Batch find: O(n²) pairwise comparison
+### similarity_service.py
+- `lightweight_similarity()` — keyword/tag/category overlap scorer, no ML model needed
+- `update_relationships_for_note()` — uses real embeddings if already generated, otherwise the lightweight scorer; never triggers model download inline
+- `SIMILARITY_THRESHOLD` (embedding-based, default 0.45), `KEYWORD_THRESHOLD` (lightweight, default 0.18), `MAX_RELATED_NOTES` (default 5) — all env-overridable
+- `ensure_all_relationships()` — startup backfill across all users
 
-### KeywordService
-- TF-IDF keyword extraction
-- Tag suggestions from note content
-- TF-IDF document similarity
+### keyword_service.py
+- `extract_keywords()` — regex word split, stopword filter, frequency ranking (not TF-IDF)
+- `suggest_tags()` — matches keywords against existing user tags + related notes' tags
 
-### SearchService
-- keyword_search: LIKE queries with ranking
-- semantic_search: cosine similarity against all embeddings
-- hybrid_search: weighted combination (keyword 0.4 + semantic 0.6)
-- Pagination via custom class
+### search_service.py
+- `keyword_search()` — `ILIKE` substring match on title/content (not SQLite FTS5, despite README wording)
+- `semantic_search()` — cosine similarity against embeddings, blocks on model load if none generated yet
+- `hybrid_search()` — merges the two via Reciprocal Rank Fusion (`1/(60+rank)`)
 
-### DocumentService
-- PDF extraction via PyPDF2
-- TXT and Markdown reading
-- Automatic title/category detection
-- Text chunking for long documents
-- Note creation + embedding generation
+### document_service.py
+- PDF extraction via PyPDF2, plain read for TXT/MD (UTF-8 with latin-1 fallback)
+- `chunk_text()` — splits long documents on sentence/paragraph boundaries with overlap
+- `create_notes_from_document()` — creates one note per chunk, runs relationship scoring per note
 
 ---
 
-## Seed Data
+## Seed Data (`seed.py`)
 
-### Notes by Category
-| Category | Count | Notes |
-|----------|-------|-------|
-| AI | 6 | ML Fundamentals, Neural Networks, Deep Learning, NLP, Computer Vision, Data Science |
-| Cybersecurity | 3 | IDS, Network Security, Adaptive Threats |
-| Software Engineering | 3 | Agile, Requirements, Testing |
-| Operating Systems | 3 | CPU Scheduling, Process Management, Deadlock |
-| Research | 2 | Adaptive Cybersecurity paper, Transformer Architecture paper |
-| **Total** | **17** | |
-
-### Relationships Discovered (25+ at threshold 0.45)
-- ML Fundamentals → Deep Learning (56%), Data Science (57%), Computer Vision (54%), Neural Networks (51%), Adaptive Threats (52%)
-- Neural Networks → Deep Learning (72%)
-- IDS → Network Security (51%), Adaptive Threats (51%)
-- Process Management → Deadlock (57%)
-- CPU Scheduling → Process Management (57%)
+17 notes across 5 categories for the demo/starter garden — see `seed.py` directly for exact titles and content; don't trust a stale count here if `seed.py` has changed since this was last verified.
 
 ### Demo Account
-- Email: demo@thoughtgarden.app
-- Password: demo1234
+- Email: `demo@thoughtgarden.app`
+- Password: `demo1234`

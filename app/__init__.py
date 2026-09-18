@@ -27,7 +27,7 @@ def create_app(config_overrides=None):
     login_manager.init_app(app)
     csrf.init_app(app)
     
-    from app.models import User, Note, Tag, Relationship
+    from app.models import User, Note, Tag, Relationship, NoteEmbedding
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -49,16 +49,9 @@ def create_app(config_overrides=None):
     app.register_blueprint(main_bp)
     
     with app.app_context():
+        # note_embeddings (NoteEmbedding model) is created here too - it
+        # used to need a separate raw CREATE TABLE because it wasn't a
+        # SQLAlchemy model; now that it is, create_all() covers it.
         db.create_all()
-        
-        db.session.execute(db.text("""
-            CREATE TABLE IF NOT EXISTS note_embeddings (
-                note_id INTEGER PRIMARY KEY,
-                embedding BLOB NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (note_id) REFERENCES note(id) ON DELETE CASCADE
-            )
-        """))
-        db.session.commit()
-    
+
     return app

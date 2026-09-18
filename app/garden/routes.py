@@ -2,6 +2,7 @@ from flask import render_template, jsonify, request
 from flask_login import login_required, current_user
 from app.garden import bp
 from app.models import Note, Relationship, db
+from sqlalchemy import func
 
 
 @bp.route('/')
@@ -18,17 +19,37 @@ def data():
     notes = Note.query.filter_by(user_id=current_user.id, is_archived=False).all()
     relationships = Relationship.query.join(Note, Relationship.source_note_id == Note.id)\
         .filter(Note.user_id == current_user.id).all()
-    
+
+    # Previously note.get_all_relationships() ran one query per note here
+    # (N+1: a garden of 200 notes meant 200 extra round trips just to size
+    # the graph nodes). One aggregate query gets every note's relationship
+    # count in a single round trip instead.
+    note_ids = [note.id for note in notes]
+    relationship_counts = dict(
+        db.session.query(
+            Note.id,
+            func.count(Relationship.id)
+        )
+        .outerjoin(
+            Relationship,
+            (Relationship.source_note_id == Note.id) | (Relationship.target_note_id == Note.id)
+        )
+        .filter(Note.id.in_(note_ids))
+        .group_by(Note.id)
+        .all()
+    ) if note_ids else {}
+
     nodes = []
     for note in notes:
         color = get_category_color(note.category)
+        rel_count = relationship_counts.get(note.id, 0)
         nodes.append({
             'id': note.id,
             'label': note.title[:30] + ('...' if len(note.title) > 30 else ''),
             'title': note.title,
             'category': note.category or 'Uncategorized',
             'color': color,
-            'size': 20 + min(len(note.get_all_relationships()) * 3, 30),
+            'size': 20 + min(rel_count * 3, 30),
             'is_pinned': note.is_pinned,
             'created_at': note.created_at.isoformat() if note.created_at else None
         })

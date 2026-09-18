@@ -50,7 +50,15 @@ class Note(db.Model):
     inverse_relationships = db.relationship('Relationship',
         foreign_keys='Relationship.target_note_id',
         backref='target_note', lazy='dynamic', cascade='all, delete-orphan')
-    
+    # passive_deletes intentionally NOT set: SQLite only enforces
+    # ON DELETE CASCADE at the DB level when PRAGMA foreign_keys=ON is
+    # set per-connection, which SQLAlchemy does not do by default. Without
+    # passive_deletes, SQLAlchemy loads and deletes the related row itself
+    # (an extra SELECT before DELETE) instead of relying on that pragma -
+    # slightly more work per delete, but correct regardless of DB config.
+    embedding_row = db.relationship('NoteEmbedding', backref='note', uselist=False,
+        cascade='all, delete-orphan')
+
     def get_all_relationships(self):
         return Relationship.query.filter(
             (Relationship.source_note_id == self.id) | (Relationship.target_note_id == self.id)
@@ -79,6 +87,26 @@ class Tag(db.Model):
     
     def __repr__(self):
         return f'<Tag {self.name}>'
+
+
+class NoteEmbedding(db.Model):
+    """Stores each note's semantic embedding vector.
+
+    Previously created via raw SQL in app/__init__.py instead of a
+    SQLAlchemy model, which meant no ORM validation, no migration
+    tracking, and every read/write going through hand-written text()
+    queries in embedding_service.py. This model replaces that raw table
+    definition; the table name/columns are kept identical so existing
+    databases need no migration.
+    """
+    __tablename__ = 'note_embeddings'
+
+    note_id = db.Column(db.Integer, db.ForeignKey('note.id', ondelete='CASCADE'), primary_key=True)
+    embedding = db.Column(db.LargeBinary, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<NoteEmbedding note_id={self.note_id}>'
 
 
 class Relationship(db.Model):

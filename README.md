@@ -70,9 +70,9 @@ thought-garden/
 
 ### Hybrid Search
 
-- **Keyword Search:** SQLite full-text search for exact matches
+- **Keyword Search:** SQL substring matching (`ILIKE`) for exact matches — not SQLite FTS5; that's on the roadmap, not yet implemented
 - **Semantic Search:** Vector similarity for conceptual matches
-- **Combined Ranking:** Results merged and ranked by relevance
+- **Combined Ranking:** Results merged via Reciprocal Rank Fusion and ranked by relevance
 
 ---
 
@@ -122,6 +122,12 @@ cp .env.example .env
 # Run application
 python run.py
 ```
+
+> **Note:** on some branches of this repo, `.env` is not yet actually
+> loaded by the app (no `load_dotenv()` call), so editing it has no
+> effect until that's wired up — check whether `app/__init__.py` calls
+> `load_dotenv()` before relying on `.env` overrides taking effect. If
+> it doesn't, export the variables at the OS/shell level instead.
 
 ### First Run
 

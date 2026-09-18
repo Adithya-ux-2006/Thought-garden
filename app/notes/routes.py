@@ -5,6 +5,7 @@ from app.models import Note, Tag, db
 from app.forms import NoteForm
 from app.services.keyword_service import extract_keywords
 from app.services.similarity_service import update_relationships_for_note
+from app.services.embedding_service import invalidate_embedding_cache
 
 
 def parse_tags(tag_string):
@@ -135,6 +136,7 @@ def delete(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
     db.session.delete(note)
     db.session.commit()
+    invalidate_embedding_cache(note_id)
     flash('Note deleted.', 'success')
     return redirect(url_for('notes.list_notes'))
 
