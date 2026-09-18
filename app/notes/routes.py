@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 from app.notes import bp
-from app.models import Note, Tag, db
+from app.models import Note, Tag, Relationship, db
 from app.forms import NoteForm
 from app.services.keyword_service import extract_keywords
 from app.services.similarity_service import update_relationships_for_note
@@ -154,7 +154,23 @@ def delete(note_id):
 def archive(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
     note.is_archived = not note.is_archived
-    db.session.commit()
+
+    if note.is_archived:
+        # Archiving used to just flip the flag and leave relationship rows
+        # in place, so the garden graph kept returning edges pointing at a
+        # node that was no longer there. Drop them here instead of relying
+        # on every reader to filter them out.
+        Relationship.query.filter(
+            (Relationship.source_note_id == note.id) | (Relationship.target_note_id == note.id)
+        ).delete(synchronize_session=False)
+        db.session.commit()
+    else:
+        db.session.commit()
+        try:
+            update_relationships_for_note(note)
+        except Exception as e:
+            flash(f'Note unarchived, but AI analysis failed: {str(e)}', 'warning')
+
     flash(f'Note {"archived" if note.is_archived else "unarchived"}.', 'success')
     return redirect(url_for('notes.view', note_id=note.id))
 

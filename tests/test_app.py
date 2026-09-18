@@ -260,6 +260,52 @@ def test_note_ownership(client, app):
     assert response.status_code == 404
 
 
+def test_archiving_note_removes_dangling_garden_edges(client, app):
+    with app.app_context():
+        user = User(name='Test', email='archive-garden@test.com')
+        user.set_password('password')
+        db.session.add(user)
+        db.session.commit()
+
+        note1 = Note(user_id=user.id, title='Note 1', content='Content 1')
+        note2 = Note(user_id=user.id, title='Note 2', content='Content 2')
+        note3 = Note(user_id=user.id, title='Note 3', content='Content 3')
+        note4 = Note(user_id=user.id, title='Note 4', content='Content 4')
+        db.session.add_all([note1, note2, note3, note4])
+        db.session.commit()
+
+        # note1 connected to all three others - archiving it should drop
+        # exactly these relationships, leaving no edge that references it.
+        db.session.add_all([
+            Relationship(source_note_id=note1.id, target_note_id=note2.id, similarity_score=0.9),
+            Relationship(source_note_id=note1.id, target_note_id=note3.id, similarity_score=0.8),
+            Relationship(source_note_id=note4.id, target_note_id=note1.id, similarity_score=0.7),
+            Relationship(source_note_id=note2.id, target_note_id=note3.id, similarity_score=0.6),
+        ])
+        db.session.commit()
+        note1_id = note1.id
+        user_id = user.id
+
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(user_id)
+        sess['_fresh'] = True
+
+    response = client.post(f'/notes/{note1_id}/archive', follow_redirects=True)
+    assert response.status_code == 200
+
+    response = client.get('/garden/data')
+    assert response.status_code == 200
+    data = response.get_json()
+
+    visible_ids = {n['id'] for n in data['nodes']}
+    assert note1_id not in visible_ids
+    for edge in data['edges']:
+        assert edge['from'] != note1_id
+        assert edge['to'] != note1_id
+        assert edge['from'] in visible_ids
+        assert edge['to'] in visible_ids
+
+
 def test_no_self_relationship(client, app):
     with app.app_context():
         user = User(name='Test', email='test@test.com')

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Focus: {{ note.title }} - Thought Garden{% endblock %}
+
+{% block content %}
+<div class="container-fluid garden-container">
+    <div class="garden-header p-3 border-bottom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="page-eyebrow"><i class="bi bi-zoom-in"></i>Focus</span>
+                <h4 class="mb-0">{{ note.title }}</h4>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Note
+                </a>
+                <a href="{{ url_for('garden.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-diagram-3 me-1"></i>Full Garden
+                </a>
+            </div>
+        </div>
+    </div>
+    <div id="focusGraph" class="garden-graph" data-note-id="{{ note.id }}" data-depth="2" data-min-similarity="0"></div>
+</div>
+
+<style>
+.garden-container {
+    height: calc(100vh - 56px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.garden-graph {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+}
+@media (max-width: 768px) {
+    .garden-container {
+        height: auto;
+        overflow: visible;
+    }
+    .garden-graph {
+        flex: none;
+        height: 60vh;
+        min-height: 400px;
+    }
+}
+</style>
+{% endblock %}

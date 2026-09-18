@@ -209,7 +209,7 @@ function initFocusGraph() {
     const depth = container.dataset.depth || 2;
     const minSimilarity = container.dataset.minSimilarity || 0;
     
-    fetch(`/garden/focus/${noteId}?depth=${depth}&min_similarity=${minSimilarity}`)
+    fetch(`/garden/api/focus/${noteId}?depth=${depth}&min_similarity=${minSimilarity}`)
         .then(response => response.json())
         .then(data => {
             renderFocusGraph(container, data.nodes, data.edges);
