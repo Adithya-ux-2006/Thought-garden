@@ -407,6 +407,75 @@ function renderFocusGraph(container, nodes, edges) {
     new vis.Network(container, dataset, options);
 }
 
+function initSearchAutocomplete() {
+    const input = document.getElementById('query');
+    const box = document.getElementById('searchSuggestions');
+    if (!input || !box) return;
+
+    let debounceTimer = null;
+
+    function hideSuggestions() {
+        box.style.display = 'none';
+        box.innerHTML = '';
+    }
+
+    function renderSuggestions(suggestions) {
+        box.innerHTML = '';
+        suggestions.forEach(function(note) {
+            // Built with createElement/textContent, not an innerHTML
+            // template string - note titles/categories are user content,
+            // and this project already had one XSS fix for exactly that
+            // kind of unescaped-user-content-in-HTML mistake.
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+
+            const title = document.createElement('span');
+            title.textContent = note.title;
+            item.appendChild(title);
+
+            if (note.category) {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-light text-dark ms-2';
+                badge.textContent = note.category;
+                item.appendChild(badge);
+            }
+
+            item.addEventListener('click', function() {
+                window.location.href = `/notes/${note.id}`;
+            });
+
+            box.appendChild(item);
+        });
+        box.style.display = suggestions.length ? 'block' : 'none';
+    }
+
+    input.addEventListener('input', function() {
+        const q = input.value.trim();
+        clearTimeout(debounceTimer);
+        if (q.length < 2) {
+            hideSuggestions();
+            return;
+        }
+        debounceTimer = setTimeout(function() {
+            fetch(`/search/api/suggest?q=${encodeURIComponent(q)}`)
+                .then(response => response.json())
+                .then(renderSuggestions)
+                .catch(error => console.error('Error fetching search suggestions:', error));
+        }, 200);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target !== input && !box.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') hideSuggestions();
+    });
+}
+
 function initDarkMode() {
     const toggle = document.getElementById('darkModeToggle');
     const icon = document.getElementById('darkModeIcon');
@@ -430,7 +499,8 @@ function initDarkMode() {
 
 document.addEventListener('DOMContentLoaded', function() {
     initDarkMode();
-    
+    initSearchAutocomplete();
+
     if (document.getElementById('gardenGraph')) {
         initGarden();
     }

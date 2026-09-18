@@ -10,10 +10,11 @@
             
             <div class="card mb-4">
                 <div class="card-body">
-                    <form method="GET" class="row g-3">
-                        <div class="col-md-6">
+                    <form method="GET" class="row g-3" data-ai-processing>
+                        <div class="col-md-6 position-relative">
                             {{ form.query.label(class="form-label") }}
-                            {{ form.query(class="form-control form-control-lg", placeholder="Search by keyword or ask a question...", value=query) }}
+                            {{ form.query(class="form-control form-control-lg", placeholder="Search by keyword or ask a question...", value=query, autocomplete="off") }}
+                            <div id="searchSuggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
                         </div>
                         <div class="col-md-2">
                             {{ form.category.label(class="form-label") }}
@@ -28,7 +29,7 @@
                             {{ form.source_type(class="form-select") }}
                         </div>
                         <div class="col-12">
-                            {{ form.submit(class="btn btn-primary") }}
+                            {{ form.submit(class="btn btn-primary", data_loading_text="Searching your garden...") }}
                             <a href="{{ url_for('search.search') }}" class="btn btn-outline-secondary ms-2">Clear</a>
                         </div>
                     </form>

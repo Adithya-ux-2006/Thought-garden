@@ -24,8 +24,7 @@ def dashboard():
     }
     
     recent_notes = Note.query.filter_by(user_id=current_user.id, is_archived=False).order_by(Note.created_at.desc()).limit(5).all()
-    recent_updated = Note.query.filter_by(user_id=current_user.id, is_archived=False).order_by(Note.updated_at.desc()).limit(5).all()
-    
+
     most_connected = db.session.query(Note, func.count(Relationship.id).label('conn_count'))\
         .join(Relationship, (Relationship.source_note_id == Note.id) | (Relationship.target_note_id == Note.id))\
         .filter(Note.user_id == current_user.id)\
@@ -55,7 +54,6 @@ def dashboard():
     return render_template('main/dashboard.html',
                            stats=stats,
                            recent_notes=recent_notes,
-                           recent_updated=recent_updated,
                            most_connected=most_connected,
                            categories=categories,
                            recent_connections=recent_connections,
