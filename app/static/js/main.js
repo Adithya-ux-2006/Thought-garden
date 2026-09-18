@@ -1,4 +1,5 @@
 let gardenNetwork = null;
+let gardenNodesDataSet = null;
 let allNodes = [];
 let allEdges = [];
 let selectedNode = null;
@@ -73,13 +74,14 @@ function renderGraph(nodes, edges) {
         }
     };
 
+    gardenNodesDataSet = new vis.DataSet(nodes);
     const dataset = {
-        nodes: new vis.DataSet(nodes),
+        nodes: gardenNodesDataSet,
         edges: new vis.DataSet(edges)
     };
 
     gardenNetwork = new vis.Network(container, dataset, options);
-    
+
     gardenNetwork.on('click', function(params) {
         if (params.nodes.length > 0) {
             const nodeId = params.nodes[0];
@@ -161,6 +163,23 @@ function searchNode() {
         gardenNetwork.selectNodes([matchingNodes[0].id]);
         gardenNetwork.focus(matchingNodes[0].id, {scale: 1.5, animation: true});
     }
+}
+
+function applyGardenCategoryFilters() {
+    if (!gardenNodesDataSet) return;
+
+    const checkedCategories = Array.from(
+        document.querySelectorAll('.garden-category-filter:checked')
+    ).map(el => el.value);
+
+    // No boxes checked = show everything (an all-hidden graph would be
+    // confusing, and "no filter selected" naturally means "no filtering").
+    const updates = allNodes.map(node => ({
+        id: node.id,
+        hidden: checkedCategories.length > 0 && !checkedCategories.includes(node.category)
+    }));
+
+    gardenNodesDataSet.update(updates);
 }
 
 function fitGraph() {
@@ -286,7 +305,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (physicsToggle) {
         physicsToggle.addEventListener('change', togglePhysics);
     }
-    
+
+    document.querySelectorAll('.garden-category-filter').forEach(function(checkbox) {
+        checkbox.addEventListener('change', applyGardenCategoryFilters);
+    });
+
     setTimeout(function() {
         const flashMessages = document.getElementById('flashMessages');
         if (flashMessages) {

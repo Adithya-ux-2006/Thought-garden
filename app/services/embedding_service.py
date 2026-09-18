@@ -9,6 +9,12 @@ _model_name = os.environ.get('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
 _embedding_cache = {}
 
 
+def cosine_similarity(a, b):
+    """Shared by similarity_service and search_service - previously
+    defined separately (identically) in both files."""
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+
 def get_model():
     global _model
     if _model is None:

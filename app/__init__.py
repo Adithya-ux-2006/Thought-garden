@@ -2,7 +2,13 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from dotenv import load_dotenv
 import os
+
+# Load variables from a .env file (if present) into the process environment
+# before any os.environ.get() calls below read them. Without this, values
+# in .env were silently ignored and every config fell back to its default.
+load_dotenv()
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -14,8 +20,15 @@ csrf = CSRFProtect()
 
 def create_app(config_overrides=None):
     app = Flask(__name__, instance_relative_config=True)
-    
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+
+    secret_key = os.environ.get('SECRET_KEY')
+    if not secret_key:
+        secret_key = 'dev-secret-key'
+        app.logger.warning(
+            'SECRET_KEY is not set - falling back to an insecure default. '
+            'Set SECRET_KEY in your environment or .env file before deploying.'
+        )
+    app.config['SECRET_KEY'] = secret_key
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///thought_garden.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('UPLOAD_MAX_SIZE_MB', 10)) * 1024 * 1024

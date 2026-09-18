@@ -105,19 +105,24 @@ def generate_title_from_content(content, filename):
 
 
 def create_notes_from_document(user_id, content, filename, category=None):
+    import logging
+    from flask import current_app
     from app.models import Note, db
     from app.services.similarity_service import update_relationships_for_note
     from app.services.keyword_service import extract_keywords
-    
+    from app.services.background_indexing import queue_embedding_generation
+
+    logger = logging.getLogger(__name__)
+
     chunks = chunk_text(content)
-    
+
     notes = []
     for i, chunk in enumerate(chunks):
         if len(chunks) > 1:
             title = f"{generate_title_from_content(content, filename)} (Part {i+1})"
         else:
             title = generate_title_from_content(content, filename)
-        
+
         note = Note(
             user_id=user_id,
             title=title,
@@ -128,13 +133,15 @@ def create_notes_from_document(user_id, content, filename, category=None):
         )
         db.session.add(note)
         notes.append(note)
-    
+
     db.session.commit()
-    
+
+    app_obj = current_app._get_current_object()
     for note in notes:
         try:
             update_relationships_for_note(note)
         except Exception as e:
-            print(f'Error processing note {note.id}: {e}')
-    
+            logger.warning('Error processing relationships for note %s: %s', note.id, e)
+        queue_embedding_generation(app_obj, note.id)
+
     return notes

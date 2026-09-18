@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, abort
+from flask import render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 from app.notes import bp
 from app.models import Note, Tag, db
@@ -6,6 +6,7 @@ from app.forms import NoteForm
 from app.services.keyword_service import extract_keywords
 from app.services.similarity_service import update_relationships_for_note
 from app.services.embedding_service import invalidate_embedding_cache
+from app.services.background_indexing import queue_embedding_generation
 
 
 def parse_tags(tag_string):
@@ -81,15 +82,20 @@ def create():
             note.tags = tags
         
         db.session.commit()
-        
+
         try:
             update_relationships_for_note(note)
         except Exception as e:
             flash(f'Note saved, but AI analysis failed: {str(e)}', 'warning')
-        
+
+        # Fast keyword-based relationships are already in place above.
+        # This kicks off the slower semantic (embedding) pass in the
+        # background so it doesn't block the response.
+        queue_embedding_generation(current_app._get_current_object(), note.id)
+
         flash('Note created successfully!', 'success')
         return redirect(url_for('notes.view', note_id=note.id))
-    
+
     return render_template('notes/create.html', form=form)
 
 
@@ -118,15 +124,17 @@ def edit(note_id):
         note.tags = get_or_create_tags(tag_names)
         
         db.session.commit()
-        
+
         try:
             update_relationships_for_note(note)
         except Exception as e:
             flash(f'Note updated, but AI analysis failed: {str(e)}', 'warning')
-        
+
+        queue_embedding_generation(current_app._get_current_object(), note.id)
+
         flash('Note updated successfully!', 'success')
         return redirect(url_for('notes.view', note_id=note.id))
-    
+
     return render_template('notes/edit.html', form=form, note=note)
 
 

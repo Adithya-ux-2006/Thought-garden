@@ -57,7 +57,14 @@ def test_register_duplicate_email(client):
         'password': 'password123',
         'confirm_password': 'password123'
     }, follow_redirects=True)
-    
+
+    # register() auto-logs-in the new user on success, and redirects any
+    # already-authenticated request straight to the dashboard before the
+    # duplicate-email check ever runs. Without logging out first, this
+    # second POST never exercises that check - it just bounces to
+    # /dashboard, which is what made this test look broken.
+    client.get('/auth/logout', follow_redirects=True)
+
     response = client.post('/auth/register', data={
         'name': 'Test User 2',
         'email': 'test@example.com',
@@ -96,7 +103,7 @@ def test_logout(auth_client):
     assert response.status_code == 200
 
 
-def test_create_note(auth_client):
+def test_create_note(auth_client, app):
     response = auth_client.post('/notes/create', data={
         'title': 'Test Note',
         'content': 'This is a test note.',
@@ -113,7 +120,7 @@ def test_create_note(auth_client):
         assert note.category == 'AI'
 
 
-def test_edit_note(auth_client):
+def test_edit_note(auth_client, app):
     auth_client.post('/notes/create', data={
         'title': 'Test Note',
         'content': 'This is a test note.',
@@ -143,7 +150,7 @@ def test_edit_note(auth_client):
         assert note.is_pinned == True
 
 
-def test_delete_note(auth_client):
+def test_delete_note(auth_client, app):
     auth_client.post('/notes/create', data={
         'title': 'Test Note',
         'content': 'This is a test note.',
@@ -164,7 +171,7 @@ def test_delete_note(auth_client):
         assert note is None
 
 
-def test_archive_note(auth_client):
+def test_archive_note(auth_client, app):
     auth_client.post('/notes/create', data={
         'title': 'Test Note',
         'content': 'This is a test note.',
@@ -185,7 +192,7 @@ def test_archive_note(auth_client):
         assert note.is_archived == True
 
 
-def test_pin_note(auth_client):
+def test_pin_note(auth_client, app):
     auth_client.post('/notes/create', data={
         'title': 'Test Note',
         'content': 'This is a test note.',
@@ -220,7 +227,7 @@ def test_search(auth_client):
     assert b'Machine Learning' in response.data
 
 
-def test_note_ownership(client):
+def test_note_ownership(client, app):
     client.post('/auth/register', data={
         'name': 'User 1',
         'email': 'user1@example.com',
@@ -253,7 +260,7 @@ def test_note_ownership(client):
     assert response.status_code == 404
 
 
-def test_no_self_relationship(client):
+def test_no_self_relationship(client, app):
     with app.app_context():
         user = User(name='Test', email='test@test.com')
         user.set_password('password')

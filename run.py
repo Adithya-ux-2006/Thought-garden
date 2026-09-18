@@ -19,4 +19,5 @@ if __name__ == '__main__':
             f'Automatic connections ready: {connection_count} relationships '
             f'across {note_count} notes.'
         )
-    app.run(debug=True, port=5000)
+    debug_mode = os.environ.get('FLASK_DEBUG', '1').lower() not in {'0', 'false', 'no'}
+    app.run(debug=debug_mode, port=int(os.environ.get('PORT', 5000)))

@@ -1,17 +1,13 @@
-import numpy as np
 from app import db
 from app.models import Note, Relationship
-from app.services.embedding_service import get_embedding, get_all_embeddings
+from app.services.embedding_service import get_embedding, get_all_embeddings, cosine_similarity
+from app.services.keyword_service import extract_keywords
 import os
 
 
 SIMILARITY_THRESHOLD = float(os.environ.get('SIMILARITY_THRESHOLD', 0.45))
 MAX_RELATED_NOTES = int(os.environ.get('MAX_RELATED_NOTES', 5))
 KEYWORD_THRESHOLD = float(os.environ.get('KEYWORD_SIMILARITY_THRESHOLD', 0.18))
-
-
-def cosine_similarity(a, b):
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 
 def lightweight_similarity(note1, note2):
@@ -119,8 +115,12 @@ def ensure_all_relationships():
 
 
 def get_relationship_explanation(note1, note2):
-    keywords1 = set(extract_keywords(note1.title + ' ' + note1.content))
-    keywords2 = set(extract_keywords(note2.title + ' ' + note2.content))
+    # max_keywords explicit: this module previously had its own
+    # extract_keywords() defaulting to 10, vs keyword_service's default
+    # of 5 - pin it here so consolidating the two didn't quietly change
+    # what "common keywords" means for this explanation text.
+    keywords1 = set(extract_keywords(note1.title + ' ' + note1.content, max_keywords=10))
+    keywords2 = set(extract_keywords(note2.title + ' ' + note2.content, max_keywords=10))
     common = keywords1 & keywords2
     
     common_tags = set(t.name.lower() for t in note1.tags) & set(t.name.lower() for t in note2.tags)
@@ -130,27 +130,3 @@ def get_relationship_explanation(note1, note2):
         top_common = sorted(list(common))[:5]
         return f"Connected because both notes discuss: {', '.join(top_common)}."
     return "Semantically related based on overall content similarity."
-
-
-def extract_keywords(text, max_keywords=10):
-    import re
-    from collections import Counter
-    
-    stop_words = {
-        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-        'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
-        'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-        'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that',
-        'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
-        'my', 'your', 'his', 'her', 'its', 'our', 'their', 'me', 'him',
-        'us', 'them', 'what', 'which', 'who', 'whom', 'whose', 'where',
-        'when', 'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other',
-        'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so',
-        'than', 'too', 'very', 'just', 'now', 'then', 'also', 'well', 'even'
-    }
-    
-    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
-    words = [w for w in words if w not in stop_words]
-    
-    freq = Counter(words)
-    return [word for word, _ in freq.most_common(max_keywords)]

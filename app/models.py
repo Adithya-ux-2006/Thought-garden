@@ -64,7 +64,11 @@ class Note(db.Model):
             (Relationship.source_note_id == self.id) | (Relationship.target_note_id == self.id)
         ).all()
     
-    def get_related_notes(self, limit=5, min_similarity=0.7):
+    def get_related_notes(self, limit=5, min_similarity=0.0):
+        # Relationships are stored starting at SIMILARITY_THRESHOLD (0.45
+        # by default - see similarity_service.py), so a 0.7 default here
+        # silently returned nothing unless every caller remembered to
+        # override it. Every caller already did, which was the tell.
         rels = Relationship.query.filter(
             ((Relationship.source_note_id == self.id) | (Relationship.target_note_id == self.id)) &
             (Relationship.similarity_score >= min_similarity)
