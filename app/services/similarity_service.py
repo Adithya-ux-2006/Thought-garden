@@ -1,6 +1,6 @@
 from app import db
 from app.models import Note, Relationship
-from app.services.embedding_service import get_embedding, get_all_embeddings, cosine_similarity
+from app.services.embedding_service import get_all_embeddings, cosine_similarity
 from app.services.keyword_service import extract_keywords
 import os
 
@@ -25,23 +25,18 @@ def lightweight_similarity(note1, note2):
     return min(1.0, (0.45 * keyword_score) + (0.40 * tag_score) + (0.15 * category_score))
 
 
-def update_relationships_for_note(note):
-    if not note.content.strip():
-        return
-    
-    # Never initialize/download the transformer model in a web request. If
-    # embeddings already exist, use them; otherwise the lightweight scorer
-    # still creates useful connections immediately.
-    source_emb = get_embedding(note.id, generate_if_missing=False)
-    all_embeddings = get_all_embeddings(note.user_id, generate_if_missing=False)
-    other_notes = Note.query.filter(
-        Note.user_id == note.user_id,
-        Note.id != note.id,
-        Note.is_archived == False,
-    ).all()
-    
+def _top_matches(note, candidates, all_embeddings):
+    """Score `note` against `candidates`, return the (other_id, sim) pairs
+    that qualify, strongest first, capped to MAX_RELATED_NOTES - i.e.
+    exactly the set `note`'s own scoring pass would pick.
+
+    Factored out so update_relationships_for_note() can reuse it not just
+    for the note being re-scored, but also - before deleting a pair - to
+    ask "would the OTHER note still pick this one, on its own terms?".
+    """
+    source_emb = all_embeddings.get(note.id)
     similarities = []
-    for other in other_notes:
+    for other in candidates:
         other_emb = all_embeddings.get(other.id)
         if source_emb is not None and other_emb is not None:
             sim = float(cosine_similarity(source_emb, other_emb))
@@ -51,23 +46,61 @@ def update_relationships_for_note(note):
             qualifies = sim >= KEYWORD_THRESHOLD
         if qualifies:
             similarities.append((other.id, sim))
-    
+
     similarities.sort(key=lambda x: x[1], reverse=True)
-    similarities = similarities[:MAX_RELATED_NOTES]
-    
+    return similarities[:MAX_RELATED_NOTES]
+
+
+def update_relationships_for_note(note):
+    if not note.content.strip():
+        return
+
+    # Never initialize/download the transformer model in a web request. If
+    # embeddings already exist, use them; otherwise the lightweight scorer
+    # still creates useful connections immediately.
+    all_embeddings = get_all_embeddings(note.user_id, generate_if_missing=False)
+    other_notes = Note.query.filter(
+        Note.user_id == note.user_id,
+        Note.id != note.id,
+        Note.is_archived == False,
+    ).all()
+    notes_by_id = {n.id: n for n in other_notes}
+
+    similarities = _top_matches(note, other_notes, all_embeddings)
+
     existing_rels = Relationship.query.filter(
         (Relationship.source_note_id == note.id) | (Relationship.target_note_id == note.id)
     ).all()
-    
+
     existing_pairs = set()
     for rel in existing_rels:
         pair = tuple(sorted([rel.source_note_id, rel.target_note_id]))
         existing_pairs.add(pair)
-    
+
     selected_pairs = {tuple(sorted((note.id, other_id))) for other_id, _ in similarities}
     for rel in existing_rels:
         pair = tuple(sorted((rel.source_note_id, rel.target_note_id)))
-        if pair not in selected_pairs:
+        if pair in selected_pairs:
+            continue
+
+        # This pair isn't in `note`'s own top picks anymore, but a
+        # relationship can exist because the OTHER note ranked THIS one
+        # highly - re-scoring A must not delete an edge that belongs to
+        # B's top-N just because A stopped wanting it. Recompute the other
+        # note's own ranking (its own candidates, on its own terms) before
+        # deleting; only drop the row if neither side wants it.
+        other_id = rel.target_note_id if rel.source_note_id == note.id else rel.source_note_id
+        other_note = notes_by_id.get(other_id)
+        if other_note is None:
+            # Other note archived/gone from this candidate set - nothing
+            # left to keep the edge for.
+            db.session.delete(rel)
+            continue
+
+        other_candidates = [note] + [n for n in other_notes if n.id != other_id]
+        other_top = _top_matches(other_note, other_candidates, all_embeddings)
+        still_wanted_by_other = any(oid == note.id for oid, _ in other_top)
+        if not still_wanted_by_other:
             db.session.delete(rel)
 
     new_pairs = set()

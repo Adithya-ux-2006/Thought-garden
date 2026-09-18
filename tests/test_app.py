@@ -1,6 +1,10 @@
+import math
+import numpy as np
 import pytest
 from app import create_app, db
-from app.models import User, Note, Tag, Relationship
+from app.models import User, Note, Tag, Relationship, NoteEmbedding
+from app.services.embedding_service import clear_embedding_cache, invalidate_embedding_cache
+from app.services.similarity_service import update_relationships_for_note
 
 
 @pytest.fixture
@@ -304,6 +308,101 @@ def test_archiving_note_removes_dangling_garden_edges(client, app):
         assert edge['to'] != note1_id
         assert edge['from'] in visible_ids
         assert edge['to'] in visible_ids
+
+
+def _unit_vector(angle_degrees):
+    rad = math.radians(angle_degrees)
+    return np.array([math.cos(rad), math.sin(rad)], dtype=np.float32)
+
+
+def _set_embedding(note_id, angle_degrees):
+    row = db.session.get(NoteEmbedding, note_id)
+    blob = _unit_vector(angle_degrees).tobytes()
+    if row is None:
+        db.session.add(NoteEmbedding(note_id=note_id, embedding=blob))
+    else:
+        row.embedding = blob
+    db.session.commit()
+    invalidate_embedding_cache(note_id)
+
+
+def test_editing_note_does_not_destroy_other_notes_connections(client, app):
+    with app.app_context():
+        clear_embedding_cache()
+
+        user = User(name='Test', email='edit-connections@test.com')
+        user.set_password('password')
+        db.session.add(user)
+        db.session.commit()
+
+        # A (the note about to be edited) plus B..F (a tight cluster) and
+        # G..I (a second tight cluster). Angles are chosen so the cosine
+        # threshold (0.45, ~63 degrees) cleanly separates "qualifies" from
+        # "doesn't", with no ties - see similarity_service fix commit for
+        # the full geometry writeup.
+        names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+        notes = {}
+        for name in names:
+            note = Note(user_id=user.id, title=f'Note {name}', content=f'Content for note {name}.')
+            db.session.add(note)
+            notes[name] = note
+        db.session.commit()
+
+        # A starts inside the G/H/I cluster (91 degrees) - before the
+        # edit, A's only qualifying matches are G, H, I.
+        _set_embedding(notes['A'].id, 91)
+        for name, angle in [('B', 0), ('C', 2), ('D', 4), ('E', 6), ('F', 8)]:
+            _set_embedding(notes[name].id, angle)
+        for name, angle in [('G', 90), ('H', 92), ('I', 94)]:
+            _set_embedding(notes[name].id, angle)
+
+        # Build the initial graph exactly like the real app would: every
+        # note scores itself against the others once.
+        for name in names:
+            update_relationships_for_note(notes[name])
+
+        def connections_of(name):
+            rels = Relationship.query.filter(
+                (Relationship.source_note_id == notes[name].id) |
+                (Relationship.target_note_id == notes[name].id)
+            ).all()
+            return {
+                (rel.target_note_id if rel.source_note_id == notes[name].id else rel.source_note_id)
+                for rel in rels
+            }
+
+        before = {name: connections_of(name) for name in names}
+
+        # Sanity check the setup actually reproduces the reported bug
+        # scenario before trusting the "nothing lost" assertion below.
+        assert notes['G'].id in before['A']
+        assert notes['H'].id in before['A']
+        assert notes['I'].id in before['A']
+
+        # The edit: move A out of the G/H/I cluster into the B..F cluster
+        # (44 degrees - still within threshold of G/H/I at ~0.64-0.69
+        # similarity, just no longer competitive against B..F at
+        # ~0.72-0.80). A's own top-5 will now pick B..F, crowding out
+        # G/H/I even though G/H/I still qualify and still want A.
+        _set_embedding(notes['A'].id, 44)
+        update_relationships_for_note(notes['A'])
+
+        after = {name: connections_of(name) for name in names}
+
+        # The actual bug fix: G, H and I never touched anything, so their
+        # connection to A must survive even though A itself dropped them
+        # from its own top pick.
+        assert notes['A'].id in after['G']
+        assert notes['A'].id in after['H']
+        assert notes['A'].id in after['I']
+
+        # General property: no note other than the one edited may have
+        # lost a connection it had before, though it may gain new ones.
+        for name in names:
+            if name == 'A':
+                continue
+            lost = before[name] - after[name]
+            assert not lost, f'Note {name} lost connections {lost} it never asked to lose'
 
 
 def test_no_self_relationship(client, app):
