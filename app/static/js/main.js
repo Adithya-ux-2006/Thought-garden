@@ -1,12 +1,67 @@
 let gardenNetwork = null;
 let gardenNodesDataSet = null;
+let gardenEdgesDataSet = null;
 let allNodes = [];
 let allEdges = [];
 let selectedNode = null;
+let gardenLabelsVisible = true;
+
+// Notes in the same category start near a shared anchor point on a ring,
+// then physics (real edges + repulsion) takes over from there. Cheaper and
+// far less fragile than vis-network's clustering API - which would merge
+// nodes into meta-nodes and complicate every other feature below (click
+// handling, neighbourhood highlight, search) - while still producing
+// visible category neighbourhoods for a garden this size.
+const GARDEN_CATEGORY_ORDER = ['AI', 'Cybersecurity', 'Software Engineering', 'Operating Systems', 'Research'];
+const GARDEN_LABEL_ZOOM_THRESHOLD = 0.8;
+const GARDEN_NODE_DIM_OPACITY = 0.12;
+const GARDEN_EDGE_DIM_OPACITY = 0.08;
 
 function themeColor(varName, fallback) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
     return value || fallback;
+}
+
+function hexToRgba(hex, alpha) {
+    const clean = hex.replace('#', '');
+    const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+    const num = parseInt(full, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function seedGardenPositions(nodes) {
+    const present = [...new Set(nodes.map(n => n.category))];
+    const ordered = GARDEN_CATEGORY_ORDER.filter(c => present.includes(c))
+        .concat(present.filter(c => !GARDEN_CATEGORY_ORDER.includes(c)));
+    const angleStep = (2 * Math.PI) / Math.max(1, ordered.length);
+    const ringRadius = 260;
+    const clusterSpread = 90;
+
+    const anchors = {};
+    ordered.forEach((cat, i) => {
+        anchors[cat] = i * angleStep;
+    });
+
+    return nodes.map(n => {
+        const angle = anchors[n.category] !== undefined ? anchors[n.category] : Math.random() * 2 * Math.PI;
+        const cx = ringRadius * Math.cos(angle);
+        const cy = ringRadius * Math.sin(angle);
+        const localAngle = Math.random() * 2 * Math.PI;
+        const localRadius = Math.random() * clusterSpread;
+        return {
+            ...n,
+            x: cx + localRadius * Math.cos(localAngle),
+            y: cy + localRadius * Math.sin(localAngle),
+            // Pinned notes get a star shape and a heavier border so they
+            // read as pinned at a glance, not just via the side panel.
+            shape: n.is_pinned ? 'star' : 'dot',
+            borderWidth: n.is_pinned ? 4 : 2,
+            borderWidthSelected: n.is_pinned ? 5 : 3
+        };
+    });
 }
 
 function initGarden() {
@@ -23,7 +78,11 @@ function initGarden() {
 function renderGraph(nodes, edges) {
     const container = document.getElementById('gardenGraph');
     if (!container) return;
-    
+
+    const edgeBaseColor = themeColor('--border-color', '#ccc');
+    const edgeHighlightColor = themeColor('--primary-color', '#3f6b4f');
+    const edgeHoverColor = themeColor('--text-secondary', '#666');
+
     const options = {
         nodes: {
             shape: 'dot',
@@ -42,9 +101,9 @@ function renderGraph(nodes, edges) {
                 roundness: 0.5
             },
             color: {
-                color: themeColor('--border-color', '#ccc'),
-                highlight: themeColor('--primary-color', '#3f6b4f'),
-                hover: themeColor('--text-secondary', '#666'),
+                color: edgeBaseColor,
+                highlight: edgeHighlightColor,
+                hover: edgeHoverColor,
                 opacity: 0.6
             },
             shadow: false
@@ -74,30 +133,93 @@ function renderGraph(nodes, edges) {
         }
     };
 
-    gardenNodesDataSet = new vis.DataSet(nodes);
+    gardenLabelsVisible = true;
+    gardenNodesDataSet = new vis.DataSet(seedGardenPositions(nodes));
+    gardenEdgesDataSet = new vis.DataSet(edges);
+    // Edges arrive from the server without an id; vis.DataSet assigns one
+    // on insert. Re-read them back out so later per-edge .update() calls
+    // (highlight/dim) have real ids to target.
+    allEdges = gardenEdgesDataSet.get();
+
     const dataset = {
         nodes: gardenNodesDataSet,
-        edges: new vis.DataSet(edges)
+        edges: gardenEdgesDataSet
     };
 
     gardenNetwork = new vis.Network(container, dataset, options);
+
+    gardenNetwork.once('stabilizationIterationsDone', function() {
+        gardenNetwork.setOptions({ physics: { enabled: false } });
+        const toggle = document.getElementById('physicsToggle');
+        if (toggle) toggle.checked = false;
+    });
+
+    gardenNetwork.on('zoom', function() {
+        updateGardenLabelVisibility();
+    });
 
     gardenNetwork.on('click', function(params) {
         if (params.nodes.length > 0) {
             const nodeId = params.nodes[0];
             showNotePanel(nodeId);
+            highlightGardenNeighborhood(nodeId, edgeHighlightColor, edgeBaseColor);
         } else {
             closePanel();
+            clearGardenHighlight(edgeBaseColor);
         }
     });
-    
+
     gardenNetwork.on('hoverNode', function(params) {
         container.style.cursor = 'pointer';
     });
-    
+
     gardenNetwork.on('blurNode', function(params) {
         container.style.cursor = 'default';
     });
+}
+
+function updateGardenLabelVisibility() {
+    if (!gardenNetwork || !gardenNodesDataSet) return;
+    const scale = gardenNetwork.getScale();
+    const shouldShow = scale > GARDEN_LABEL_ZOOM_THRESHOLD;
+    if (shouldShow === gardenLabelsVisible) return;
+    gardenLabelsVisible = shouldShow;
+    gardenNodesDataSet.update(allNodes.map(node => ({
+        id: node.id,
+        font: { size: gardenLabelsVisible ? 12 : 0 }
+    })));
+}
+
+function highlightGardenNeighborhood(nodeId, edgeHighlightColor, edgeBaseColor) {
+    if (!gardenNetwork || !gardenNodesDataSet || !gardenEdgesDataSet) return;
+
+    const connected = new Set(gardenNetwork.getConnectedNodes(nodeId));
+    connected.add(nodeId);
+
+    gardenNodesDataSet.update(allNodes.map(node => ({
+        id: node.id,
+        color: connected.has(node.id) ? node.color : hexToRgba(node.color, GARDEN_NODE_DIM_OPACITY)
+    })));
+
+    gardenEdgesDataSet.update(allEdges.map(edge => {
+        const inFocus = edge.from === nodeId || edge.to === nodeId;
+        return {
+            id: edge.id,
+            color: {
+                color: inFocus ? edgeHighlightColor : hexToRgba(edgeBaseColor, GARDEN_EDGE_DIM_OPACITY),
+                opacity: 1
+            }
+        };
+    }));
+}
+
+function clearGardenHighlight(edgeBaseColor) {
+    if (!gardenNodesDataSet || !gardenEdgesDataSet) return;
+    gardenNodesDataSet.update(allNodes.map(node => ({ id: node.id, color: node.color })));
+    gardenEdgesDataSet.update(allEdges.map(edge => ({
+        id: edge.id,
+        color: { color: edgeBaseColor, opacity: 0.6 }
+    })));
 }
 
 function showNotePanel(nodeId) {
@@ -148,20 +270,36 @@ function closePanel() {
 }
 
 function searchNode() {
-    const query = document.getElementById('searchNode').value.toLowerCase();
+    if (!gardenNetwork) return;
+    const input = document.getElementById('searchNode');
+    const feedback = document.getElementById('searchFeedback');
+    const rawQuery = input.value.trim();
+    const query = rawQuery.toLowerCase();
+
     if (!query) {
         gardenNetwork.selectNodes([]);
+        if (feedback) feedback.textContent = '';
         return;
     }
-    
-    const matchingNodes = allNodes.filter(node => 
-        node.label.toLowerCase().includes(query) || 
+
+    const matchingNodes = allNodes.filter(node =>
+        node.label.toLowerCase().includes(query) ||
         node.title.toLowerCase().includes(query)
     );
-    
-    if (matchingNodes.length > 0) {
-        gardenNetwork.selectNodes([matchingNodes[0].id]);
-        gardenNetwork.focus(matchingNodes[0].id, {scale: 1.5, animation: true});
+
+    if (matchingNodes.length === 0) {
+        gardenNetwork.selectNodes([]);
+        if (feedback) feedback.textContent = `No notes match "${rawQuery}".`;
+        return;
+    }
+
+    const matchIds = matchingNodes.map(n => n.id);
+    gardenNetwork.selectNodes(matchIds);
+    gardenNetwork.fit({ nodes: matchIds, animation: true });
+    if (feedback) {
+        feedback.textContent = matchIds.length === 1
+            ? '1 match found.'
+            : `${matchIds.length} matches found.`;
     }
 }
 

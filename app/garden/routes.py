@@ -71,12 +71,17 @@ def data():
             'to': rel.target_note_id,
             'value': rel.similarity_score * 5,
             'title': f'{rel.relationship_type}: {rel.similarity_score:.0%}',
-            'color': {'color': '#999', 'highlight': '#666', 'hover': '#333'},
+            # No per-edge colour here on purpose: vis-network lets any
+            # per-item colour override the global edges.color option
+            # entirely, which was silently defeating the theme-aware
+            # colour main.js computes from CSS variables - edges stayed
+            # flat grey and wrong in dark mode no matter what the theme
+            # said. Leaving colour unset lets the themed global win.
             'width': 1 + rel.similarity_score * 3,
             'similarity': rel.similarity_score,
             'type': rel.relationship_type
         })
-    
+
     return jsonify({'nodes': nodes, 'edges': edges})
 
 
@@ -175,7 +180,8 @@ def focus_data(note_id):
                 'to': rel.target_note_id,
                 'value': rel.similarity_score * 5,
                 'title': f'{rel.relationship_type}: {rel.similarity_score:.0%}',
-                'color': {'color': '#999', 'highlight': '#666', 'hover': '#333'},
+                # Same reasoning as /garden/data: no per-edge colour, so
+                # the themed global edges.color option actually applies.
                 'width': 1 + rel.similarity_score * 3,
                 'similarity': rel.similarity_score,
                 'type': rel.relationship_type
@@ -216,15 +222,19 @@ def note_detail(note_id):
 
 
 def get_category_color(category):
+    # Pulled from the earthy design system's semantic tokens
+    # (app/static/css/style.css) rather than the old Tailwind defaults,
+    # using each token's dark-theme value: those are the brighter,
+    # pastel-saturated variants, so a single hex sent from the server
+    # reads clearly on both the near-black dark canvas and the cream
+    # light one, instead of washing out against whichever theme it
+    # wasn't tuned for.
     colors = {
-        'AI': '#6366f1',
-        'Artificial Intelligence': '#6366f1',
-        'Cybersecurity': '#ef4444',
-        'Software Engineering': '#10b981',
-        'Operating Systems': '#f59e0b',
-        'Research': '#8b5cf6',
-        'Ideas': '#ec4899',
-        'Study': '#06b6d4',
-        'Study Material': '#06b6d4',
+        'AI': '#7fb894',                    # --primary-color (moss)
+        'Artificial Intelligence': '#7fb894',
+        'Cybersecurity': '#e08a72',          # --danger-color (coral)
+        'Software Engineering': '#6fc98b',   # --success-color (green)
+        'Operating Systems': '#e0b262',      # --warning-color (amber)
+        'Research': '#7fcfe0',               # --info-color (sky)
     }
-    return colors.get(category, '#64748b')
+    return colors.get(category, '#d99a68')  # --accent-color (terracotta) fallback

@@ -31,7 +31,9 @@
                         </button>
                     </div>
                 </div>
-                <div class="d-flex gap-3 mt-2">
+                <div id="searchFeedback" class="small text-muted mt-1"></div>
+                <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
+                    <span class="text-muted small text-uppercase" style="letter-spacing: 0.04em;">Legend &middot; filter</span>
                     <div class="form-check">
                         <input class="form-check-input garden-category-filter" type="checkbox" id="filterPhysics" value="AI">
                         <label class="form-check-label small" for="filterPhysics">
@@ -62,6 +64,7 @@
                             <span class="badge bg-info">Research</span>
                         </label>
                     </div>
+                    <span class="text-muted small ms-auto"><i class="bi bi-star-fill" style="color: var(--warning-color);"></i> Pinned</span>
                 </div>
             </div>
             <div id="gardenGraph" class="garden-graph"></div>
