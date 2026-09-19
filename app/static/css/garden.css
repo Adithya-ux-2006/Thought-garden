@@ -1,0 +1,189 @@
+/* ============================================================
+   Knowledge Garden page — scoped styling.
+   Builds entirely on the app's existing earthy design tokens
+   (style.css: --primary-color, --accent-color, --bg-*, --shadow-*,
+   --radius-*) rather than inventing a parallel palette, so this
+   page always matches whatever the rest of the app looks like.
+   ============================================================ */
+
+.garden-container {
+    height: calc(100vh - 56px);
+    overflow: hidden;
+}
+
+.garden-container > .row,
+.garden-container .col-lg-9,
+.garden-container .col-lg-3 {
+    height: 100%;
+}
+
+.garden-container .col-lg-9 {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- ground the graph sits on ---------- */
+
+.garden-graph {
+    position: relative;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    background:
+        repeating-radial-gradient(circle at 40% 36%, rgba(35, 40, 31, 0.045) 0px, rgba(35, 40, 31, 0.045) 1px, transparent 1px, transparent 26px),
+        radial-gradient(ellipse 80% 65% at 50% 34%, var(--bg-card), var(--bg-secondary) 78%);
+}
+
+[data-bs-theme="dark"] .garden-graph {
+    background:
+        repeating-radial-gradient(circle at 40% 36%, rgba(234, 230, 217, 0.05) 0px, rgba(234, 230, 217, 0.05) 1px, transparent 1px, transparent 26px),
+        radial-gradient(ellipse 80% 65% at 50% 34%, var(--bg-card), var(--bg-secondary) 78%);
+}
+
+/* ---------- header ---------- */
+
+.garden-header {
+    position: relative;
+    z-index: 2;
+    background: var(--bg-card);
+    border-bottom: 2px solid var(--primary-color) !important;
+    box-shadow: var(--shadow-sm);
+}
+
+.garden-header .page-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.garden-header h4 {
+    font-family: 'Fraunces', 'Georgia', serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin-top: 0.15rem;
+}
+
+.garden-header .btn-outline-secondary {
+    border-radius: 999px;
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.garden-header .btn-outline-secondary:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.garden-header .input-group .form-control {
+    border-radius: 999px 0 0 999px;
+}
+
+.garden-header .input-group .btn {
+    border-radius: 0 999px 999px 0;
+}
+
+/* ---------- legend / category filter bar ---------- */
+
+.garden-legend-bar {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    width: fit-content;
+}
+
+.garden-legend-bar .form-check {
+    margin-bottom: 0;
+}
+
+.garden-legend-bar .badge {
+    border-radius: 999px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.garden-category-filter:checked ~ .form-check-label .badge {
+    transform: scale(1.08);
+}
+
+.garden-category-filter:checked ~ .form-check-label .badge.bg-primary { box-shadow: 0 0 0 2px rgba(63, 107, 79, 0.4); }
+.garden-category-filter:checked ~ .form-check-label .badge.bg-danger  { box-shadow: 0 0 0 2px rgba(179, 74, 52, 0.4); }
+.garden-category-filter:checked ~ .form-check-label .badge.bg-success{ box-shadow: 0 0 0 2px rgba(63, 135, 82, 0.4); }
+.garden-category-filter:checked ~ .form-check-label .badge.bg-warning{ box-shadow: 0 0 0 2px rgba(184, 134, 58, 0.4); }
+.garden-category-filter:checked ~ .form-check-label .badge.bg-info   { box-shadow: 0 0 0 2px rgba(63, 127, 145, 0.4); }
+
+[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-primary { box-shadow: 0 0 0 2px rgba(127, 184, 148, 0.45); }
+[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-danger  { box-shadow: 0 0 0 2px rgba(224, 138, 114, 0.45); }
+[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-success{ box-shadow: 0 0 0 2px rgba(111, 201, 139, 0.45); }
+[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-warning{ box-shadow: 0 0 0 2px rgba(224, 178, 98, 0.45); }
+[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-info   { box-shadow: 0 0 0 2px rgba(127, 207, 224, 0.45); }
+
+/* ---------- note panel ---------- */
+
+.note-panel {
+    background: var(--bg-card);
+    border-left: 1px solid var(--border-color);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.panel-placeholder, .panel-content {
+    height: 100%;
+}
+
+.note-panel #panelTitle {
+    font-family: 'Fraunces', 'Georgia', serif;
+    font-weight: 600;
+}
+
+#panelConnections .connection-item {
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    border-left: 3px solid var(--primary-color);
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+#panelConnections .connection-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    background: var(--bg-card);
+}
+
+.note-panel .panel-footer .btn-primary {
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 768px) {
+    .garden-container {
+        height: auto;
+        overflow: visible;
+    }
+
+    .garden-container > .row,
+    .garden-container .col-lg-9,
+    .garden-container .col-lg-3 {
+        height: auto;
+    }
+
+    .garden-graph {
+        flex: none;
+        height: 60vh;
+        min-height: 400px;
+    }
+
+    .note-panel {
+        height: auto;
+        min-height: 300px;
+    }
+}

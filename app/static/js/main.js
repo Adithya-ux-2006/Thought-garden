@@ -1,4 +1,5 @@
 let gardenNetwork = null;
+let focusNetwork = null;
 let gardenNodesDataSet = null;
 let gardenEdgesDataSet = null;
 let allNodes = [];
@@ -20,6 +21,23 @@ const GARDEN_EDGE_DIM_OPACITY = 0.08;
 function themeColor(varName, fallback) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
     return value || fallback;
+}
+
+// themeColor() itself is theme-aware, but it's only ever read once, when a
+// graph is first constructed. Toggling dark mode afterward doesn't touch an
+// already-drawn vis-network instance, so labels drawn in one theme stay that
+// color after switching - this recomputes the font (color + a halo stroke,
+// since flat text over graph lines/edges needs the contrast either way) and
+// is called both at initial render and again from the toggle handler.
+function gardenLabelFont() {
+    const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    return {
+        size: 12,
+        face: 'Inter, sans-serif',
+        color: themeColor('--text-primary', dark ? '#e8e4dc' : '#23281f'),
+        strokeWidth: 4,
+        strokeColor: dark ? 'rgba(12, 12, 15, 0.85)' : 'rgba(255, 255, 255, 0.92)'
+    };
 }
 
 function hexToRgba(hex, alpha) {
@@ -87,13 +105,9 @@ function renderGraph(nodes, edges) {
         nodes: {
             shape: 'dot',
             size: 20,
-            font: {
-                size: 12,
-                color: themeColor('--text-primary', '#23281f'),
-                face: 'Inter, sans-serif'
-            },
+            font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: true
+            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 }
         },
         edges: {
             smooth: {
@@ -359,13 +373,9 @@ function renderFocusGraph(container, nodes, edges) {
     const options = {
         nodes: {
             shape: 'dot',
-            font: {
-                size: 12,
-                color: themeColor('--text-primary', '#23281f'),
-                face: 'Inter, sans-serif'
-            },
+            font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: true
+            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 }
         },
         edges: {
             smooth: {
@@ -403,8 +413,8 @@ function renderFocusGraph(container, nodes, edges) {
         nodes: new vis.DataSet(nodes),
         edges: new vis.DataSet(edges)
     };
-    
-    new vis.Network(container, dataset, options);
+
+    focusNetwork = new vis.Network(container, dataset, options);
 }
 
 function initSearchAutocomplete() {
@@ -493,6 +503,8 @@ function initDarkMode() {
             html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
             localStorage.setItem('darkMode', !isDark);
             if (icon) icon.className = isDark ? 'bi bi-moon' : 'bi bi-sun';
+            if (gardenNetwork) gardenNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
+            if (focusNetwork) focusNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
         });
     }
 }

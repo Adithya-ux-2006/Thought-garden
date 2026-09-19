@@ -2,11 +2,15 @@
 
 {% block title %}Knowledge Garden - Thought Garden{% endblock %}
 
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/garden.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid garden-container">
     <div class="row g-0">
         <div class="col-lg-9">
-            <div class="garden-header p-3 border-bottom">
+            <div class="garden-header p-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <span class="page-eyebrow"><i class="bi bi-diagram-3"></i>Explore</span>
@@ -32,7 +36,7 @@
                     </div>
                 </div>
                 <div id="searchFeedback" class="small text-muted mt-1"></div>
-                <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
+                <div class="garden-legend-bar d-flex align-items-center gap-3 mt-2 flex-wrap">
                     <span class="text-muted small text-uppercase" style="letter-spacing: 0.04em;">Legend &middot; filter</span>
                     <div class="form-check">
                         <input class="form-check-input garden-category-filter" type="checkbox" id="filterPhysics" value="AI">
@@ -115,60 +119,5 @@
         </div>
     </div>
 </div>
-
-<style>
-.garden-container {
-    height: calc(100vh - 56px);
-    overflow: hidden;
-}
-.garden-container > .row,
-.garden-container .col-lg-9,
-.garden-container .col-lg-3 {
-    height: 100%;
-}
-.garden-container .col-lg-9 {
-    display: flex;
-    flex-direction: column;
-}
-.garden-graph {
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-}
-.note-panel {
-    background: var(--bg-card, #fff);
-    border-left: 1px solid var(--border-color, #dee2e6);
-    height: 100%;
-    overflow-y: auto;
-}
-.panel-placeholder, .panel-content {
-    height: 100%;
-}
-#panelConnections .connection-item {
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    background: var(--bg-secondary, #f8f9fa);
-    margin-bottom: 0.5rem;
-}
-#panelConnections .connection-item:hover {
-    background: var(--border-color, #e9ecef);
-}
-@media (max-width: 768px) {
-    .garden-container {
-        height: auto;
-        overflow: visible;
-    }
-    .garden-container > .row,
-    .garden-container .col-lg-9,
-    .garden-container .col-lg-3 {
-        height: auto;
-    }
-    .garden-graph {
-        flex: none;
-        height: 60vh;
-        min-height: 400px;
-    }
-}
-</style>
 
 {% endblock %}
