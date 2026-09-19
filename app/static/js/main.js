@@ -34,7 +34,7 @@ function gardenLabelFont() {
     return {
         size: 12,
         face: 'Inter, sans-serif',
-        color: themeColor('--text-primary', dark ? '#e8e4dc' : '#23281f'),
+        color: themeColor('--text-primary', dark ? '#ece7dc' : '#26332e'),
         strokeWidth: 4,
         strokeColor: dark ? 'rgba(12, 12, 15, 0.85)' : 'rgba(255, 255, 255, 0.92)'
     };
@@ -97,9 +97,9 @@ function renderGraph(nodes, edges) {
     const container = document.getElementById('gardenGraph');
     if (!container) return;
 
-    const edgeBaseColor = themeColor('--border-color', '#ccc');
-    const edgeHighlightColor = themeColor('--primary-color', '#3f6b4f');
-    const edgeHoverColor = themeColor('--text-secondary', '#666');
+    const edgeBaseColor = themeColor('--border-color', '#ded9ca');
+    const edgeHighlightColor = themeColor('--primary-color', '#193c32');
+    const edgeHoverColor = themeColor('--text-secondary', '#646c67');
 
     const options = {
         nodes: {
@@ -212,7 +212,13 @@ function highlightGardenNeighborhood(nodeId, edgeHighlightColor, edgeBaseColor) 
 
     gardenNodesDataSet.update(allNodes.map(node => ({
         id: node.id,
-        color: connected.has(node.id) ? node.color : hexToRgba(node.color, GARDEN_NODE_DIM_OPACITY)
+        // node.color is {background, border} (see get_category_color()) -
+        // dim both channels so a de-emphasized node's ring fades too, not
+        // just its fill.
+        color: connected.has(node.id) ? node.color : {
+            background: hexToRgba(node.color.background, GARDEN_NODE_DIM_OPACITY),
+            border: hexToRgba(node.color.border, GARDEN_NODE_DIM_OPACITY)
+        }
     })));
 
     gardenEdgesDataSet.update(allEdges.map(edge => {
@@ -383,9 +389,9 @@ function renderFocusGraph(container, nodes, edges) {
                 roundness: 0.5
             },
             color: {
-                color: themeColor('--border-color', '#ccc'),
-                highlight: themeColor('--primary-color', '#3f6b4f'),
-                hover: themeColor('--text-secondary', '#666')
+                color: themeColor('--border-color', '#ded9ca'),
+                highlight: themeColor('--primary-color', '#193c32'),
+                hover: themeColor('--text-secondary', '#646c67')
             }
         },
         physics: {

@@ -111,17 +111,23 @@
     transform: scale(1.08);
 }
 
-.garden-category-filter:checked ~ .form-check-label .badge.bg-primary { box-shadow: 0 0 0 2px rgba(63, 107, 79, 0.4); }
-.garden-category-filter:checked ~ .form-check-label .badge.bg-danger  { box-shadow: 0 0 0 2px rgba(179, 74, 52, 0.4); }
-.garden-category-filter:checked ~ .form-check-label .badge.bg-success{ box-shadow: 0 0 0 2px rgba(63, 135, 82, 0.4); }
-.garden-category-filter:checked ~ .form-check-label .badge.bg-warning{ box-shadow: 0 0 0 2px rgba(184, 134, 58, 0.4); }
-.garden-category-filter:checked ~ .form-check-label .badge.bg-info   { box-shadow: 0 0 0 2px rgba(63, 127, 145, 0.4); }
+/* Category badges - deliberately their own classes, not Bootstrap's
+   bg-primary/danger/success/warning/info: those utility colors are the
+   app's real semantic tokens (alerts, validation, destructive actions)
+   and a note's category has nothing to do with any of that. Colors come
+   entirely from the --category-* tokens in style.css, so light/dark
+   variants (and any future retune) live in exactly one place. */
+.badge-category-ai       { background-color: var(--category-ai-soft-bg) !important; color: var(--category-ai-soft-text) !important; }
+.badge-category-cyber    { background-color: var(--category-cyber-soft-bg) !important; color: var(--category-cyber-soft-text) !important; }
+.badge-category-se       { background-color: var(--category-se-soft-bg) !important; color: var(--category-se-soft-text) !important; }
+.badge-category-os       { background-color: var(--category-os-soft-bg) !important; color: var(--category-os-soft-text) !important; }
+.badge-category-research { background-color: var(--category-research-soft-bg) !important; color: var(--category-research-soft-text) !important; }
 
-[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-primary { box-shadow: 0 0 0 2px rgba(127, 184, 148, 0.45); }
-[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-danger  { box-shadow: 0 0 0 2px rgba(224, 138, 114, 0.45); }
-[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-success{ box-shadow: 0 0 0 2px rgba(111, 201, 139, 0.45); }
-[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-warning{ box-shadow: 0 0 0 2px rgba(224, 178, 98, 0.45); }
-[data-bs-theme="dark"] .garden-category-filter:checked ~ .form-check-label .badge.bg-info   { box-shadow: 0 0 0 2px rgba(127, 207, 224, 0.45); }
+.garden-category-filter:checked ~ .form-check-label .badge-category-ai       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-ai) 45%, transparent); }
+.garden-category-filter:checked ~ .form-check-label .badge-category-cyber    { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-cyber) 45%, transparent); }
+.garden-category-filter:checked ~ .form-check-label .badge-category-se      { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-se) 45%, transparent); }
+.garden-category-filter:checked ~ .form-check-label .badge-category-os      { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-os) 45%, transparent); }
+.garden-category-filter:checked ~ .form-check-label .badge-category-research{ box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-research) 45%, transparent); }
 
 /* ---------- note panel ---------- */
 

@@ -26,24 +26,25 @@
     --space-8: 3rem;
 
     /* surfaces + text — light mode */
-    --bg-primary: #faf8f2;
-    --bg-secondary: #f1ede2;
-    --bg-card: #fffdf9;
-    --bg-subtle: #ece6d7;
-    --text-primary: #23281f;
-    --text-secondary: #565c4d;
-    --text-muted: #8b8f7d;
-    --border-color: #e1dac6;
+    --bg-primary: #f9f6f0;
+    --bg-secondary: #f7f4ec;
+    --bg-card: #fbfaf6;
+    --bg-subtle: #eeebe3;
+    --text-primary: #26332e;
+    --text-secondary: #646c67;
+    --text-muted: #79807a;
+    --border-color: #ded9ca;
 
     /* brand */
-    --primary-color: #3f6b4f;
-    --primary-hover: #2f5a40;
-    --primary-rgb: 63, 107, 79;
+    --primary-color: #193c32;
+    --primary-hover: #425f56;
+    --primary-rgb: 25, 60, 50;
     --accent-color: #bb6b3a;
     --accent-hover: #a25a2e;
     --accent-rgb: 187, 107, 58;
 
-    /* semantic */
+    /* semantic (real UI meaning - alerts, validation, destructive actions;
+       deliberately independent of the garden's category palette below) */
     --success-color: #3f8752;
     --success-rgb: 63, 135, 82;
     --warning-color: #b8863a;
@@ -54,9 +55,46 @@
     --info-rgb: 63, 127, 145;
     --secondary-rgb: 107, 106, 94;
 
+    /* Knowledge Garden category palette - used for the category filter
+       chips/badges (garden.css) and independent from the semantic tokens
+       above on purpose: a note's category and "this is a destructive
+       action" have no relationship, and coupling them (as the previous
+       scheme did, reusing bg-danger/success/warning/info for categories)
+       meant a category color would silently drift if someone re-themed
+       alerts. Graph node fill/border colors are separate again - those
+       are served by app/garden/routes.py:get_category_color() since
+       Python can't read CSS custom properties, and are tuned to work
+       across both themes in one fixed value (see that function's comment).
+       -soft-bg/-soft-text pairs follow the same tinted-badge pattern as
+       the semantic colors above (verified >=4.5:1 contrast). */
+    --category-ai: #a99bea;
+    --category-ai-border: #5c5580;
+    --category-ai-soft-bg: #f1eef4;
+    --category-ai-soft-text: #544d75;
+
+    --category-cyber: #e58b78;
+    --category-cyber-border: #7d4c42;
+    --category-cyber-soft-bg: #f8ece6;
+    --category-cyber-soft-text: #72453c;
+
+    --category-se: #6faf8f;
+    --category-se-border: #3d604e;
+    --category-se-soft-bg: #eaf1e9;
+    --category-se-soft-text: #375747;
+
+    --category-os: #d9a441;
+    --category-os-border: #775a23;
+    --category-os-soft-bg: #f6efe0;
+    --category-os-soft-text: #6c5220;
+
+    --category-research: #6f9db5;
+    --category-research-border: #3d5663;
+    --category-research-soft-bg: #eaeeee;
+    --category-research-soft-text: #374e5a;
+
     /* soft (tinted) variants for badges / alerts */
-    --primary-soft-bg: #e4efe6;
-    --primary-soft-text: #2f5a40;
+    --primary-soft-bg: #e4e7e2;
+    --primary-soft-text: #193c32;
     --accent-soft-bg: #f6e6d8;
     --accent-soft-text: #8a4a26;
     --success-soft-bg: #e2f2e6;
@@ -81,18 +119,18 @@
 }
 
 [data-bs-theme="dark"] {
-    --bg-primary: #14170f;
-    --bg-secondary: #191d13;
-    --bg-card: #1e2318;
-    --bg-subtle: #232a1a;
-    --text-primary: #eae6d9;
-    --text-secondary: #b7bca7;
-    --text-muted: #7d8570;
-    --border-color: #2d3423;
+    --bg-primary: #121815;
+    --bg-secondary: #171d1a;
+    --bg-card: #1d2420;
+    --bg-subtle: #222a25;
+    --text-primary: #ece7dc;
+    --text-secondary: #acaaa1;
+    --text-muted: #85867e;
+    --border-color: #313b34;
 
-    --primary-color: #7fb894;
-    --primary-hover: #96c9a8;
-    --primary-rgb: 127, 184, 148;
+    --primary-color: #5eae8c;
+    --primary-hover: #7abca0;
+    --primary-rgb: 94, 174, 140;
     --accent-color: #d99a68;
     --accent-hover: #e3ac7c;
     --accent-rgb: 217, 154, 104;
@@ -107,8 +145,37 @@
     --info-rgb: 127, 207, 224;
     --secondary-rgb: 183, 188, 167;
 
-    --primary-soft-bg: #24352a;
-    --primary-soft-text: #8fcaa2;
+    /* Category palette shifted for dark-background legibility - the raw
+       hues already clear >=5.8:1 against --bg-secondary here (verified),
+       so unlike light mode these don't need a separately darkened border
+       to read as distinct UI: the fill itself carries it. */
+    --category-ai: #b3a7ec;
+    --category-ai-border: #b3a7ec;
+    --category-ai-soft-bg: #363944;
+    --category-ai-soft-text: #b3a7ec;
+
+    --category-cyber: #e89888;
+    --category-cyber-border: #e89888;
+    --category-cyber-soft-bg: #41362f;
+    --category-cyber-soft-text: #e89888;
+
+    --category-se: #80b89c;
+    --category-se-border: #80b89c;
+    --category-se-soft-bg: #2b3d33;
+    --category-se-soft-text: #80b89c;
+
+    --category-os: #ddae57;
+    --category-os-border: #ddae57;
+    --category-os-soft-bg: #3e3b25;
+    --category-os-soft-text: #ddae57;
+
+    --category-research: #80a8bd;
+    --category-research-border: #80a8bd;
+    --category-research-soft-bg: #2b393a;
+    --category-research-soft-text: #80a8bd;
+
+    --primary-soft-bg: #283c33;
+    --primary-soft-text: #6ab495;
     --accent-soft-bg: #3a2a1e;
     --accent-soft-text: #e3ac7c;
     --success-soft-bg: #223428;
@@ -328,13 +395,13 @@ small, .small {
    ========================================================================== */
 
 .navbar {
-    background: linear-gradient(135deg, #2d4a37 0%, #23392b 100%) !important;
+    background: linear-gradient(135deg, #304f46 0%, #15332a 100%) !important;
     padding-top: 0.65rem;
     padding-bottom: 0.65rem;
 }
 
 [data-bs-theme="dark"] .navbar {
-    background: linear-gradient(135deg, #10160d 0%, #0b0f08 100%) !important;
+    background: linear-gradient(135deg, #1a201c 0%, #0d120f 100%) !important;
     border-bottom: 1px solid var(--border-color);
 }
 

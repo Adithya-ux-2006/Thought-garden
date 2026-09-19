@@ -222,19 +222,21 @@ def note_detail(note_id):
 
 
 def get_category_color(category):
-    # Pulled from the earthy design system's semantic tokens
-    # (app/static/css/style.css) rather than the old Tailwind defaults,
-    # using each token's dark-theme value: those are the brighter,
-    # pastel-saturated variants, so a single hex sent from the server
-    # reads clearly on both the near-black dark canvas and the cream
-    # light one, instead of washing out against whichever theme it
-    # wasn't tuned for.
+    # Flask has no idea which theme the browser is in (that's a client-side
+    # toggle, never sent up), so each category gets one {background, border}
+    # pair that has to hold up on both a cream canvas and a near-black one.
+    # The pastel background alone reads fine on dark but falls short of a
+    # 3:1 contrast ratio against the light theme's cream ground (verified);
+    # the darker border makes the node's boundary clearly visible there
+    # regardless, and matters less on dark where the fill already carries
+    # it. Values match --category-* in app/static/css/style.css (light-mode
+    # numbers) - CSS can't be read from here, so they're mirrored by hand.
     colors = {
-        'AI': '#7fb894',                    # --primary-color (moss)
-        'Artificial Intelligence': '#7fb894',
-        'Cybersecurity': '#e08a72',          # --danger-color (coral)
-        'Software Engineering': '#6fc98b',   # --success-color (green)
-        'Operating Systems': '#e0b262',      # --warning-color (amber)
-        'Research': '#7fcfe0',               # --info-color (sky)
+        'AI': {'background': '#a99bea', 'border': '#5c5580'},
+        'Artificial Intelligence': {'background': '#a99bea', 'border': '#5c5580'},
+        'Cybersecurity': {'background': '#e58b78', 'border': '#7d4c42'},
+        'Software Engineering': {'background': '#6faf8f', 'border': '#3d604e'},
+        'Operating Systems': {'background': '#d9a441', 'border': '#775a23'},
+        'Research': {'background': '#6f9db5', 'border': '#3d5663'},
     }
-    return colors.get(category, '#d99a68')  # --accent-color (terracotta) fallback
+    return colors.get(category, {'background': '#d99a68', 'border': '#775439'})
