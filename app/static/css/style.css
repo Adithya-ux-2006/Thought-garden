@@ -92,6 +92,14 @@
     --category-research-soft-bg: #eaeeee;
     --category-research-soft-text: #374e5a;
 
+    /* Pinned-note ring color - single value for both themes, same reasoning
+       as the category tokens (get_category_color() in app/garden/routes.py):
+       Flask can't know which theme the browser is in, so the server-set
+       ring color is one fixed hex. Defined once here, in :root, not
+       repeated per theme, and mirrored by hand in PINNED_BORDER_COLOR since
+       Python can't read a CSS custom property. */
+    --pinned-color: #a57834;
+
     /* soft (tinted) variants for badges / alerts */
     --primary-soft-bg: #e4e7e2;
     --primary-soft-text: #193c32;
@@ -654,6 +662,24 @@ small, .small {
 
 .btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible {
     outline: none;
+}
+
+/* Bootstrap's own .btn:focus-visible rule (vendored bootstrap.min.css)
+   composes its box-shadow from --bs-btn-focus-shadow-rgb, which every
+   .btn-* variant re-hardcodes to Bootstrap's own stock color at its own
+   specificity (e.g. .btn-primary sets it to 49,132,253) - the
+   --bs-primary-rgb remap at the top of this file never reaches that
+   nested variable. This matches Bootstrap's exact selector instead and
+   sets the real box-shadow directly, overriding it outright.
+   Note for whoever verifies this next: .btn also has `transition: all
+   0.18s ease`, which includes box-shadow. Reading getComputedStyle()
+   synchronously right after a Tab keypress (or right after setting the
+   style at all) catches the transition mid-flight and reports something
+   close to the old value - looks exactly like the rule "isn't applying"
+   even when it is. Wait for the transition to finish (~400ms) before
+   asserting on the computed box-shadow. */
+.btn:focus-visible {
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.5);
 }
 
 /* ==========================================================================

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="treeTrunk" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a9805a"/>
+      <stop offset="100%" stop-color="#8b6f4e"/>
+    </linearGradient>
+    <radialGradient id="treeCanopy" cx="35%" cy="25%" r="80%">
+      <stop offset="0%" stop-color="#a3bb8e"/>
+      <stop offset="100%" stop-color="#6b8a5c"/>
+    </radialGradient>
+    <clipPath id="treeClip">
+      <circle cx="30" cy="23" r="18"/>
+    </clipPath>
+    <clipPath id="treeRimClip">
+      <rect x="30" y="23" width="20" height="20"/>
+    </clipPath>
+  </defs>
+  <ellipse cx="32" cy="58" rx="20" ry="4.5" fill="#000000" opacity="0.2"/>
+  <rect x="27" y="40" width="10" height="18" rx="4" fill="url(#treeTrunk)"/>
+  <circle cx="45" cy="33" r="11" fill="url(#treeCanopy)"/>
+  <circle cx="30" cy="23" r="18" fill="url(#treeCanopy)"/>
+  <g clip-path="url(#treeClip)">
+    <ellipse cx="34" cy="34" rx="15" ry="10" fill="#3f5334" opacity="0.3"/>
+    <ellipse cx="22" cy="14" rx="6.5" ry="7.5" fill="#ffffff" opacity="0.32"/>
+  </g>
+  <g clip-path="url(#treeRimClip)">
+    <circle cx="30" cy="23" r="18" fill="none" stroke="#3f5334" stroke-width="1.5" opacity="0.4"/>
+  </g>
+</svg>

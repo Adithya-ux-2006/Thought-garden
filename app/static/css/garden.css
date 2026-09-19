@@ -22,6 +22,16 @@
     flex-direction: column;
 }
 
+/* focus.html has no row/col-lg-9 split (single column: header + graph),
+   so it needs the flex-column behavior applied directly to the container
+   itself instead of a descendant - everything else about sizing the graph
+   (.garden-graph's flex/height rules below, the responsive breakpoint)
+   is already unscoped and applies to both layouts as-is. */
+.garden-container-single {
+    display: flex;
+    flex-direction: column;
+}
+
 /* ---------- ground the graph sits on ---------- */
 
 .garden-graph {
@@ -136,6 +146,14 @@
     margin-left: var(--space-2);
     padding-left: var(--space-3);
     border-left: 1px solid var(--border-color);
+}
+
+/* Same --pinned-color the ring itself renders (routes.py's
+   PINNED_BORDER_COLOR mirrors this token by hand) - was hardcoded to
+   --warning-color before, a close-but-different gold that didn't actually
+   match what a pinned node looks like. */
+.garden-pinned-indicator .bi-star-fill {
+    color: var(--pinned-color);
 }
 
 .garden-toolbar-controls {

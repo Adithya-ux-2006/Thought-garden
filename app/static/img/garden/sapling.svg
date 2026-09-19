@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="saplingTrunk" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a9805a"/>
+      <stop offset="100%" stop-color="#8b6f4e"/>
+    </linearGradient>
+    <radialGradient id="saplingCanopy" cx="35%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#99b587"/>
+      <stop offset="100%" stop-color="#7d9a6d"/>
+    </radialGradient>
+    <clipPath id="saplingClip">
+      <circle cx="32" cy="28" r="15"/>
+    </clipPath>
+    <clipPath id="saplingRimClip">
+      <rect x="32" y="28" width="17" height="17"/>
+    </clipPath>
+  </defs>
+  <ellipse cx="32" cy="56" rx="17" ry="4" fill="#000000" opacity="0.2"/>
+  <rect x="29" y="38" width="6" height="18" rx="3" fill="url(#saplingTrunk)"/>
+  <circle cx="32" cy="28" r="15" fill="url(#saplingCanopy)"/>
+  <g clip-path="url(#saplingClip)">
+    <ellipse cx="35" cy="38" rx="13" ry="9" fill="#455438" opacity="0.3"/>
+    <ellipse cx="25" cy="19" rx="5.5" ry="6.5" fill="#ffffff" opacity="0.3"/>
+  </g>
+  <g clip-path="url(#saplingRimClip)">
+    <circle cx="32" cy="28" r="15" fill="none" stroke="#455438" stroke-width="1.4" opacity="0.4"/>
+  </g>
+</svg>

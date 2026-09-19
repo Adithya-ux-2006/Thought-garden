@@ -86,11 +86,12 @@ function seedGardenPositions(nodes) {
             ...n,
             x: cx + localRadius * Math.cos(localAngle),
             y: cy + localRadius * Math.sin(localAngle),
-            // Pinned notes get a star shape and a heavier border so they
-            // read as pinned at a glance, not just via the side panel.
-            shape: n.is_pinned ? 'star' : 'dot',
-            borderWidth: n.is_pinned ? 4 : 2,
-            borderWidthSelected: n.is_pinned ? 5 : 3
+            // shape/image/color/borderWidth all come from the server now
+            // (growth-stage icon + category or pinned-gold ring) - only
+            // borderWidthSelected still needs computing client-side, kept
+            // relative to whatever borderWidth the payload set so a pinned
+            // note's already-thicker ring gets thicker still on selection.
+            borderWidthSelected: (n.borderWidth || 2) + 1
         };
     });
 }
@@ -120,7 +121,16 @@ function renderGraph(nodes, edges) {
             size: 20,
             font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 }
+            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 },
+            // Without this, vis-network's default selection style replaces a
+            // clicked node's real color/border (category ring, pinned gold
+            // ring) with a flat blue highlight - wiping the exact visual
+            // distinction those are there to make, on the single most common
+            // interaction with the graph. The app already gives its own
+            // selection feedback (highlightGardenNeighborhood dims everything
+            // not connected), so vis's own highlight is redundant as well as
+            // destructive - disabled outright rather than reimplemented.
+            chosen: false
         },
         edges: {
             smooth: {
@@ -396,7 +406,10 @@ function renderFocusGraph(container, nodes, edges) {
             shape: 'dot',
             font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 }
+            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 },
+            // Same reasoning as renderGraph(): don't let vis-network's default
+            // selection style replace a node's real color/border on click.
+            chosen: false
         },
         edges: {
             smooth: {

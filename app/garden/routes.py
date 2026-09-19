@@ -1,8 +1,24 @@
-from flask import render_template, jsonify, request
+from flask import render_template, jsonify, request, url_for
 from flask_login import login_required, current_user
 from app.garden import bp
 from app.models import Note, Relationship, db
+from app.services.growth_service import compute_growth_stage, growth_icon_filename
 from sqlalchemy import func
+
+# Matches --pinned-color in app/static/css/style.css (also used by the
+# garden legend's pinned swatch, so the two stay in sync) - CSS can't be
+# read from here, so it's mirrored by hand, same as get_category_color().
+# It's a darkened (0.9x) derivative of --warning-color: the raw token was
+# only 2.94:1 against the light theme's cream ground as a ring color, just
+# under the 3:1 bar. Reused rather than inventing a new hex, same reasoning
+# as every category border: the server can't know the client's theme, so
+# this one value has to hold up on both a cream and a near-black canvas
+# (verified 3.58:1 light / 4.35:1 dark).
+PINNED_BORDER_COLOR = '#a57834'
+
+
+def growth_icon_url(stage):
+    return url_for('static', filename=f'img/garden/{growth_icon_filename(stage)}')
 
 
 @bp.route('/')
@@ -53,13 +69,24 @@ def data():
     for note in notes:
         color = get_category_color(note.category)
         rel_count = relationship_counts.get(note.id, 0)
+        stage = compute_growth_stage(note.created_at, rel_count)
+        # Pinned notes used to get a star shape instead of a dot. Now every
+        # node is the same circularImage shape (the growth-stage icon), so
+        # "pinned" has to read through the ring instead: thicker border,
+        # gold instead of the category color, in place of the category's
+        # in that one slot only - the fill stays category-colored either way.
+        border = PINNED_BORDER_COLOR if note.is_pinned else color['border']
         nodes.append({
             'id': note.id,
             'label': note.title[:30] + ('...' if len(note.title) > 30 else ''),
             'title': note.title,
             'category': note.category or 'Uncategorized',
-            'color': color,
+            'shape': 'circularImage',
+            'image': growth_icon_url(stage),
+            'color': {'background': color['background'], 'border': border},
+            'borderWidth': 5 if note.is_pinned else 2,
             'size': 20 + min(rel_count * 3, 30),
+            'stage': stage,
             'is_pinned': note.is_pinned,
             'created_at': note.created_at.isoformat() if note.created_at else None
         })
@@ -116,6 +143,11 @@ def focus_data(note_id):
     edges = []
     seen_pairs = set()
     frontier_notes = {note.id: note}
+    # Growth stage needs each note's total connection count and created_at,
+    # neither of which survives once to_payload() has turned a Note into a
+    # plain dict - kept alongside node_payloads so the patch pass below has
+    # the actual objects to work with.
+    notes_by_id = {note.id: note}
 
     for level in range(depth):
         frontier_ids = list(frontier_notes.keys())
@@ -168,6 +200,7 @@ def focus_data(note_id):
             new_notes_by_id = {n.id: n for n in new_notes}
             for other_id, n in new_notes_by_id.items():
                 node_payloads[other_id] = to_payload(n, level + 1)
+            notes_by_id.update(new_notes_by_id)
 
         for rel in planned_edges:
             # Only emit an edge once both endpoints actually became nodes -
@@ -188,6 +221,38 @@ def focus_data(note_id):
             })
 
         frontier_notes = new_notes_by_id
+
+    # One aggregate query for the (small, bounded-by-depth) set of notes
+    # that actually ended up in this view, rather than a query per node -
+    # same reasoning as /garden/data's relationship_counts. Growth stage
+    # here uses each note's true total connection count, matching how
+    # /garden/data computes it, not just how many edges happened to survive
+    # this view's depth/similarity/per-node-limit trimming.
+    view_ids = list(node_payloads.keys())
+    connection_counts = dict(
+        db.session.query(
+            Note.id,
+            func.count(Relationship.id)
+        )
+        .outerjoin(
+            Relationship,
+            (Relationship.source_note_id == Note.id) | (Relationship.target_note_id == Note.id)
+        )
+        .filter(Note.id.in_(view_ids))
+        .group_by(Note.id)
+        .all()
+    ) if view_ids else {}
+
+    for nid, payload in node_payloads.items():
+        n = notes_by_id[nid]
+        stage = compute_growth_stage(n.created_at, connection_counts.get(nid, 0))
+        border = PINNED_BORDER_COLOR if n.is_pinned else payload['color']['border']
+        payload['shape'] = 'circularImage'
+        payload['image'] = growth_icon_url(stage)
+        payload['stage'] = stage
+        payload['is_pinned'] = n.is_pinned
+        payload['color'] = {'background': payload['color']['background'], 'border': border}
+        payload['borderWidth'] = 5 if n.is_pinned else 2
 
     return jsonify({'nodes': list(node_payloads.values()), 'edges': edges})
 
