@@ -72,8 +72,15 @@ def semantic_search(user_id, query, category=None, tag=None, source_type=None, p
 
 
 def hybrid_search(user_id, query, category=None, tag=None, source_type=None, page=1, per_page=10):
-    keyword_results = keyword_search(user_id, query, category, tag, source_type, page=1, per_page=50)
-    semantic_results = semantic_search(user_id, query, category, tag, source_type, page=1, per_page=50)
+    # Depth of each sub-search must cover however far the caller is paginating,
+    # or results/total past that depth are silently unreachable/wrong. Cap at
+    # 1000 since this is a personal notes app, not to bound a truly expensive
+    # query - semantic_search's dominant cost (model encode + scoring every
+    # embedding) doesn't scale with per_page, and keyword_search's LIMIT is cheap
+    # at this size.
+    fetch_depth = min(max(page * per_page, 50), 1000)
+    keyword_results = keyword_search(user_id, query, category, tag, source_type, page=1, per_page=fetch_depth)
+    semantic_results = semantic_search(user_id, query, category, tag, source_type, page=1, per_page=fetch_depth)
 
     # Reciprocal Rank Fusion: a standard way to merge two ranked lists
     # without needing their scores to be on the same scale (a keyword
@@ -92,7 +99,7 @@ def hybrid_search(user_id, query, category=None, tag=None, source_type=None, pag
 
     sorted_ids = sorted(combined.keys(), key=lambda x: combined[x], reverse=True)
 
-    notes = Note.query.filter(Note.id.in_(sorted_ids)).all()
+    notes = Note.query.filter(Note.id.in_(sorted_ids), Note.user_id == user_id).all()
     note_dict = {n.id: n for n in notes}
     sorted_notes = [note_dict[nid] for nid in sorted_ids if nid in note_dict]
 
