@@ -10,65 +10,71 @@
 <div class="container-fluid garden-container">
     <div class="row g-0">
         <div class="col-lg-9">
-            <div class="garden-header p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="page-eyebrow"><i class="bi bi-diagram-3"></i>Explore</span>
-                        <h4 class="mb-0">Knowledge Garden</h4>
-                    </div>
-                    <div class="d-flex gap-2 align-items-center">
-                        <div class="input-group input-group-sm" style="width: 200px;">
-                            <input type="text" class="form-control" id="searchNode" placeholder="Find node...">
-                            <button class="btn btn-outline-secondary" type="button" onclick="searchNode()">
-                                <i class="bi bi-search"></i>
-                            </button>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="physicsToggle" checked>
-                            <label class="form-check-label small" for="physicsToggle">Physics</label>
-                        </div>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="fitGraph()">
-                            <i class="bi bi-arrows-fullscreen"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="resetView()">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </button>
-                    </div>
+            <div class="garden-header">
+                <div class="garden-title-block">
+                    <span class="page-eyebrow garden-eyebrow"><i class="bi bi-diagram-3"></i>Explore</span>
+                    <h2 class="garden-title">Knowledge Garden</h2>
                 </div>
-                <div id="searchFeedback" class="small text-muted mt-1"></div>
-                <div class="garden-legend-bar d-flex align-items-center gap-3 mt-2 flex-wrap">
-                    <span class="text-muted small text-uppercase" style="letter-spacing: 0.04em;">Legend &middot; filter</span>
-                    <div class="form-check">
-                        <input class="form-check-input garden-category-filter" type="checkbox" id="filterPhysics" value="AI">
-                        <label class="form-check-label small" for="filterPhysics">
-                            <span class="badge badge-category-ai">AI</span>
-                        </label>
+
+                <div class="garden-toolbar">
+                    <div class="garden-toolbar-row">
+                        <div class="garden-toolbar-filters">
+                            <span class="garden-toolbar-label">Categories</span>
+                            <div class="form-check garden-chip">
+                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterPhysics" value="AI">
+                                <label class="form-check-label small" for="filterPhysics">
+                                    <span class="badge badge-category-ai">AI</span>
+                                </label>
+                            </div>
+                            <div class="form-check garden-chip">
+                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterCyber" value="Cybersecurity">
+                                <label class="form-check-label small" for="filterCyber">
+                                    <span class="badge badge-category-cyber">Cyber</span>
+                                </label>
+                            </div>
+                            <div class="form-check garden-chip">
+                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterSE" value="Software Engineering">
+                                <label class="form-check-label small" for="filterSE">
+                                    <span class="badge badge-category-se">SE</span>
+                                </label>
+                            </div>
+                            <div class="form-check garden-chip">
+                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterOS" value="Operating Systems">
+                                <label class="form-check-label small" for="filterOS">
+                                    <span class="badge badge-category-os">OS</span>
+                                </label>
+                            </div>
+                            <div class="form-check garden-chip">
+                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterResearch" value="Research">
+                                <label class="form-check-label small" for="filterResearch">
+                                    <span class="badge badge-category-research">Research</span>
+                                </label>
+                            </div>
+                            <span class="garden-pinned-indicator"><i class="bi bi-star-fill" style="color: var(--warning-color);"></i> Pinned</span>
+                        </div>
+
+                        <div class="garden-toolbar-controls">
+                            <div class="input-group input-group-sm garden-search-group">
+                                <input type="text" class="form-control" id="searchNode" placeholder="Find node...">
+                                <button class="btn btn-outline-secondary" type="button" onclick="searchNode()">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <div class="form-check form-switch garden-physics-toggle">
+                                <input class="form-check-input" type="checkbox" id="physicsToggle" checked>
+                                <label class="form-check-label small" for="physicsToggle">Physics</label>
+                            </div>
+                            <div class="garden-view-btns">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="fitGraph()" title="Fit to view">
+                                    <i class="bi bi-arrows-fullscreen"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="resetView()" title="Reset view">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input garden-category-filter" type="checkbox" id="filterCyber" value="Cybersecurity">
-                        <label class="form-check-label small" for="filterCyber">
-                            <span class="badge badge-category-cyber">Cyber</span>
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input garden-category-filter" type="checkbox" id="filterSE" value="Software Engineering">
-                        <label class="form-check-label small" for="filterSE">
-                            <span class="badge badge-category-se">SE</span>
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input garden-category-filter" type="checkbox" id="filterOS" value="Operating Systems">
-                        <label class="form-check-label small" for="filterOS">
-                            <span class="badge badge-category-os">OS</span>
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input garden-category-filter" type="checkbox" id="filterResearch" value="Research">
-                        <label class="form-check-label small" for="filterResearch">
-                            <span class="badge badge-category-research">Research</span>
-                        </label>
-                    </div>
-                    <span class="text-muted small ms-auto"><i class="bi bi-star-fill" style="color: var(--warning-color);"></i> Pinned</span>
+                    <div id="searchFeedback" class="small text-muted garden-search-feedback"></div>
                 </div>
             </div>
             <div id="gardenGraph" class="garden-graph"></div>
@@ -76,12 +82,15 @@
         
         <div class="col-lg-3">
             <div class="note-panel h-100" id="notePanel">
-                <div class="panel-placeholder text-center p-5">
-                    <i class="bi bi-diagram-3 display-4 text-muted"></i>
-                    <h5 class="mt-3">Click a node to explore</h5>
+                <div class="panel-placeholder text-center">
+                    <div class="panel-placeholder-icon">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <h5>Click a node to explore</h5>
                     <p class="text-muted">Select any note in the graph to see its details and connections.</p>
+                    <p class="panel-placeholder-hint text-muted small">Notes cluster by category — click any node to see its connections.</p>
                 </div>
-                
+
                 <div class="panel-content d-none" id="panelContent">
                     <div class="panel-header p-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-start">
@@ -90,22 +99,22 @@
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         </div>
-                        <div class="mt-2">
-                            <span class="badge bg-primary" id="panelCategory"></span>
-                            <span class="badge bg-secondary ms-1" id="panelDate"></span>
+                        <div class="panel-meta">
+                            <span class="badge" id="panelCategory"></span>
+                            <span class="badge bg-secondary" id="panelDate"></span>
                         </div>
                     </div>
                     <div class="panel-body p-3">
-                        <div class="mb-3">
-                            <h6>Preview</h6>
+                        <div class="panel-section">
+                            <h6 class="panel-section-label">Preview</h6>
                             <p class="text-muted small" id="panelPreview"></p>
                         </div>
-                        <div class="mb-3">
-                            <h6>Tags</h6>
+                        <div class="panel-section">
+                            <h6 class="panel-section-label">Tags</h6>
                             <div id="panelTags"></div>
                         </div>
-                        <div class="mb-3">
-                            <h6>Connections</h6>
+                        <div class="panel-section">
+                            <h6 class="panel-section-label">Connections</h6>
                             <div id="panelConnections"></div>
                         </div>
                     </div>

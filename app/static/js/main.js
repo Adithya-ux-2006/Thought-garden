@@ -40,6 +40,19 @@ function gardenLabelFont() {
     };
 }
 
+const GARDEN_CATEGORY_BADGE_CLASS = {
+    'AI': 'badge-category-ai',
+    'Artificial Intelligence': 'badge-category-ai',
+    'Cybersecurity': 'badge-category-cyber',
+    'Software Engineering': 'badge-category-se',
+    'Operating Systems': 'badge-category-os',
+    'Research': 'badge-category-research'
+};
+
+function gardenCategoryBadgeClass(category) {
+    return GARDEN_CATEGORY_BADGE_CLASS[category] || 'badge-category-none';
+}
+
 function hexToRgba(hex, alpha) {
     const clean = hex.replace('#', '');
     const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
@@ -251,7 +264,9 @@ function showNotePanel(nodeId) {
             panelContent.classList.remove('d-none');
             
             document.getElementById('panelTitle').textContent = note.title;
-            document.getElementById('panelCategory').textContent = note.category || 'Uncategorized';
+            const panelCategory = document.getElementById('panelCategory');
+            panelCategory.textContent = note.category || 'Uncategorized';
+            panelCategory.className = 'badge ' + gardenCategoryBadgeClass(note.category);
             document.getElementById('panelDate').textContent = new Date(note.created_at).toLocaleDateString();
             document.getElementById('panelPreview').textContent = note.content.substring(0, 200) + (note.content.length > 200 ? '...' : '');
             
