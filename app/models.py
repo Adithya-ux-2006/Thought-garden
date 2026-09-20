@@ -129,3 +129,32 @@ class Relationship(db.Model):
     
     def __repr__(self):
         return f'<Relationship {self.source_note_id} -> {self.target_note_id} ({self.similarity_score:.2f})>'
+
+
+class SemanticJob(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    note_id = db.Column(db.Integer, db.ForeignKey('note.id', ondelete='CASCADE'), nullable=False, unique=True, index=True)
+    status = db.Column(db.String(20), nullable=False, default='queued', index=True)
+    step = db.Column(db.String(40), nullable=False, default='queued')
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    error = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+    note = db.relationship('Note', backref=db.backref('semantic_job', uselist=False, cascade='all, delete-orphan'))
+
+    def __repr__(self):
+        return f'<SemanticJob note={self.note_id} status={self.status} step={self.step}>'
+
+
+class NoteEmbedding(db.Model):
+    __tablename__ = 'note_embeddings'
+    note_id = db.Column(db.Integer, db.ForeignKey('note.id', ondelete='CASCADE'), primary_key=True)
+    embedding = db.Column(db.LargeBinary, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    note = db.relationship('Note', backref=db.backref('embedding', uselist=False, cascade='all, delete-orphan'))
+
+    def __repr__(self):
+        return f'<NoteEmbedding note={self.note_id}>'

@@ -1,4 +1,5 @@
 from flask import render_template, redirect, url_for, flash, request
+from urllib.parse import urlparse
 from flask_login import login_user, logout_user, login_required, current_user
 from app.auth import bp
 from app.models import User, db
@@ -6,10 +7,20 @@ from app.forms import RegisterForm, LoginForm, ProfileForm
 from app.services.onboarding_service import prepare_starter_garden
 
 
+def _safe_redirect_url(target):
+    """Return *target* only if it is a relative, same-origin path."""
+    if not target:
+        return None
+    parsed = urlparse(target)
+    if parsed.netloc or parsed.scheme:
+        return None
+    return target
+
+
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('garden.index'))
     
     form = RegisterForm()
     if form.validate_on_submit():
@@ -38,16 +49,16 @@ def register():
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('garden.index'))
     
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
-            next_page = request.args.get('next')
+            next_page = _safe_redirect_url(request.args.get('next'))
             flash('Welcome back!', 'success')
-            return redirect(next_page or url_for('main.dashboard'))
+            return redirect(next_page or url_for('garden.index'))
         flash('Invalid email or password.', 'danger')
     return render_template('auth/login.html', form=form)
 

@@ -39,7 +39,7 @@ class ProfileForm(FlaskForm):
 
 
 class NoteForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired(), Length(max=200)])
+    title = StringField('Title', validators=[Optional(), Length(max=200)])
     content = TextAreaField('Content', validators=[DataRequired()])
     category = SelectField('Category', choices=[
         ('', 'Select Category'),

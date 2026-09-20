@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from app import create_app, db
 from app.models import User, Note, Tag, Relationship
-from app.services.similarity_service import update_relationships_for_note
+from app.services.note_lifecycle_service import create_note_batch
 
 app = create_app()
 
@@ -144,35 +144,11 @@ with app.app_context():
         }
     ]
     
-    for note_data in notes_data:
-        note = Note(
-            user_id=user.id,
-            title=note_data["title"],
-            content=note_data["content"],
-            category=note_data.get("category"),
-            source_type="manual",
-            is_pinned=note_data.get("is_pinned", False)
-        )
-        db.session.add(note)
-        db.session.flush()
-        
-        for tag_name in note_data.get("tags", []):
-            if tag_name in tags:
-                note.tags.append(tags[tag_name])
-    
-    db.session.commit()
-    
     print("Seed data created. Discovering relationships automatically...")
-    
-    notes = Note.query.filter_by(user_id=user.id).all()
-    
-    for note in notes:
-        try:
-            update_relationships_for_note(note)
-        except Exception as e:
-            print(f"Warning: Could not update relationships for note {note.id}: {e}")
-    
-    db.session.commit()
+    result = create_note_batch(user.id, notes_data)
+    notes = result.notes
+    if result.connection_error:
+        print(f"Warning: Could not update every relationship: {result.connection_error}")
     
     rel_count = Relationship.query.count()
     print(f"\nSeeding complete!")

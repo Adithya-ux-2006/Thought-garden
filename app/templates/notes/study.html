@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Study {{ note.title }} - Thought Garden{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary mb-3">← Back to note</a>
+    <h2>{{ note.title }}</h2>
+    <div class="card shadow-sm my-4"><div class="card-body"><h5>Summary</h5><p class="mb-0">{{ summary }}</p></div></div>
+    <h4>Flashcards</h4>
+    {% for card in cards %}
+    <details class="card shadow-sm mb-3"><summary class="card-header">{{ card.question }}</summary><div class="card-body">{{ card.answer }}</div></details>
+    {% else %}<p class="text-muted">Add more detail to this note to generate flashcards.</p>{% endfor %}
+</div>
+{% endblock %}
