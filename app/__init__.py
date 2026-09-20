@@ -1,4 +1,7 @@
-from flask import Flask
+import logging
+import uuid
+
+from flask import Flask, jsonify, render_template, request, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -14,9 +17,45 @@ login_manager.login_message_category = 'info'
 csrf = CSRFProtect()
 
 
+class RequestIDFilter(logging.Filter):
+    """Inject the current request's ID into every log record so it appears
+    in the formatted output without each caller passing it explicitly."""
+
+    def filter(self, record):
+        try:
+            record.request_id = g.get('request_id', '-')
+        except RuntimeError:
+            # Outside a Flask application context (e.g. during startup or
+            # in background threads before a request), g is unbound.
+            record.request_id = '-'
+        return True
+
+
+def _configure_logging(app):
+    """Set up a consistent log format with request ID and timestamp.
+
+    Uses Flask's built-in logger — no external logging framework needed.
+    The format includes request_id (or '-' outside a request context),
+    timestamp, level, module, and message.
+    """
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] %(request_id)s %(levelname)s in %(module)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    ))
+    handler.addFilter(RequestIDFilter())
+
+    app.logger.handlers.clear()
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.addFilter(RequestIDFilter())
+
+
 def create_app(config_overrides=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
+
+    _configure_logging(app)
 
     if Config.SECRET_KEY == 'dev-secret-key':
         app.logger.warning(
@@ -32,6 +71,32 @@ def create_app(config_overrides=None):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
+
+    # --- Request ID middleware ---
+    @app.before_request
+    def _assign_request_id():
+        g.request_id = request.headers.get('X-Request-ID') or uuid.uuid4().hex
+
+    @app.after_request
+    def _add_request_id_header(response):
+        response.headers['X-Request-ID'] = g.get('request_id', '-')
+        return response
+
+    # --- Error handlers ---
+    @app.errorhandler(404)
+    def not_found(e):
+        app.logger.warning('404 Not Found: %s %s', request.method, request.path)
+        if request.accept_mimetypes.best == 'application/json':
+            return jsonify(error='Not found', request_id=g.get('request_id', '-')), 404
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        app.logger.exception('500 Internal Server Error: %s %s', request.method, request.path)
+        db.session.rollback()
+        if request.accept_mimetypes.best == 'application/json':
+            return jsonify(error='Internal server error', request_id=g.get('request_id', '-')), 500
+        return render_template('errors/500.html'), 500
 
     from app.models import User, Note, Tag, Relationship, NoteEmbedding
 
