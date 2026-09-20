@@ -1,11 +1,11 @@
-import os
 import pickle
 import numpy as np
 from app import db
 from app.models import Note, NoteEmbedding
+from config import Config
 
 _model = None
-_model_name = os.environ.get('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
+_model_name = Config.EMBEDDING_MODEL
 _embedding_cache = {}
 
 

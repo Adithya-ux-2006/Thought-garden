@@ -2,12 +2,12 @@ from app import db
 from app.models import Note, Relationship
 from app.services.embedding_service import get_all_embeddings, cosine_similarity
 from app.services.keyword_service import extract_keywords
-import os
+from config import Config
 
 
-SIMILARITY_THRESHOLD = float(os.environ.get('SIMILARITY_THRESHOLD', 0.45))
-MAX_RELATED_NOTES = int(os.environ.get('MAX_RELATED_NOTES', 5))
-KEYWORD_THRESHOLD = float(os.environ.get('KEYWORD_SIMILARITY_THRESHOLD', 0.18))
+SIMILARITY_THRESHOLD = Config.SIMILARITY_THRESHOLD
+MAX_RELATED_NOTES = Config.MAX_RELATED_NOTES
+KEYWORD_THRESHOLD = Config.KEYWORD_SIMILARITY_THRESHOLD
 
 
 def lightweight_similarity(note1, note2):
