@@ -51,17 +51,50 @@ def _configure_logging(app):
     app.logger.addFilter(RequestIDFilter())
 
 
+DEV_SECRET_KEY = 'dev-secret-key'
+
+
+def _validate_secret_key(app):
+    """Ensure SECRET_KEY is set to a real value in production.
+
+    In debug mode, the insecure development fallback is allowed with a
+    warning.  In production (debug off), the app refuses to start — a
+    missing or default SECRET_KEY means sessions, CSRF tokens, and
+    signed cookies are trivially forgeable.
+
+    The actual secret value is never logged or included in the error
+    message.
+    """
+    key = Config.SECRET_KEY
+    is_insecure = not key or key == DEV_SECRET_KEY
+
+    if not is_insecure:
+        return  # real key provided — nothing to do
+
+    if Config.FLASK_DEBUG:
+        app.logger.warning(
+            'SECRET_KEY is not set - falling back to an insecure default. '
+            'Set SECRET_KEY in your environment or .env file before deploying.'
+        )
+        return
+
+    # Production with no real key — refuse to start.
+    raise RuntimeError(
+        'SECRET_KEY must be set to a secure, random value before starting '
+        'in production (FLASK_DEBUG=0). The default development key is not '
+        'safe for use in production — sessions, CSRF tokens, and signed '
+        'cookies would be trivially forgeable. Set SECRET_KEY in your '
+        'environment or .env file to a long, random string.'
+    )
+
+
 def create_app(config_overrides=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
 
     _configure_logging(app)
 
-    if Config.SECRET_KEY == 'dev-secret-key':
-        app.logger.warning(
-            'SECRET_KEY is not set - falling back to an insecure default. '
-            'Set SECRET_KEY in your environment or .env file before deploying.'
-        )
+    _validate_secret_key(app)
     app.config['MAX_CONTENT_LENGTH'] = Config.UPLOAD_MAX_SIZE_MB * 1024 * 1024
 
     if config_overrides:
