@@ -11,15 +11,18 @@ Stack: Flask, Flask-SQLAlchemy (SQLite), Flask-Login, Flask-WTF, sentence-transf
 ## Repo layout
 
 ```
-run.py                 entry point — auto-seeds empty DB, backfills relationships, runs on :5000 (debug=True)
+run.py                 entry point — auto-seeds empty DB, backfills relationships, runs on :5000
+config.py              centralized Config class — all env vars with defaults in one place
 seed.py                demo data generator (17 notes across 5 categories)
-app/__init__.py        app factory — CSRF, SQLAlchemy, Flask-Login, raw-SQL note_embeddings table
-app/models.py          User, Note, Tag, Relationship
+app/__init__.py        app factory — CSRF, SQLAlchemy, Flask-Login, request-ID logging, error handlers, SECRET_KEY validation
+app/models.py          User, Note, Tag, Relationship, NoteEmbedding
 app/forms.py           Flask-WTF forms
 app/{auth,notes,garden,search,main}/routes.py   blueprints
 app/services/          embedding, similarity, keyword, search, document logic
+app/templates/errors/  404.html, 500.html (structured error pages)
 app/templates/, app/static/
-tests/test_app.py      pytest suite — currently broken, see below
+migrations/            Alembic/Flask-Migrate — baseline migration stamped
+tests/test_app.py      pytest suite (16 tests, all passing)
 docs/                  see "Docs are stale" below before trusting any of it
 ```
 
@@ -37,7 +40,7 @@ If you hit `meson.build ... ERROR: Cython requires python3 dependency` or `NumPy
 
 First `pip install -r requirements.txt` is slow — `sentence-transformers` pulls in `torch`, which is a large download.
 
-`.env.example` exists and `python-dotenv` is a dependency, but **nothing in the code calls `load_dotenv()`**. All env vars (`SECRET_KEY`, `SIMILARITY_THRESHOLD`, etc.) are silently ignored unless you wire this up or export them another way. Don't assume editing `.env` does anything.
+`.env.example` exists and `python-dotenv` is a dependency. `config.py` calls `load_dotenv()` at import time, so `.env` values are picked up automatically. All env vars (`SECRET_KEY`, `SIMILARITY_THRESHOLD`, etc.) are centralized in `config.py`'s `Config` class with their defaults.
 
 ### Verified working (2026-09-18)
 ```
@@ -47,19 +50,19 @@ Boots clean, seeds 17 notes / 28 relationships, serves `/` and `/auth/login` at 
 
 ## Known bugs / rough edges (found by full-repo read, not yet fixed unless noted)
 
-- **Test suite is broken.** `tests/test_app.py` uses bare `app.app_context()` inside test bodies, but `app` at module scope is the pytest *fixture function*, not an app instance → `AttributeError` in ~half the tests. Nobody has been running these; don't trust "tests pass" without checking this first. `pytest` also isn't in `requirements.txt`.
+- **Test suite was broken, now fixed.** `tests/test_app.py` previously used bare `app.app_context()` inside test bodies, but `app` at module scope was the pytest *fixture function*, not an app instance → `AttributeError` in ~half the tests. Fixed by adding `app` as an explicit parameter to each test. `pytest` is now in `requirements.txt`. Full suite: 16/16 passing.
 - **Semantic embeddings are mostly dormant.** `update_relationships_for_note()` calls `get_embedding(..., generate_if_missing=False)` — embeddings are only used if they already exist, nothing generates them on note create/edit. They only get built the first time someone hits semantic search (`semantic_search` → `get_all_embeddings(user_id)`, default `generate_if_missing=True`), which then blocks that request on model load + encoding every note. Until then, all "AI connections" you see are the lightweight keyword/tag/category overlap scorer (`similarity_service.py:17`), not real embeddings.
 - **Garden category filter checkboxes do nothing.** `app/templates/garden/index.html` has filter checkboxes (AI, Cybersecurity, SE, OS, Research) with no JS wired up. Dead UI. Tracked as `REM-001` in `docs/FIX_PLAN.md`, still unfixed.
-- **`SECRET_KEY` defaults to a hardcoded dev string** (`app/__init__.py:18`) and, since dotenv isn't loaded, effectively always does — sessions aren't safe if this ever gets deployed as-is.
-- **`debug=True` hardcoded** in `run.py:22`. Werkzeug debugger = remote code execution if this is ever exposed off localhost.
+- **`SECRET_KEY` hardened for production.** Defaults to `dev-secret-key` in debug mode (with a warning). In production (`FLASK_DEBUG=0`), the app refuses to start if `SECRET_KEY` is missing or still the dev default — raises `RuntimeError` with a clear operator message. See `app/__init__.py:_validate_secret_key()`.
+- **`FLASK_DEBUG` env var now respected** in `run.py` (defaults to on for local dev, but can be turned off via env var). No longer hardcoded to `True`.
 - **`Pagination` class defined twice** in `search_service.py`; the copy used by `semantic_search` is missing `iter_pages()`, so templates that call it on a semantic-only result set will crash.
 - **`cosine_similarity` and `extract_keywords` each defined twice** (once in `similarity_service.py`, once in `search_service.py` / `keyword_service.py` respectively) with slightly different signatures/defaults. Easy to edit the wrong copy.
 - **Embeddings stored as `pickle` blobs** in the raw-SQL `note_embeddings` table (`embedding_service.py:35`). Unpickling untrusted DB content is a code-exec surface; should be raw `numpy.tobytes()`.
 - **`note.get_related_notes()` default `min_similarity=0.7`** (`models.py:59`) but relationships are actually stored/created at threshold 0.45 — every caller has to remember to override this or they silently get zero results. All current callers do pass `0.0`, but it's a landmine for new code.
 - **N+1 queries** in `garden/routes.py` (`note.get_all_relationships()` called per node in a loop).
 - `app/extensions.py` is dead code (duplicate `db`/`login_manager`, never imported).
-- No `LICENSE` file despite README claiming MIT. No `CONTRIBUTING.md` despite ROADMAP linking one.
-- No migrations (Alembic or similar) — any schema change currently means deleting the DB file.
+- No LICENSE file despite README claiming MIT. No CONTRIBUTING.md despite ROADMAP linking one.
+- Migrations now supported via Flask-Migrate/Alembic (`migrations/` directory with baseline migration `a1b2c3d4e5f6` stamped on existing DB).
 
 ## Docs are stale — don't trust them blindly
 
@@ -214,5 +217,12 @@ README oversells slightly vs. actual code: claims SQLite FTS5 full-text search, 
     - (Pre-existing, unchanged) navbar gradient hex values in `style.css` are literals rather than a token pair; canvas nodes remain unreachable by keyboard and have no accessible text, both structural vis-network/canvas constraints, correctly still deferred.
   - **Local-vs-GitHub gap noted and now resolved by this session's push** (see below): at audit time, `origin/main` was still at `9eefc91` (the layout pass) - the entire growth-icon system and all 6 fixes existed only in the local working tree. Flagged clearly in the audit rather than silently auditing stale GitHub content.
   - Pushed `9eefc91..aed85e5` to `origin/main` this session, along with this CLAUDE.md entry - GitHub is now current with the local working tree.
+
+- **2026-09-20** — Backend hardening pass (Steps 3–5 of the backend roadmap), committed and pushed to `main` as three separate commits.
+  - **`34e5934` — `refactor: centralize application configuration`** — Created `config.py` with a single `Config` class centralizing all 11 env vars (same names/defaults as before). Updated `app/__init__.py` to use `app.config.from_object(Config)`, removed inline `os.environ.get()` calls. Updated `run.py`, `embedding_service.py`, `similarity_service.py` to import from `Config`. `load_dotenv()` now called in `config.py` at import time (was previously never called despite being a dependency).
+  - **`1943506` — `feat: add structured error handling`** — Added `RequestIDFilter` for consistent request IDs in logs, `_configure_logging()` with timestamped format, `before_request`/`after_request` middleware for `X-Request-ID` headers, 404/500 error handlers with content negotiation (HTML for browsers, JSON for API clients), and error templates (`app/templates/errors/404.html`, `500.html`). The 500 handler rolls back the DB session before responding.
+  - **`3634305` — `security: enforce production secret key`** — Added `_validate_secret_key()` to `app/__init__.py`. In debug mode: warns but allows the `dev-secret-key` fallback (unchanged behavior). In production (`FLASK_DEBUG=0`): refuses to start with a `RuntimeError` if `SECRET_KEY` is missing or still the dev default. Error message clearly explains what to configure; actual secret value is never logged or exposed.
+  - **Verification:** App boots in debug mode (warning logged), boots in production with real key (silent), refuses to start in production without key (RuntimeError). 30/30 tests pass (16 app + 8 growth service + 6 other). All existing data intact (1 user, 17 notes).
+  - Frontend/garden work untouched — confirmed by `git status` showing only backend files committed.
 
 When you make further changes, add a dated entry above instead of editing history away — this file is a log, not just a snapshot.
