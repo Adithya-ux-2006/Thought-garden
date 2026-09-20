@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
@@ -11,6 +12,7 @@ import os
 load_dotenv()
 
 db = SQLAlchemy()
+migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access your garden.'
@@ -37,6 +39,7 @@ def create_app(config_overrides=None):
         app.config.update(config_overrides)
     
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
     
