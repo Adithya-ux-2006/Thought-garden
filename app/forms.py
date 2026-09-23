@@ -58,15 +58,15 @@ class NoteForm(FlaskForm):
 
 
 class SearchForm(FlaskForm):
-    query = StringField('Search', validators=[Optional()])
+    q = StringField('Search', validators=[Optional()])
     category = SelectField('Category', choices=[('', 'All Categories')], validators=[Optional()])
     tag = SelectField('Tag', choices=[('', 'All Tags')], validators=[Optional()])
     source_type = SelectField('Source', choices=[
         ('', 'All Sources'),
         ('manual', 'Manual'),
         ('pdf', 'PDF'),
-        ('markdown', 'Markdown'),
-        ('text', 'Text')
+        ('md', 'Markdown'),
+        ('txt', 'Text')
     ], validators=[Optional()])
     submit = SubmitField('Search')
 

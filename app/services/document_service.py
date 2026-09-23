@@ -85,11 +85,12 @@ def chunk_text(text, max_chunk_size=2000, overlap=200):
         chunk = text[start:end].strip()
         if chunk:
             chunks.append(chunk)
-        
-        start = end - overlap
-        if start >= len(text):
+
+        if end >= len(text):
             break
-    
+        # A chunk shorter than the overlap (early break point) must not rewind.
+        start = end - overlap if end - overlap > start else end
+
     return chunks
 
 

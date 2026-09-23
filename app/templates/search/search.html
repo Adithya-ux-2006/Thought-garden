@@ -12,8 +12,8 @@
                 <div class="card-body">
                     <form method="GET" class="row g-3" data-ai-processing>
                         <div class="col-md-6 position-relative">
-                            {{ form.query.label(class="form-label") }}
-                            {{ form.query(class="form-control form-control-lg", placeholder="Search by keyword or ask a question...", value=query, autocomplete="off") }}
+                            {{ form.q.label(class="form-label") }}
+                            {{ form.q(class="form-control form-control-lg", placeholder="Search by keyword or ask a question...", value=query, autocomplete="off") }}
                             <div id="searchSuggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
                         </div>
                         <div class="col-md-2">
@@ -40,7 +40,7 @@
             <div class="mb-3">
                 <p class="text-muted">
                     {% if results %}
-                    Found {{ results|length }} result{{ 's' if results|length != 1 }}
+                    Found {{ pagination.total }} result{{ 's' if pagination.total != 1 }}
                     {% else %}
                     No results found
                     {% endif %}

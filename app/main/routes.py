@@ -3,6 +3,7 @@ from flask import render_template, redirect, url_for, request
 from flask_login import login_required, current_user
 from app.main import bp
 from app.models import Note, Tag, Relationship, db, note_tags
+from app.services.document_service import ALLOWED_EXTENSIONS as IMPORTED_SOURCE_TYPES
 from sqlalchemy import func, or_
 
 
@@ -16,12 +17,15 @@ def index():
 @bp.route('/dashboard')
 @login_required
 def dashboard():
+    active_notes = Note.query.filter_by(user_id=current_user.id, is_archived=False)
     stats = {
-        'total_notes': Note.query.filter_by(user_id=current_user.id).count(),
-        'documents': Note.query.filter_by(user_id=current_user.id).filter(Note.source_type != 'manual').count(),
+        'total_notes': active_notes.count(),
+        'documents': active_notes.filter(Note.source_type.in_(IMPORTED_SOURCE_TYPES)).count(),
         'connections': Relationship.query.join(Note, Relationship.source_note_id == Note.id).filter(Note.user_id == current_user.id).count(),
-        'tags': Tag.query.join(note_tags).join(Note).filter(Note.user_id == current_user.id).distinct().count(),
-        'pinned': Note.query.filter_by(user_id=current_user.id, is_pinned=True).count(),
+        'tags': Tag.query.join(note_tags).join(Note).filter(
+            Note.user_id == current_user.id, Note.is_archived == False
+        ).distinct().count(),
+        'pinned': active_notes.filter_by(is_pinned=True).count(),
     }
     
     recent_notes = Note.query.filter_by(user_id=current_user.id, is_archived=False).order_by(Note.created_at.desc()).limit(5).all()

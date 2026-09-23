@@ -452,7 +452,7 @@ function renderFocusGraph(container, nodes, edges) {
 }
 
 function initSearchAutocomplete() {
-    const input = document.getElementById('query');
+    const input = document.getElementById('q');
     const box = document.getElementById('searchSuggestions');
     if (!input || !box) return;
 

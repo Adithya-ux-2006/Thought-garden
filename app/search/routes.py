@@ -51,7 +51,7 @@ def suggest():
     if len(q) < 2:
         return jsonify([])
     
-    notes = Note.query.filter_by(user_id=current_user.id).filter(
+    notes = Note.query.filter_by(user_id=current_user.id, is_archived=False).filter(
         or_(Note.title.ilike(f'%{q}%'), Note.content.ilike(f'%{q}%'))
     ).limit(5).all()
     

@@ -112,8 +112,11 @@ def view(note_id):
 def edit(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
     form = NoteForm(obj=note)
-    form.tags.data = ', '.join([t.name for t in note.tags])
-    
+    if note.category and note.category not in {value for value, _ in form.category.choices}:
+        form.category.choices = form.category.choices + [(note.category, note.category)]
+    if request.method == 'GET':
+        form.tags.data = ', '.join([t.name for t in note.tags])
+
     if form.validate_on_submit():
         note.title = form.title.data
         note.content = form.content.data
