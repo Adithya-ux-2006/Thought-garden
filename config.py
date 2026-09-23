@@ -19,7 +19,17 @@ class Config:
 
     # --- Flask core ---
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
-    FLASK_DEBUG = os.environ.get('FLASK_DEBUG', '1').lower() not in {'0', 'false', 'no'}
+    # Off unless explicitly enabled - a blank or typo'd value must not turn
+    # the debugger on.
+    FLASK_DEBUG = os.environ.get('FLASK_DEBUG', '0').strip().lower() in {'1', 'true', 'yes', 'on'}
+
+    # --- Cookies --- Secure only outside debug, so local http:// dev still works.
+    SESSION_COOKIE_SECURE = not FLASK_DEBUG
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_SECURE = not FLASK_DEBUG
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
 
     # --- SQLAlchemy ---
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///thought_garden.db')

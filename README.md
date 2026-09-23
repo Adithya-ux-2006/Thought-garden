@@ -116,7 +116,9 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Create environment file
+# Create environment file, then either set SECRET_KEY
+# (python -c "import secrets; print(secrets.token_hex(32))")
+# or, for local development only, set FLASK_DEBUG=1
 cp .env.example .env
 
 # Run application

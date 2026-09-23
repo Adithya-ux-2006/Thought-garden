@@ -67,7 +67,7 @@ def test_register_duplicate_email(client):
     # duplicate-email check ever runs. Without logging out first, this
     # second POST never exercises that check - it just bounces to
     # /dashboard, which is what made this test look broken.
-    client.get('/auth/logout', follow_redirects=True)
+    client.post('/auth/logout', follow_redirects=True)
 
     response = client.post('/auth/register', data={
         'name': 'Test User 2',
@@ -103,7 +103,7 @@ def test_login_invalid_credentials(client):
 
 
 def test_logout(auth_client):
-    response = auth_client.get('/auth/logout', follow_redirects=True)
+    response = auth_client.post('/auth/logout', follow_redirects=True)
     assert response.status_code == 200
 
 
@@ -247,7 +247,7 @@ def test_note_ownership(client, app):
         'is_pinned': False
     }, follow_redirects=True)
     
-    client.get('/auth/logout', follow_redirects=True)
+    client.post('/auth/logout', follow_redirects=True)
     
     client.post('/auth/register', data={
         'name': 'User 2',

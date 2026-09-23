@@ -1,10 +1,10 @@
 import os
+from flask import current_app
 from werkzeug.utils import secure_filename
 from PyPDF2 import PdfReader
 
 
 ALLOWED_EXTENSIONS = {'txt', 'md', 'pdf'}
-MAX_FILE_SIZE = 10 * 1024 * 1024
 
 
 def allowed_file(filename):
@@ -22,8 +22,9 @@ def validate_file(file):
     size = file.tell()
     file.seek(0)
     
-    if size > MAX_FILE_SIZE:
-        return False, f'File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB'
+    limit_mb = current_app.config['UPLOAD_MAX_SIZE_MB']
+    if size > limit_mb * 1024 * 1024:
+        return False, f'File too large. Maximum size: {limit_mb} MB.'
     
     return True, None
 

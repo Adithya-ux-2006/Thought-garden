@@ -22,7 +22,7 @@
 |--------|-----|----------|----------------|-------------|
 | GET/POST | `/auth/login` | auth/login.html | No | User login |
 | GET/POST | `/auth/register` | auth/register.html | No | New user registration; seeds a starter garden on first registration |
-| GET | `/auth/logout` | redirect to `/` | Yes | User logout |
+| POST | `/auth/logout` | redirect to `/` | Yes | User logout (CSRF-protected form) |
 | GET/POST | `/auth/profile` | auth/profile.html | Yes | User profile + password change |
 
 ### Notes (`/notes`)

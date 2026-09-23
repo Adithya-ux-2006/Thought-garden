@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, abort, current_app
+from flask import render_template, redirect, url_for, flash, request, abort, current_app, g
 from flask_login import login_required, current_user
 from app.notes import bp
 from app.models import Note, Tag, Relationship, db
@@ -7,6 +7,13 @@ from app.services.keyword_service import extract_keywords
 from app.services.similarity_service import update_relationships_for_note
 from app.services.embedding_service import invalidate_embedding_cache
 from app.services.background_indexing import queue_embedding_generation
+
+
+def _report_failure(message, category='warning'):
+    """Log the active exception in full; show the user only a generic message
+    plus a reference that matches the request ID in the logs."""
+    current_app.logger.exception(message)
+    flash(f"{message} (Reference: {g.get('request_id', '-')})", category)
 
 
 def parse_tags(tag_string):
@@ -85,8 +92,8 @@ def create():
 
         try:
             update_relationships_for_note(note)
-        except Exception as e:
-            flash(f'Note saved, but AI analysis failed: {str(e)}', 'warning')
+        except Exception:
+            _report_failure('Note saved, but finding connections failed.')
 
         # Fast keyword-based relationships are already in place above.
         # This kicks off the slower semantic (embedding) pass in the
@@ -130,8 +137,8 @@ def edit(note_id):
 
         try:
             update_relationships_for_note(note)
-        except Exception as e:
-            flash(f'Note updated, but AI analysis failed: {str(e)}', 'warning')
+        except Exception:
+            _report_failure('Note updated, but finding connections failed.')
 
         queue_embedding_generation(current_app._get_current_object(), note.id)
 
@@ -171,8 +178,8 @@ def archive(note_id):
         db.session.commit()
         try:
             update_relationships_for_note(note)
-        except Exception as e:
-            flash(f'Note unarchived, but AI analysis failed: {str(e)}', 'warning')
+        except Exception:
+            _report_failure('Note unarchived, but finding connections failed.')
 
     flash(f'Note {"archived" if note.is_archived else "unarchived"}.', 'success')
     return redirect(url_for('notes.view', note_id=note.id))
@@ -220,8 +227,8 @@ def import_document():
         if len(notes) == 1:
             return redirect(url_for('notes.view', note_id=notes[0].id))
         return redirect(url_for('notes.list_notes'))
-    except Exception as e:
-        flash(f'Error importing document: {str(e)}', 'danger')
+    except Exception:
+        _report_failure('Could not import this document. Please check the file and try again.', 'danger')
         return redirect(url_for('notes.create'))
 
 

@@ -1,7 +1,7 @@
 import logging
 import uuid
 
-from flask import Flask, jsonify, render_template, request, g
+from flask import Flask, flash, g, jsonify, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -52,6 +52,8 @@ def _configure_logging(app):
 
 
 DEV_SECRET_KEY = 'dev-secret-key'
+# Publicly known values (code default, old .env.example) - never valid in production.
+INSECURE_SECRET_KEYS = {'', DEV_SECRET_KEY, 'dev-secret-key-change-in-production'}
 
 
 def _validate_secret_key(app):
@@ -65,17 +67,17 @@ def _validate_secret_key(app):
     The actual secret value is never logged or included in the error
     message.
     """
-    key = Config.SECRET_KEY
-    is_insecure = not key or key == DEV_SECRET_KEY
-
-    if not is_insecure:
+    key = app.config.get('SECRET_KEY') or ''
+    if key not in INSECURE_SECRET_KEYS:
         return  # real key provided — nothing to do
 
-    if Config.FLASK_DEBUG:
+    if app.config.get('FLASK_DEBUG'):
         app.logger.warning(
             'SECRET_KEY is not set - falling back to an insecure default. '
             'Set SECRET_KEY in your environment or .env file before deploying.'
         )
+        if not key:
+            app.config['SECRET_KEY'] = DEV_SECRET_KEY
         return
 
     # Production with no real key — refuse to start.
@@ -94,11 +96,12 @@ def create_app(config_overrides=None):
 
     _configure_logging(app)
 
-    _validate_secret_key(app)
-    app.config['MAX_CONTENT_LENGTH'] = Config.UPLOAD_MAX_SIZE_MB * 1024 * 1024
-
     if config_overrides:
         app.config.update(config_overrides)
+
+    app.config['MAX_CONTENT_LENGTH'] = app.config['UPLOAD_MAX_SIZE_MB'] * 1024 * 1024
+
+    _validate_secret_key(app)
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -122,6 +125,18 @@ def create_app(config_overrides=None):
         if request.accept_mimetypes.best == 'application/json':
             return jsonify(error='Not found', request_id=g.get('request_id', '-')), 404
         return render_template('errors/404.html'), 404
+
+    @app.errorhandler(413)
+    def request_too_large(e):
+        app.logger.warning('413 Request Too Large: %s %s', request.method, request.path)
+        message = f"File too large. Maximum size: {app.config['UPLOAD_MAX_SIZE_MB']} MB."
+        if request.accept_mimetypes.best == 'application/json':
+            return jsonify(error=message, request_id=g.get('request_id', '-')), 413
+        flash(message, 'danger')
+        # The import endpoint is POST-only; every other form page is GET-able at its own path.
+        if request.endpoint == 'notes.import_document':
+            return redirect(url_for('notes.create'))
+        return redirect(request.path)
 
     @app.errorhandler(500)
     def internal_error(e):

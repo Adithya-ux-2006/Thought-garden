@@ -280,32 +280,50 @@ function showNotePanel(nodeId) {
             document.getElementById('panelDate').textContent = new Date(note.created_at).toLocaleDateString();
             document.getElementById('panelPreview').textContent = note.content.substring(0, 200) + (note.content.length > 200 ? '...' : '');
             
-            const tagsContainer = document.getElementById('panelTags');
-            tagsContainer.innerHTML = note.tags.map(tag => 
-                `<span class="badge bg-light text-dark me-1">${tag}</span>`
-            ).join('');
-            
+            // Note data is user content: build nodes with textContent, never HTML strings.
+            document.getElementById('panelTags').replaceChildren(...note.tags.map(tag => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-light text-dark me-1';
+                badge.textContent = tag;
+                return badge;
+            }));
+
             const connectionsContainer = document.getElementById('panelConnections');
             if (note.connections.length > 0) {
-                connectionsContainer.innerHTML = note.connections.map(conn => `
-                    <div class="connection-item" onclick="showNotePanel(${conn.id})">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong>${conn.title.substring(0, 30)}${conn.title.length > 30 ? '...' : ''}</strong>
-                            <span class="badge bg-${conn.similarity > 0.8 ? 'success' : conn.similarity > 0.7 ? 'primary' : 'secondary'}">
-                                ${(conn.similarity * 100).toFixed(0)}%
-                            </span>
-                        </div>
-                        <small class="text-muted">${conn.category || 'Uncategorized'}</small>
-                    </div>
-                `).join('');
+                connectionsContainer.replaceChildren(...note.connections.map(buildConnectionItem));
             } else {
-                connectionsContainer.innerHTML = '<p class="text-muted small">No connections found</p>';
+                const empty = document.createElement('p');
+                empty.className = 'text-muted small';
+                empty.textContent = 'No connections found';
+                connectionsContainer.replaceChildren(empty);
             }
             
             document.getElementById('panelViewBtn').href = `/notes/${note.id}`;
             selectedNode = nodeId;
         })
         .catch(error => console.error('Error loading note:', error));
+}
+
+function buildConnectionItem(conn) {
+    const item = document.createElement('div');
+    item.className = 'connection-item';
+    item.addEventListener('click', () => showNotePanel(conn.id));
+
+    const row = document.createElement('div');
+    row.className = 'd-flex justify-content-between align-items-center';
+    const title = document.createElement('strong');
+    title.textContent = conn.title.substring(0, 30) + (conn.title.length > 30 ? '...' : '');
+    const score = document.createElement('span');
+    score.className = 'badge bg-' + (conn.similarity > 0.8 ? 'success' : conn.similarity > 0.7 ? 'primary' : 'secondary');
+    score.textContent = `${(conn.similarity * 100).toFixed(0)}%`;
+    row.append(title, score);
+
+    const category = document.createElement('small');
+    category.className = 'text-muted';
+    category.textContent = conn.category || 'Uncategorized';
+
+    item.append(row, category);
+    return item;
 }
 
 function closePanel() {
