@@ -76,11 +76,12 @@
                         {% if note.category %}
                         <span class="badge bg-primary">{{ note.category }}</span>
                         {% endif %}
-                        {% for tag in note.tags[:3] %}
+                        {% set tags_shown = note.tags|display_tags(note.category) %}
+                        {% for tag in tags_shown[:3] %}
                         <span class="badge bg-light text-dark">{{ tag.name }}</span>
                         {% endfor %}
-                        {% if note.tags|length > 3 %}
-                        <span class="badge bg-secondary">+{{ note.tags|length - 3 }}</span>
+                        {% if tags_shown|length > 3 %}
+                        <span class="badge bg-secondary">+{{ tags_shown|length - 3 }}</span>
                         {% endif %}
                     </div>
                     <div class="d-flex justify-content-between align-items-center">

@@ -152,6 +152,18 @@ def create_app(config_overrides=None):
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
+    @app.template_filter('display_tags')
+    def display_tags_filter(tags, category):
+        # Seed data (and real user habit) often tags a note with its own
+        # category name, which then repeats the already-shown category
+        # badge as the first tag right next to it - same word twice with
+        # no added information. Used everywhere a note's tags are rendered
+        # alongside its category badge.
+        if not category:
+            return list(tags)
+        category_lower = category.strip().lower()
+        return [t for t in tags if t.name.strip().lower() != category_lower]
+
     with app.app_context():
         # note_embeddings (NoteEmbedding model) is created here too - it
         # used to need a separate raw CREATE TABLE because it wasn't a

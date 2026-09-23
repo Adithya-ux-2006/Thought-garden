@@ -100,9 +100,10 @@
                                     <br><small class="text-muted">{{ note.created_at.strftime('%b %d') }}</small>
                                 </div>
                             </div>
-                            {% if note.tags %}
+                            {% set tags_shown = note.tags|display_tags(note.category) %}
+                            {% if tags_shown %}
                             <div class="mt-2">
-                                {% for tag in note.tags[:3] %}
+                                {% for tag in tags_shown[:3] %}
                                 <span class="badge bg-light text-dark">{{ tag.name }}</span>
                                 {% endfor %}
                             </div>

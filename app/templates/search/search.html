@@ -73,7 +73,7 @@
                                 <small class="text-muted">
                                     <i class="bi bi-clock me-1"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
                                 </small>
-                                {% for tag in note.tags[:3] %}
+                                {% for tag in (note.tags|display_tags(note.category))[:3] %}
                                 <span class="badge bg-light text-dark">{{ tag.name }}</span>
                                 {% endfor %}
                             </div>
