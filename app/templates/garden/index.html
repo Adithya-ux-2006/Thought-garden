@@ -75,6 +75,22 @@
                         </div>
                     </div>
                     <div id="searchFeedback" class="small text-muted garden-search-feedback"></div>
+                    <div class="garden-growth-legend">
+                        <span class="garden-toolbar-label">Growth</span>
+                        <span class="garden-growth-legend-item">
+                            <img src="{{ url_for('static', filename='img/garden/seed.svg') }}" alt="Seed" width="18" height="18">Seed
+                        </span>
+                        <span class="garden-growth-legend-item">
+                            <img src="{{ url_for('static', filename='img/garden/sprout.svg') }}" alt="Sprout" width="18" height="18">Sprout
+                        </span>
+                        <span class="garden-growth-legend-item">
+                            <img src="{{ url_for('static', filename='img/garden/sapling.svg') }}" alt="Sapling" width="18" height="18">Sapling
+                        </span>
+                        <span class="garden-growth-legend-item">
+                            <img src="{{ url_for('static', filename='img/garden/tree.svg') }}" alt="Tree" width="18" height="18">Tree
+                        </span>
+                        <span class="garden-growth-legend-hint">grows with a note's age &amp; connections</span>
+                    </div>
                 </div>
             </div>
             <div id="gardenGraph" class="garden-graph"></div>

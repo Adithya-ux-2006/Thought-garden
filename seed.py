@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -43,7 +44,14 @@ with app.app_context():
             "content": "Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed. It focuses on developing computer programs that can access data and use it to learn for themselves. The process begins with observations or data, such as examples, direct experience, or instruction, to look for patterns in data and make better decisions in the future.",
             "category": "AI",
             "tags": ["Machine Learning", "AI", "Research"],
-            "is_pinned": True
+            "is_pinned": True,
+            # Backdated so the demo garden can actually show a 'tree' stage
+            # (growth_service.py needs both age AND connections - this note
+            # is the AI cluster's hub, so it reliably ends up well-connected
+            # after relationship discovery below). Doesn't touch the scoring
+            # logic itself, just gives one note a realistic age to combine
+            # with real connections.
+            "days_old": 20
         },
         {
             "title": "Neural Networks Explained",
@@ -153,6 +161,11 @@ with app.app_context():
             source_type="manual",
             is_pinned=note_data.get("is_pinned", False)
         )
+        if "days_old" in note_data:
+            # Note.created_at otherwise defaults to utcnow() at insert time
+            # (see app/models.py) - explicitly setting it here is what lets
+            # a demo note be old enough to reach the 'tree' growth stage.
+            note.created_at = datetime.utcnow() - timedelta(days=note_data["days_old"])
         db.session.add(note)
         db.session.flush()
         
