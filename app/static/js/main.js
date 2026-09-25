@@ -13,7 +13,13 @@ let gardenLabelsVisible = true;
 // nodes into meta-nodes and complicate every other feature below (click
 // handling, neighbourhood highlight, search) - while still producing
 // visible category neighbourhoods for a garden this size.
-const GARDEN_CATEGORY_ORDER = ['AI', 'Cybersecurity', 'Software Engineering', 'Operating Systems', 'Research'];
+//
+// GARDEN_CATEGORIES is injected by base.html from
+// app/services/category_service.py (the single source of truth also used
+// server-side for garden node colors and the form dropdown) so this order/
+// badge-class list can't drift from the Python one the way the old two
+// hardcoded copies did.
+const GARDEN_CATEGORY_ORDER = (window.GARDEN_CATEGORIES || []).map(c => c.value);
 const GARDEN_LABEL_ZOOM_THRESHOLD = 0.8;
 const GARDEN_NODE_DIM_OPACITY = 0.12;
 const GARDEN_EDGE_DIM_OPACITY = 0.08;
@@ -40,14 +46,9 @@ function gardenLabelFont() {
     };
 }
 
-const GARDEN_CATEGORY_BADGE_CLASS = {
-    'AI': 'badge-category-ai',
-    'Artificial Intelligence': 'badge-category-ai',
-    'Cybersecurity': 'badge-category-cyber',
-    'Software Engineering': 'badge-category-se',
-    'Operating Systems': 'badge-category-os',
-    'Research': 'badge-category-research'
-};
+const GARDEN_CATEGORY_BADGE_CLASS = Object.fromEntries(
+    (window.GARDEN_CATEGORIES || []).map(c => [c.value, `badge-category-${c.slug}`])
+);
 
 function gardenCategoryBadgeClass(category) {
     return GARDEN_CATEGORY_BADGE_CLASS[category] || 'badge-category-none';
@@ -235,7 +236,7 @@ function highlightGardenNeighborhood(nodeId, edgeHighlightColor, edgeBaseColor) 
 
     gardenNodesDataSet.update(allNodes.map(node => ({
         id: node.id,
-        // node.color is {background, border} (see get_category_color()) -
+        // node.color is {background, border} (see category_service.category_color()) -
         // dim both channels so a de-emphasized node's ring fades too, not
         // just its fill.
         color: connected.has(node.id) ? node.color : {

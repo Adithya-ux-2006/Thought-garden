@@ -20,36 +20,14 @@
                     <div class="garden-toolbar-row">
                         <div class="garden-toolbar-filters">
                             <span class="garden-toolbar-label">Categories</span>
+                            {% for cat in categories %}
                             <div class="form-check garden-chip">
-                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterPhysics" value="AI">
-                                <label class="form-check-label small" for="filterPhysics">
-                                    <span class="badge badge-category-ai">AI</span>
+                                <input class="form-check-input garden-category-filter" type="checkbox" id="filter-{{ cat.slug }}" value="{{ cat.value }}">
+                                <label class="form-check-label small" for="filter-{{ cat.slug }}">
+                                    <span class="badge badge-category-{{ cat.slug }}">{{ cat.short_label }}</span>
                                 </label>
                             </div>
-                            <div class="form-check garden-chip">
-                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterCyber" value="Cybersecurity">
-                                <label class="form-check-label small" for="filterCyber">
-                                    <span class="badge badge-category-cyber">Cyber</span>
-                                </label>
-                            </div>
-                            <div class="form-check garden-chip">
-                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterSE" value="Software Engineering">
-                                <label class="form-check-label small" for="filterSE">
-                                    <span class="badge badge-category-se">SE</span>
-                                </label>
-                            </div>
-                            <div class="form-check garden-chip">
-                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterOS" value="Operating Systems">
-                                <label class="form-check-label small" for="filterOS">
-                                    <span class="badge badge-category-os">OS</span>
-                                </label>
-                            </div>
-                            <div class="form-check garden-chip">
-                                <input class="form-check-input garden-category-filter" type="checkbox" id="filterResearch" value="Research">
-                                <label class="form-check-label small" for="filterResearch">
-                                    <span class="badge badge-category-research">Research</span>
-                                </label>
-                            </div>
+                            {% endfor %}
                             <span class="garden-pinned-indicator"><i class="bi bi-star-fill"></i> Pinned</span>
                         </div>
 

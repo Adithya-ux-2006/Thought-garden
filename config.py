@@ -44,6 +44,16 @@ class Config:
     MAX_RELATED_NOTES = int(os.environ.get('MAX_RELATED_NOTES', 5))
     KEYWORD_SIMILARITY_THRESHOLD = float(os.environ.get('KEYWORD_SIMILARITY_THRESHOLD', 0.18))
 
-    # --- Startup / server ---
-    AUTO_SEED = os.environ.get('AUTO_SEED', '1').lower() not in {'0', 'false', 'no'}
+    # --- Background indexer ---
+    # How often the worker wakes on its own even without a new job queued,
+    # in case an earlier pass left something in 'pending' (e.g. after a
+    # transient failure). Enqueuing a job also wakes it immediately.
+    INDEXER_POLL_INTERVAL_SECONDS = float(os.environ.get('INDEXER_POLL_INTERVAL_SECONDS', 5))
+    INDEX_JOB_MAX_ATTEMPTS = int(os.environ.get('INDEX_JOB_MAX_ATTEMPTS', 3))
+
+    # --- Login rate limit (failed attempts per client IP) ---
+    LOGIN_MAX_FAILED_ATTEMPTS = int(os.environ.get('LOGIN_MAX_FAILED_ATTEMPTS', 10))
+    LOGIN_LOCKOUT_SECONDS = int(os.environ.get('LOGIN_LOCKOUT_SECONDS', 900))
+
+    # --- Server ---
     PORT = int(os.environ.get('PORT', 5000))

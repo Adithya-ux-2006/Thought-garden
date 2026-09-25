@@ -64,7 +64,7 @@ thought-garden/
 
 1. **Immediate Connection Discovery:** Titles, content, tags, and categories are compared without blocking the web request
 2. **Stored Semantic Embeddings:** Existing SentenceTransformer vectors enhance similarity when available
-3. **Automatic Backfill:** Existing notes are connected when the application starts
+3. **Backfill on demand:** `flask reindex` recomputes connections for every note
 4. **Top-N Selection:** The strongest connections are retained for each note
 5. **Explanation:** Overlapping keywords identify why notes are connected
 
@@ -82,7 +82,7 @@ thought-garden/
 |-----------|------------|
 | Backend | Python, Flask |
 | Database | SQLite (SQLAlchemy ORM) |
-| AI/ML | sentence-transformers, scikit-learn, NumPy |
+| AI/ML | sentence-transformers, NumPy |
 | Frontend | HTML5, Jinja2, Bootstrap 5, Vanilla JS |
 | Graph | vis-network |
 | PDF | PyPDF2 |
@@ -121,6 +121,12 @@ pip install -r requirements.txt
 # or, for local development only, set FLASK_DEBUG=1
 cp .env.example .env
 
+# Create or upgrade the database schema
+flask db upgrade
+
+# Optional: local demo account with the starter garden
+flask seed-demo
+
 # Run application
 python run.py
 ```
@@ -133,13 +139,15 @@ python run.py
 
 ### First Run
 
-On an empty database, `run.py` creates the starter garden automatically. New users receive starter notes and connections during registration, then enter the completed visual Garden. Set `AUTO_SEED=0` to disable automatic starter data.
+`python run.py` never creates tables or data; it refuses to start until `flask db upgrade` has brought the schema up to date. New users receive the starter notes (from `app/data/starter_notes.json`) and their connections during registration, then enter the completed visual Garden. Run `flask reindex` to recompute every connection.
+
+**Existing database:** back up `instance/thought_garden.db`, then run `flask db upgrade`. A database created before migrations existed (no `alembic_version` table) needs `flask db stamp a1b2c3d4e5f6` first.
 
 ### Access
 
 Open http://127.0.0.1:5000 in your browser.
 
-**Demo Account:**
+**Demo Account** (only after `flask seed-demo`; local use only):
 - Email: demo@thoughtgarden.app
 - Password: demo1234
 

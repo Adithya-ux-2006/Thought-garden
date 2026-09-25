@@ -45,7 +45,7 @@
                     <h5 class="mt-3">Strongest Connection</h5>
                     {% if insights.strongest_connection %}
                     <h3 class="text-info">{{ (insights.strongest_connection.similarity_score * 100)|round }}%</h3>
-                    <p class="text-muted small">
+                    <p class="text-muted small">{{ insights.strongest_connection|relationship_label }}<br>
                         {{ insights.strongest_connection.source_note.title[:30] }}{% if insights.strongest_connection.source_note.title|length > 30 %}...{% endif %}
                         ↔
                         {{ insights.strongest_connection.target_note.title[:30] }}{% if insights.strongest_connection.target_note.title|length > 30 %}...{% endif %}

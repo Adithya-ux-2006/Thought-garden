@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import render_template, redirect, url_for, request
 from flask_login import login_required, current_user
 from app.main import bp
@@ -96,7 +96,7 @@ def insights():
         .filter(~Note.relationships.any(), ~Note.inverse_relationships.any())\
         .count()
     
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
     recently_growing = db.session.query(Note.category, func.count(Note.id))\
         .filter(Note.user_id == current_user.id, Note.category.isnot(None),
                 Note.created_at >= thirty_days_ago)\

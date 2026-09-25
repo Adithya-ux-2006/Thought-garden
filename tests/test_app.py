@@ -3,8 +3,7 @@ import numpy as np
 import pytest
 from app import create_app, db
 from app.models import User, Note, Tag, Relationship, NoteEmbedding
-from app.services.embedding_service import clear_embedding_cache, invalidate_embedding_cache
-from app.services.similarity_service import update_relationships_for_note
+from app.services.similarity_service import rebuild_user_graph
 
 
 @pytest.fixture
@@ -175,6 +174,53 @@ def test_delete_note(auth_client, app):
         assert note is None
 
 
+def test_two_users_can_independently_use_the_same_tag_name(client, app):
+    # End-to-end regression for the tag cross-user leak: creating a note
+    # tagged 'ai' as one user must not reuse or collide with another
+    # user's identically-named tag.
+    client.post('/auth/register', data={
+        'name': 'User One', 'email': 'one@example.com',
+        'password': 'password123', 'confirm_password': 'password123',
+    }, follow_redirects=True)
+    client.post('/notes/create', data={
+        'title': 'Note One', 'content': 'First.', 'tags': 'shared', 'is_pinned': False,
+    }, follow_redirects=True)
+    client.post('/auth/logout', follow_redirects=True)
+
+    client.post('/auth/register', data={
+        'name': 'User Two', 'email': 'two@example.com',
+        'password': 'password123', 'confirm_password': 'password123',
+    }, follow_redirects=True)
+    client.post('/notes/create', data={
+        'title': 'Note Two', 'content': 'Second.', 'tags': 'shared', 'is_pinned': False,
+    }, follow_redirects=True)
+
+    with app.app_context():
+        tags = Tag.query.filter_by(name='shared').all()
+        assert len(tags) == 2
+        assert {t.user_id for t in tags} == {
+            User.query.filter_by(email='one@example.com').one().id,
+            User.query.filter_by(email='two@example.com').one().id,
+        }
+
+
+def test_removing_a_notes_only_tag_prunes_the_orphaned_tag(auth_client, app):
+    auth_client.post('/notes/create', data={
+        'title': 'Tagged Note', 'content': 'Content.', 'tags': 'onlyhere', 'is_pinned': False,
+    }, follow_redirects=True)
+
+    with app.app_context():
+        note_id = Note.query.filter_by(title='Tagged Note').one().id
+        assert Tag.query.filter_by(name='onlyhere').count() == 1
+
+    auth_client.post(f'/notes/{note_id}/edit', data={
+        'title': 'Tagged Note', 'content': 'Content.', 'tags': '', 'is_pinned': False,
+    }, follow_redirects=True)
+
+    with app.app_context():
+        assert Tag.query.filter_by(name='onlyhere').count() == 0
+
+
 def test_archive_note(auth_client, app):
     auth_client.post('/notes/create', data={
         'title': 'Test Note',
@@ -323,13 +369,10 @@ def _set_embedding(note_id, angle_degrees):
     else:
         row.embedding = blob
     db.session.commit()
-    invalidate_embedding_cache(note_id)
 
 
 def test_editing_note_does_not_destroy_other_notes_connections(client, app):
     with app.app_context():
-        clear_embedding_cache()
-
         user = User(name='Test', email='edit-connections@test.com')
         user.set_password('password')
         db.session.add(user)
@@ -356,10 +399,9 @@ def test_editing_note_does_not_destroy_other_notes_connections(client, app):
         for name, angle in [('G', 90), ('H', 92), ('I', 94)]:
             _set_embedding(notes[name].id, angle)
 
-        # Build the initial graph exactly like the real app would: every
-        # note scores itself against the others once.
-        for name in names:
-            update_relationships_for_note(notes[name])
+        # Build the initial graph exactly like the real app would: a full
+        # rebuild from the current embeddings.
+        rebuild_user_graph(user.id)
 
         def connections_of(name):
             rels = Relationship.query.filter(
@@ -385,7 +427,7 @@ def test_editing_note_does_not_destroy_other_notes_connections(client, app):
         # ~0.72-0.80). A's own top-5 will now pick B..F, crowding out
         # G/H/I even though G/H/I still qualify and still want A.
         _set_embedding(notes['A'].id, 44)
-        update_relationships_for_note(notes['A'])
+        rebuild_user_graph(user.id)
 
         after = {name: connections_of(name) for name in names}
 

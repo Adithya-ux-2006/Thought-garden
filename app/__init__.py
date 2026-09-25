@@ -3,6 +3,7 @@ import uuid
 
 from flask import Flask, flash, g, jsonify, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
@@ -90,6 +91,14 @@ def _validate_secret_key(app):
     )
 
 
+def _set_sqlite_pragmas(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute('PRAGMA foreign_keys=ON')
+    cursor.execute('PRAGMA busy_timeout=5000')
+    cursor.execute('PRAGMA journal_mode=WAL')
+    cursor.close()
+
+
 def create_app(config_overrides=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
@@ -104,9 +113,15 @@ def create_app(config_overrides=None):
     _validate_secret_key(app)
 
     db.init_app(app)
+    with app.app_context():
+        if db.engine.dialect.name == 'sqlite':
+            event.listen(db.engine, 'connect', _set_sqlite_pragmas)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
+
+    from app.auth.rate_limit import FailedLoginLimiter
+    app.extensions['login_limiter'] = FailedLoginLimiter()
 
     # --- Request ID middleware ---
     @app.before_request
@@ -167,6 +182,16 @@ def create_app(config_overrides=None):
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
+    from app.cli import register_commands
+    register_commands(app)
+
+    # One persistent worker thread per process, loaded once here - never
+    # per request. Skipped under pytest (TESTING=True in every fixture);
+    # tests instead call indexer.process_pending(app) directly.
+    if not app.config.get('TESTING'):
+        from app.services import indexer
+        indexer.start_worker(app)
+
     @app.template_filter('display_tags')
     def display_tags_filter(tags, category):
         # Seed data (and real user habit) often tags a note with its own
@@ -179,10 +204,10 @@ def create_app(config_overrides=None):
         category_lower = category.strip().lower()
         return [t for t in tags if t.name.strip().lower() != category_lower]
 
-    with app.app_context():
-        # note_embeddings (NoteEmbedding model) is created here too - it
-        # used to need a separate raw CREATE TABLE because it wasn't a
-        # SQLAlchemy model; now that it is, create_all() covers it.
-        db.create_all()
+    from app.services.similarity_service import relationship_label
+    app.template_filter('relationship_label')(relationship_label)
+
+    from app.services.category_service import garden_category_metadata
+    app.jinja_env.globals['GARDEN_CATEGORIES'] = garden_category_metadata()
 
     return app

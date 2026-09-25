@@ -261,8 +261,6 @@ def test_debug_login_cookies_are_not_marked_secure():
 
 @pytest.fixture
 def small_limit_client(monkeypatch):
-    monkeypatch.setattr('app.notes.routes.queue_embedding_generation', lambda *a, **k: None)
-    monkeypatch.setattr('app.services.background_indexing.queue_embedding_generation', lambda *a, **k: None)
     app = _make_app(UPLOAD_MAX_SIZE_MB=1)
     with app.app_context():
         db.create_all()
@@ -324,7 +322,6 @@ def _boom(*args, **kwargs):
 
 @pytest.fixture
 def logged_in(app, client, monkeypatch):
-    monkeypatch.setattr('app.notes.routes.queue_embedding_generation', lambda *a, **k: None)
     _login(client)
     return client
 
@@ -347,7 +344,7 @@ def _assert_generic_failure(client, response, caplog, page_url):
 
 
 def test_create_analysis_failure_is_generic_to_user(logged_in, caplog, monkeypatch):
-    monkeypatch.setattr('app.notes.routes.update_relationships_for_note', _boom)
+    monkeypatch.setattr('app.notes.routes.rebuild_user_graph', _boom)
     response = logged_in.post('/notes/create', data={'title': 'New', 'content': 'Body.'})
     assert response.status_code == 302
     _assert_generic_failure(logged_in, response, caplog, response.headers['Location'])
@@ -355,7 +352,7 @@ def test_create_analysis_failure_is_generic_to_user(logged_in, caplog, monkeypat
 
 def test_edit_analysis_failure_is_generic_to_user(logged_in, caplog, monkeypatch):
     note_id = _note_id(logged_in)
-    monkeypatch.setattr('app.notes.routes.update_relationships_for_note', _boom)
+    monkeypatch.setattr('app.notes.routes.rebuild_user_graph', _boom)
     response = logged_in.post(f'/notes/{note_id}/edit', data={'title': 'Changed', 'content': 'Body.'})
     assert response.status_code == 302
     _assert_generic_failure(logged_in, response, caplog, response.headers['Location'])
@@ -364,7 +361,7 @@ def test_edit_analysis_failure_is_generic_to_user(logged_in, caplog, monkeypatch
 def test_unarchive_analysis_failure_is_generic_to_user(logged_in, caplog, monkeypatch):
     note_id = _note_id(logged_in)
     logged_in.post(f'/notes/{note_id}/archive')
-    monkeypatch.setattr('app.notes.routes.update_relationships_for_note', _boom)
+    monkeypatch.setattr('app.notes.routes.rebuild_user_graph', _boom)
     response = logged_in.post(f'/notes/{note_id}/archive')
     assert response.status_code == 302
     _assert_generic_failure(logged_in, response, caplog, response.headers['Location'])

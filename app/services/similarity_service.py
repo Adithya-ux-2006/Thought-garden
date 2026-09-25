@@ -1,3 +1,5 @@
+import numpy as np
+
 from app import db
 from app.models import Note, Relationship
 from app.services.embedding_service import get_all_embeddings, cosine_similarity
@@ -11,7 +13,9 @@ KEYWORD_THRESHOLD = Config.KEYWORD_SIMILARITY_THRESHOLD
 
 
 def lightweight_similarity(note1, note2):
-    """Fast, deterministic similarity that needs no external ML model."""
+    """Fast, deterministic similarity that needs no external ML model.
+    Used by rebuild_user_graph() as the fallback for any note that doesn't
+    have a ready embedding yet."""
     words1 = set(extract_keywords(f'{note1.title} {note1.content}', max_keywords=30))
     words2 = set(extract_keywords(f'{note2.title} {note2.content}', max_keywords=30))
     keyword_score = len(words1 & words2) / max(1, len(words1 | words2))
@@ -25,126 +29,102 @@ def lightweight_similarity(note1, note2):
     return min(1.0, (0.45 * keyword_score) + (0.40 * tag_score) + (0.15 * category_score))
 
 
-def _top_matches(note, candidates, all_embeddings):
-    """Score `note` against `candidates`, return the (other_id, sim) pairs
-    that qualify, strongest first, capped to MAX_RELATED_NOTES - i.e.
-    exactly the set `note`'s own scoring pass would pick.
+def rebuild_user_graph(user_id):
+    """Recompute every relationship among `user_id`'s active notes from
+    scratch and replace them in one transaction.
 
-    Factored out so update_relationships_for_note() can reuse it not just
-    for the note being re-scored, but also - before deleting a pair - to
-    ask "would the OTHER note still pick this one, on its own terms?".
+    Notes with a ready embedding are scored against each other with a
+    single vectorized cosine-similarity pass (numpy top-k - a garden of
+    1,000 notes x 384 dims is ~2MB, milliseconds of work). Any note
+    without a ready embedding yet (still queued, or the indexer never
+    loaded a model) falls back to lightweight_similarity() for its pairs.
+
+    This replaces the old update_relationships_for_note(), which patched
+    one note's edges at a time and had to special-case "does the other
+    note still want this edge on its own terms" to avoid dropping a pair
+    that only the other side selected. A full, consistent rebuild scores
+    every note the same way in the same pass, so that case can't arise -
+    every relationship is either wanted by this rebuild or it isn't.
+
+    Strictly scoped to one user: only that user's active notes are read,
+    and only relationships between them are touched.
     """
-    source_emb = all_embeddings.get(note.id)
-    similarities = []
-    for other in candidates:
-        other_emb = all_embeddings.get(other.id)
-        if source_emb is not None and other_emb is not None:
-            sim = float(cosine_similarity(source_emb, other_emb))
-            qualifies = sim >= SIMILARITY_THRESHOLD
-        else:
-            sim = lightweight_similarity(note, other)
-            qualifies = sim >= KEYWORD_THRESHOLD
-        if qualifies:
-            similarities.append((other.id, sim))
+    notes = Note.query.filter_by(user_id=user_id, is_archived=False).all()
+    note_ids = [n.id for n in notes]
 
-    similarities.sort(key=lambda x: x[1], reverse=True)
-    return similarities[:MAX_RELATED_NOTES]
+    if note_ids:
+        Relationship.query.filter(
+            Relationship.source_note_id.in_(note_ids) | Relationship.target_note_id.in_(note_ids)
+        ).delete(synchronize_session=False)
 
+    if len(notes) < 2:
+        db.session.commit()
+        return 0
 
-def update_relationships_for_note(note):
-    if not note.content.strip():
-        return
+    embeddings = get_all_embeddings(user_id)
+    embedded_ids = [n.id for n in notes if n.id in embeddings]
 
-    # Never initialize/download the transformer model in a web request. If
-    # embeddings already exist, use them; otherwise the lightweight scorer
-    # still creates useful connections immediately.
-    all_embeddings = get_all_embeddings(note.user_id, generate_if_missing=False)
-    other_notes = Note.query.filter(
-        Note.user_id == note.user_id,
-        Note.id != note.id,
-        Note.is_archived == False,
-    ).all()
-    notes_by_id = {n.id: n for n in other_notes}
+    # (sorted note-id pair) -> (score, method). Every pair is scored from
+    # exactly one side's perspective (embedded notes only ever pair with
+    # other embedded notes; an unembedded note's keyword pass covers all
+    # of its own pairs, including to embedded notes) and cosine similarity
+    # is symmetric, so a pair can never be proposed twice with conflicting
+    # scores - first write is the only write.
+    pairs = {}
 
-    similarities = _top_matches(note, other_notes, all_embeddings)
+    def _consider(a_id, b_id, score, method):
+        pair = (a_id, b_id) if a_id < b_id else (b_id, a_id)
+        if pair not in pairs:
+            pairs[pair] = (score, method)
 
-    existing_rels = Relationship.query.filter(
-        (Relationship.source_note_id == note.id) | (Relationship.target_note_id == note.id)
-    ).all()
+    if len(embedded_ids) >= 2:
+        matrix = np.stack([embeddings[nid] for nid in embedded_ids])
+        sims = matrix @ matrix.T
+        for i, note_id in enumerate(embedded_ids):
+            row = sims[i]
+            candidates = [
+                (embedded_ids[j], float(row[j]))
+                for j in range(len(embedded_ids))
+                if j != i and row[j] >= SIMILARITY_THRESHOLD
+            ]
+            candidates.sort(key=lambda item: item[1], reverse=True)
+            for other_id, score in candidates[:MAX_RELATED_NOTES]:
+                _consider(note_id, other_id, score, 'embedding')
 
-    existing_pairs = set()
-    for rel in existing_rels:
-        pair = tuple(sorted([rel.source_note_id, rel.target_note_id]))
-        existing_pairs.add(pair)
+    unembedded = [n for n in notes if n.id not in embeddings]
+    for note in unembedded:
+        scored = []
+        for other in notes:
+            if other.id == note.id:
+                continue
+            score = lightweight_similarity(note, other)
+            if score >= KEYWORD_THRESHOLD:
+                scored.append((other.id, score))
+        scored.sort(key=lambda item: item[1], reverse=True)
+        for other_id, score in scored[:MAX_RELATED_NOTES]:
+            _consider(note.id, other_id, score, 'keyword')
 
-    selected_pairs = {tuple(sorted((note.id, other_id))) for other_id, _ in similarities}
-    for rel in existing_rels:
-        pair = tuple(sorted((rel.source_note_id, rel.target_note_id)))
-        if pair in selected_pairs:
-            continue
-
-        # This pair isn't in `note`'s own top picks anymore, but a
-        # relationship can exist because the OTHER note ranked THIS one
-        # highly - re-scoring A must not delete an edge that belongs to
-        # B's top-N just because A stopped wanting it. Recompute the other
-        # note's own ranking (its own candidates, on its own terms) before
-        # deleting; only drop the row if neither side wants it.
-        other_id = rel.target_note_id if rel.source_note_id == note.id else rel.source_note_id
-        other_note = notes_by_id.get(other_id)
-        if other_note is None:
-            # Other note archived/gone from this candidate set - nothing
-            # left to keep the edge for.
-            db.session.delete(rel)
-            continue
-
-        other_candidates = [note] + [n for n in other_notes if n.id != other_id]
-        other_top = _top_matches(other_note, other_candidates, all_embeddings)
-        still_wanted_by_other = any(oid == note.id for oid, _ in other_top)
-        if not still_wanted_by_other:
-            db.session.delete(rel)
-
-    new_pairs = set()
-    for other_id, sim in similarities:
-        pair = tuple(sorted([note.id, other_id]))
-        if pair in existing_pairs:
-            rel = Relationship.query.filter(
-                ((Relationship.source_note_id == note.id) & (Relationship.target_note_id == other_id)) |
-                ((Relationship.source_note_id == other_id) & (Relationship.target_note_id == note.id))
-            ).first()
-            if rel:
-                rel.similarity_score = sim
-                rel.updated_at = db.func.now()
-        else:
-            new_pairs.add((note.id, other_id, sim))
-    
-    for source_id, target_id, sim in new_pairs:
-        rel = Relationship(
+    for (source_id, target_id), (score, method) in pairs.items():
+        db.session.add(Relationship(
             source_note_id=source_id,
             target_note_id=target_id,
-            similarity_score=sim,
-            relationship_type='semantic'
-        )
-        db.session.add(rel)
-    
+            similarity_score=score,
+            relationship_type='semantic',
+            method=method,
+        ))
+
     db.session.commit()
+    return len(pairs)
 
 
-def recalculate_all_relationships(user_id):
-    notes = Note.query.filter_by(user_id=user_id).all()
-    for note in notes:
-        update_relationships_for_note(note)
-
-
-def ensure_all_relationships():
-    """Backfill connections for every existing garden during application startup."""
-    user_ids = [row[0] for row in db.session.query(Note.user_id).distinct().all()]
-    note_count = 0
-    for user_id in user_ids:
-        notes = Note.query.filter_by(user_id=user_id, is_archived=False).all()
-        note_count += len(notes)
-        for note in notes:
-            update_relationships_for_note(note)
-    return note_count, Relationship.query.count()
+def relationship_label(rel):
+    """Human-readable strength for a relationship, method-aware: keyword
+    overlap and cosine similarity live on different scales, so the same
+    raw number ("72%") meant different things depending which scorer
+    produced it (C6). Callers show this instead of the raw score."""
+    if rel.method == 'embedding':
+        return 'Strong match' if rel.similarity_score >= 0.7 else 'Related'
+    return 'Strong match' if rel.similarity_score >= 0.4 else 'Related'
 
 
 def get_relationship_explanation(note1, note2):
@@ -155,10 +135,10 @@ def get_relationship_explanation(note1, note2):
     keywords1 = set(extract_keywords(note1.title + ' ' + note1.content, max_keywords=10))
     keywords2 = set(extract_keywords(note2.title + ' ' + note2.content, max_keywords=10))
     common = keywords1 & keywords2
-    
+
     common_tags = set(t.name.lower() for t in note1.tags) & set(t.name.lower() for t in note2.tags)
     common.update(common_tags)
-    
+
     if common:
         top_common = sorted(list(common))[:5]
         return f"Connected because both notes discuss: {', '.join(top_common)}."

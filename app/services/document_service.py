@@ -107,14 +107,9 @@ def generate_title_from_content(content, filename):
 
 
 def create_notes_from_document(user_id, content, filename, category=None):
-    import logging
-    from flask import current_app
     from app.models import Note, db
-    from app.services.similarity_service import update_relationships_for_note
-    from app.services.keyword_service import extract_keywords
-    from app.services.background_indexing import queue_embedding_generation
-
-    logger = logging.getLogger(__name__)
+    from app.services import indexer
+    from app.services.similarity_service import rebuild_user_graph
 
     chunks = chunk_text(content)
 
@@ -138,12 +133,12 @@ def create_notes_from_document(user_id, content, filename, category=None):
 
     db.session.commit()
 
-    app_obj = current_app._get_current_object()
+    try:
+        rebuild_user_graph(user_id)
+    except Exception:
+        current_app.logger.exception('Error building connections for notes imported from %s', filename)
+
     for note in notes:
-        try:
-            update_relationships_for_note(note)
-        except Exception as e:
-            logger.warning('Error processing relationships for note %s: %s', note.id, e)
-        queue_embedding_generation(app_obj, note.id)
+        indexer.enqueue(note)
 
     return notes

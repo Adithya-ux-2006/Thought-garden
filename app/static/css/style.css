@@ -62,9 +62,10 @@
        scheme did, reusing bg-danger/success/warning/info for categories)
        meant a category color would silently drift if someone re-themed
        alerts. Graph node fill/border colors are separate again - those
-       are served by app/garden/routes.py:get_category_color() since
-       Python can't read CSS custom properties, and are tuned to work
-       across both themes in one fixed value (see that function's comment).
+       are served by app/services/category_service.py:category_color()
+       since Python can't read CSS custom properties, and are tuned to
+       work across both themes in one fixed value (see that function's
+       comment).
        -soft-bg/-soft-text pairs follow the same tinted-badge pattern as
        the semantic colors above (verified >=4.5:1 contrast). */
     --category-ai: #a99bea;
@@ -93,7 +94,7 @@
     --category-research-soft-text: #374e5a;
 
     /* Pinned-note ring color - single value for both themes, same reasoning
-       as the category tokens (get_category_color() in app/garden/routes.py):
+       as the category tokens (category_color() in app/services/category_service.py):
        Flask can't know which theme the browser is in, so the server-set
        ring color is one fixed hex. Defined once here, in :root, not
        repeated per theme, and mirrored by hand in PINNED_BORDER_COLOR since

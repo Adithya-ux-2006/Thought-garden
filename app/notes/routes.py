@@ -4,9 +4,9 @@ from app.notes import bp
 from app.models import Note, Tag, Relationship, db
 from app.forms import NoteForm
 from app.services.keyword_service import extract_keywords
-from app.services.similarity_service import update_relationships_for_note
-from app.services.embedding_service import invalidate_embedding_cache
-from app.services.background_indexing import queue_embedding_generation
+from app.services.similarity_service import rebuild_user_graph
+from app.services.tag_service import get_or_create_tags, prune_orphan_tags
+from app.services import indexer
 
 
 def _report_failure(message, category='warning'):
@@ -20,17 +20,6 @@ def parse_tags(tag_string):
     if not tag_string:
         return []
     tags = [t.strip() for t in tag_string.split(',') if t.strip()]
-    return tags
-
-
-def get_or_create_tags(tag_names):
-    tags = []
-    for name in tag_names:
-        tag = Tag.query.filter_by(name=name).first()
-        if not tag:
-            tag = Tag(name=name)
-            db.session.add(tag)
-        tags.append(tag)
     return tags
 
 
@@ -85,20 +74,19 @@ def create():
         
         tag_names = parse_tags(form.tags.data)
         if tag_names:
-            tags = get_or_create_tags(tag_names)
-            note.tags = tags
-        
+            note.tags = get_or_create_tags(current_user.id, tag_names)
+
         db.session.commit()
 
         try:
-            update_relationships_for_note(note)
+            rebuild_user_graph(current_user.id)
         except Exception:
             _report_failure('Note saved, but finding connections failed.')
 
-        # Fast keyword-based relationships are already in place above.
-        # This kicks off the slower semantic (embedding) pass in the
-        # background so it doesn't block the response.
-        queue_embedding_generation(current_app._get_current_object(), note.id)
+        # Fast keyword-tier relationships are already in place above. This
+        # just queues the note for the background worker's embedding pass,
+        # which will upgrade them to embedding-tier once it gets to it.
+        indexer.enqueue(note)
 
         flash('Note created successfully!', 'success')
         return redirect(url_for('notes.view', note_id=note.id))
@@ -119,28 +107,35 @@ def view(note_id):
 def edit(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
     form = NoteForm(obj=note)
-    if note.category and note.category not in {value for value, _ in form.category.choices}:
-        form.category.choices = form.category.choices + [(note.category, note.category)]
     if request.method == 'GET':
         form.tags.data = ', '.join([t.name for t in note.tags])
+        # Purely cosmetic: without its value present in `choices`, WTForms'
+        # select widget can't mark any <option> as selected, so a note
+        # saved under a category outside the presets would render with
+        # nothing selected. validate_choice=False (see NoteForm) already
+        # makes POST accept any category regardless of this list - this
+        # only affects what shows pre-selected on the GET-rendered form.
+        if note.category and note.category not in dict(form.category.choices):
+            form.category.choices.append((note.category, note.category))
 
     if form.validate_on_submit():
         note.title = form.title.data
         note.content = form.content.data
         note.category = form.category.data or None
         note.is_pinned = form.is_pinned.data
-        
+
         tag_names = parse_tags(form.tags.data)
-        note.tags = get_or_create_tags(tag_names)
-        
+        note.tags = get_or_create_tags(current_user.id, tag_names)
+        prune_orphan_tags(current_user.id)
+
         db.session.commit()
 
         try:
-            update_relationships_for_note(note)
+            rebuild_user_graph(current_user.id)
         except Exception:
             _report_failure('Note updated, but finding connections failed.')
 
-        queue_embedding_generation(current_app._get_current_object(), note.id)
+        indexer.enqueue(note)
 
         flash('Note updated successfully!', 'success')
         return redirect(url_for('notes.view', note_id=note.id))
@@ -153,8 +148,9 @@ def edit(note_id):
 def delete(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
     db.session.delete(note)
+    db.session.flush()
+    prune_orphan_tags(current_user.id)
     db.session.commit()
-    invalidate_embedding_cache(note_id)
     flash('Note deleted.', 'success')
     return redirect(url_for('notes.list_notes'))
 
@@ -177,7 +173,7 @@ def archive(note_id):
     else:
         db.session.commit()
         try:
-            update_relationships_for_note(note)
+            rebuild_user_graph(current_user.id)
         except Exception:
             _report_failure('Note unarchived, but finding connections failed.')
 

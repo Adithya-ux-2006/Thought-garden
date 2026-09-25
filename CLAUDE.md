@@ -6,14 +6,15 @@ Persistent project context. Keep this file current; prefer concise dated entries
 
 Flask personal notes app with an AI-discovered knowledge graph: register → copy of a 17-note starter garden → create/import notes → similarity scoring → graph (`vis-network`) or hybrid keyword+semantic search.
 
-**Stack:** Flask, Flask-SQLAlchemy, SQLite, Flask-Login, Flask-WTF, sentence-transformers (`all-MiniLM-L6-v2`), scikit-learn/NumPy, PyPDF2, Bootstrap 5, vanilla JS.
+**Stack:** Flask, Flask-SQLAlchemy, SQLite, Flask-Login, Flask-WTF, sentence-transformers (`all-MiniLM-L6-v2`), NumPy, PyPDF2, Bootstrap 5, vanilla JS.
 
 ## Key layout
 
 ```text
-run.py                         app entry; auto-seed empty DB; relationship backfill; :5000
+run.py                         app entry; refuses to start unless schema is at Alembic head; :5000
 config.py                      centralized Config + load_dotenv()
-seed.py                        17-note demo seed across 5 categories
+app/cli.py                     `flask seed-demo`, `flask reindex`, schema_is_current()
+app/data/starter_notes.json    17 starter notes (new-user garden and demo seed)
 app/__init__.py                app factory; CSRF, DB, Login, request IDs/errors, SECRET_KEY validation
 app/models.py                  User, Note, Tag, Relationship, NoteEmbedding
 app/forms.py                   Flask-WTF forms
@@ -23,30 +24,32 @@ app/templates/errors/          404.html / 500.html
 app/templates/ + app/static/   UI/assets
 app/static/vendor/             self-hosted Bootstrap 5.3.3, Bootstrap Icons 1.11.3, vis-network 9.1.9, Fraunces, Inter
 migrations/                    Flask-Migrate/Alembic baseline (`a1b2c3d4e5f6`)
-tests/                         pytest suite (34 tests: app, growth service, garden frontend source guards)
+tests/                         pytest suite; conftest.py stubs the embedding model and runs background indexing inline
 ```
 
 ## Environment / startup
 
 Python 3.13. Current compatible pins:
 ```text
-scikit-learn==1.5.2
 numpy==1.26.4; python_version < "3.13"
 numpy==2.1.2; python_version >= "3.13"
 ```
-Older sklearn/numpy pins fail on this machine because Python 3.13 falls back to builds requiring GCC >= 8.4; installed MinGW is 6.3.0. `sentence-transformers` also makes first install slow because it pulls `torch`.
+Older numpy pins fail on this machine because Python 3.13 falls back to builds requiring GCC >= 8.4; installed MinGW is 6.3.0. scikit-learn is no longer a direct dependency but is still installed transitively by `sentence-transformers` (resolves to a prebuilt wheel). `sentence-transformers` also makes first install slow because it pulls `torch`.
 
 `.env.example` exists; `python-dotenv` is installed and `config.py` calls `load_dotenv()` at import time. All env vars are centralized in `Config` with defaults.
 
-Local verification command:
+Local startup (needs `SECRET_KEY` or `FLASK_DEBUG=1` in `.env`):
 ```text
+flask db upgrade      # Alembic is the only schema source; app never calls create_all()
+flask seed-demo       # optional: demo@thoughtgarden.app / demo1234, local only
+flask reindex         # optional: recompute all relationships
 python run.py
 ```
-Historically verified: clean boot, 17 seeded notes / 28 relationships, `/` and `/auth/login` return 200. Demo account: `demo@thoughtgarden.app` / `demo1234`.
+Existing DBs: back up `instance/thought_garden.db`, then `flask db upgrade` (a pre-migrations DB without `alembic_version` needs `flask db stamp a1b2c3d4e5f6` first). The real dev DB was at `a1b2c3d4e5f6` on 2026-09-24; a backup is at `instance/thought_garden.pre-phase1-2026-09-24.db`.
 
 ## Current architecture / important behavior
 
-- **Embeddings:** `NoteEmbedding` is a real model relation (`Note.embedding_row`, `cascade='all, delete-orphan'`, deliberately no `passive_deletes=True`). Stored as raw `numpy.tobytes()` / `np.frombuffer()` instead of pickle; old pickle blobs with protocol-2+ signature `0x80` remain backward-readable.
+- **Embeddings:** `NoteEmbedding` is a real model relation (`Note.embedding_row`, `cascade='all, delete-orphan'`, deliberately no `passive_deletes=True`). Stored as raw float32 bytes. Never unpickled: migration `c4d8a2b6e9f1` deletes legacy pickled rows and any unreadable blob is treated as missing and regenerated.
 - **Background indexing:** `queue_embedding_generation()` runs embedding generation + relationship rescoring in a background thread after note create/edit and document import; semantic relationships no longer depend on first semantic search.
 - **Similarity helpers:** canonical `cosine_similarity` is in `embedding_service.py`; keyword extraction uses the canonical `keyword_service.py` implementation, with the one former max=10 call site pinned explicitly.
 - **Search:** `hybrid_search` uses Reciprocal Rank Fusion `1/(60+rank+1)`. Final note query is user-scoped. Sub-search depth is `page * per_page`, floor 50 / cap 1000. Keyword search currently uses `ILIKE '%q%'`; README's SQLite FTS5 claim is not implemented.
@@ -64,15 +67,12 @@ Historically verified: clean boot, 17 seeded notes / 28 relationships, `/` and `
 
 ## Current known work / caveats
 
-1. **Rate limiting not yet implemented:** next security task; target login, register, and semantic-search endpoints. Make storage configurable; do not assume in-memory storage is suitable for multi-worker production. Integrate 429 responses with existing error handling.
+1. **Rate limiting:** failed logins are limited per client IP (`LOGIN_MAX_FAILED_ATTEMPTS`/`LOGIN_LOCKOUT_SECONDS`, in-process state, so single-process only; uses `request.remote_addr`, no proxy support). Register and semantic search are not rate limited.
 2. **CSP not yet implemented.**
 3. **API/data-hardening roadmap remains:** formalize JSON API, input sanitization review, pagination consistency, query optimization, caching, background-job reliability, type hints/docstrings. Configuration centralization, migrations, pytest, structured errors, and SECRET_KEY hardening are done.
 4. **Automated coverage gaps:** `chosen:false` and focus-ring styling have source-level guards only (`tests/test_garden_frontend_regressions.py`), not browser tests; pinned-color consistency is still manual-only.
 5. **Deferred structural accessibility:** vis-network renders to canvas, so node category/growth meaning is not exposed as normal DOM text/keyboard targets. A real fix likely needs ARIA/live-region support or a parallel accessible list view; not yet implemented.
-6. **Open findings from 2026-09-24 full assessment (not yet fixed; work proceeds in user-assigned phases):**
-   - Functional bugs: UI search form field name doesn't match the route's query param; note edit discards tag changes; document chunking can fail to terminate on some inputs; first search loads the model in-request (~14s).
-   - Security hardening pending: auth redirect handling, client-side rendering of user content, production config defaults, logout method, upload-limit handling. Details tracked outside the repo.
-   - Other: search source-filter values don't match stored `source_type`; result count shows page size; suggest API includes archived notes; `db.create_all()` runs alongside Alembic; keyword and cosine scores share one `similarity_score` column, all labelled `semantic`; scikit-learn unused.
+6. **Open findings (see `FIX_PLAN.md` phases 2+):** first search loads the model in-request (~14s); keyword and cosine scores share one `similarity_score` column, all labelled `semantic`; relationship results depend on the order edges were built (`flask reindex` on the real DB gives 25 vs the stored 28; old code gives the same 25).
 
 ## Documentation rules
 
@@ -95,6 +95,7 @@ Historically verified: clean boot, 17 seeded notes / 28 relationships, `/` and `
 - **2026-09-19 audit fixes:** `chosen:false` prevents node click from destroying category/pinned colors; Bootstrap `.btn:focus-visible` focus ring now matches forest green; growth `MAX_AGE_DAYS` changed 30→14 so tree is realistically reachable while preserving the 50/50 invariant; `focus.html` inline style removed; `--pinned-color` added; `was_recently_watered()` removed. Browser verification confirmed pinned/non-pinned click behavior, focus ring across variants, growth boundaries, CSS cleanup, and zero console errors. Full suite: 23 passed.
 - **Focus-ring testing caveat:** Bootstrap transitions `box-shadow`; computed style read immediately after Tab shows a transient mid-transition value. Wait ~400ms before asserting final focus color. This is documented in CSS.
 - **2026-09-24 demo discoverability:** `display_tags` template filter hides tags equal to the note's category on dashboard/list/search (`e9b8d79`); garden toolbar has a read-only growth legend and the ML Fundamentals seed note is backdated 20 days so the demo shows a tree (`7fd5242`); growth boundary + frontend source-guard tests added (`ac88ac6`). 34/34 tests pass. CLAUDE.md condensed to this format.
+- **2026-09-24 Phases 0a/0b/1 (`fix/critical-bugs`, `fix/security-and-cleanup`, `refactor/foundations`):** 0a fixed UI search, tag edits, chunker hang, filters/counts; 0b hardened panel rendering, login redirects, debug/secret defaults, logout (POST+CSRF), cookies, upload limit, error messages. Phase 1: Alembic-only schema (+ email-normalization and pickled-embedding migrations), SQLite pragmas (FK/WAL/busy_timeout), startup magic replaced by `flask seed-demo`/`flask reindex`, starter garden from a JSON fixture (no longer copied from the demo account), case-insensitive emails, login rate limit, password required to change email, dead code + scikit-learn removed. Migrations verified on a copy of the real DB.
 - **2026-09-20 post-fix audit:** all six fixes independently reverified; no regressions found across Dashboard/Notes/Search/Insights/Garden, themes, filters, search, node interactions, focus view, keyboard traversal, and growth icons. `--pinned-color` and server pin ring matched exactly (`rgb(165,120,52)`). Growth boundary checks: 0-day/1000-connections caps at sapling; 7-day/6-connections reaches tree. Remaining findings are the current caveats above.
 
 ## Git / branch safety
@@ -106,7 +107,7 @@ Historically verified: clean boot, 17 seeded notes / 28 relationships, `/` and `
   - `34e5934` — `refactor: centralize application configuration`
   - `1943506` — `feat: add structured error handling`
   - `3634305` — `security: enforce production secret key`
-- Most recent documented test checkpoint (2026-09-24): **34/34 tests pass**.
+- Most recent documented test checkpoint (2026-09-24, `refactor/foundations`): full suite green; run `pytest` for the current count.
 - Pre-existing garden/frontend work must not be included in unrelated backend commits. Before committing: inspect `git status --short`, `git diff --stat`, and `git diff`; stage only files for the current task.
 
 ## Working conventions

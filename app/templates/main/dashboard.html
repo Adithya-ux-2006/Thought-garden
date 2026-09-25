@@ -132,8 +132,8 @@
                     {% for rel in recent_connections %}
                     <div class="connection-item mb-3 pb-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge bg-{{ 'success' if rel.similarity_score > 0.8 else 'primary' if rel.similarity_score > 0.7 else 'secondary' }}">
-                                {{ (rel.similarity_score * 100)|round }}% similar
+                            <span class="badge bg-{{ 'success' if rel|relationship_label == 'Strong match' else 'secondary' }}">
+                                {{ rel|relationship_label }} ({{ (rel.similarity_score * 100)|round }}%)
                             </span>
                         </div>
                         <div class="mt-2">

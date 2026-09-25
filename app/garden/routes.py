@@ -3,11 +3,13 @@ from flask_login import login_required, current_user
 from app.garden import bp
 from app.models import Note, Relationship, db
 from app.services.growth_service import compute_growth_stage, growth_icon_filename
+from app.services.similarity_service import relationship_label
+from app.services.category_service import category_color, garden_category_metadata
 from sqlalchemy import func
 
 # Matches --pinned-color in app/static/css/style.css (also used by the
 # garden legend's pinned swatch, so the two stay in sync) - CSS can't be
-# read from here, so it's mirrored by hand, same as get_category_color().
+# read from here, so it's mirrored by hand, same as category_service.category_color().
 # It's a darkened (0.9x) derivative of --warning-color: the raw token was
 # only 2.94:1 against the light theme's cream ground as a ring color, just
 # under the 3:1 bar. Reused rather than inventing a new hex, same reasoning
@@ -24,9 +26,7 @@ def growth_icon_url(stage):
 @bp.route('/')
 @login_required
 def index():
-    notes = Note.query.filter_by(user_id=current_user.id, is_archived=False).all()
-    categories = list(set(n.category for n in notes if n.category))
-    return render_template('garden/index.html', categories=categories)
+    return render_template('garden/index.html', categories=garden_category_metadata())
 
 
 @bp.route('/data')
@@ -67,7 +67,7 @@ def data():
 
     nodes = []
     for note in notes:
-        color = get_category_color(note.category)
+        color = category_color(note.category)
         rel_count = relationship_counts.get(note.id, 0)
         stage = compute_growth_stage(note.created_at, rel_count)
         # Pinned notes used to get a star shape instead of a dot. Now every
@@ -97,7 +97,7 @@ def data():
             'from': rel.source_note_id,
             'to': rel.target_note_id,
             'value': rel.similarity_score * 5,
-            'title': f'{rel.relationship_type}: {rel.similarity_score:.0%}',
+            'title': f'{relationship_label(rel)}: {rel.similarity_score:.0%}',
             # No per-edge colour here on purpose: vis-network lets any
             # per-item colour override the global edges.color option
             # entirely, which was silently defeating the theme-aware
@@ -106,7 +106,8 @@ def data():
             # said. Leaving colour unset lets the themed global win.
             'width': 1 + rel.similarity_score * 3,
             'similarity': rel.similarity_score,
-            'type': rel.relationship_type
+            'type': rel.relationship_type,
+            'method': rel.method
         })
 
     return jsonify({'nodes': nodes, 'edges': edges})
@@ -133,7 +134,7 @@ def focus_data(note_id):
             'label': n.title[:30] + ('...' if len(n.title) > 30 else ''),
             'title': n.title,
             'category': n.category or 'Uncategorized',
-            'color': get_category_color(n.category),
+            'color': category_color(n.category),
             'size': 30 if n.id == note_id else 20,
             'level': level,
             'is_focus': n.id == note_id
@@ -212,12 +213,13 @@ def focus_data(note_id):
                 'from': rel.source_note_id,
                 'to': rel.target_note_id,
                 'value': rel.similarity_score * 5,
-                'title': f'{rel.relationship_type}: {rel.similarity_score:.0%}',
+                'title': f'{relationship_label(rel)}: {rel.similarity_score:.0%}',
                 # Same reasoning as /garden/data: no per-edge colour, so
                 # the themed global edges.color option actually applies.
                 'width': 1 + rel.similarity_score * 3,
                 'similarity': rel.similarity_score,
-                'type': rel.relationship_type
+                'type': rel.relationship_type,
+                'method': rel.method
             })
 
         frontier_notes = new_notes_by_id
@@ -284,24 +286,3 @@ def note_detail(note_id):
         'updated_at': note.updated_at.isoformat() if note.updated_at else None,
         'connections': connections
     })
-
-
-def get_category_color(category):
-    # Flask has no idea which theme the browser is in (that's a client-side
-    # toggle, never sent up), so each category gets one {background, border}
-    # pair that has to hold up on both a cream canvas and a near-black one.
-    # The pastel background alone reads fine on dark but falls short of a
-    # 3:1 contrast ratio against the light theme's cream ground (verified);
-    # the darker border makes the node's boundary clearly visible there
-    # regardless, and matters less on dark where the fill already carries
-    # it. Values match --category-* in app/static/css/style.css (light-mode
-    # numbers) - CSS can't be read from here, so they're mirrored by hand.
-    colors = {
-        'AI': {'background': '#a99bea', 'border': '#5c5580'},
-        'Artificial Intelligence': {'background': '#a99bea', 'border': '#5c5580'},
-        'Cybersecurity': {'background': '#e58b78', 'border': '#7d4c42'},
-        'Software Engineering': {'background': '#6faf8f', 'border': '#3d604e'},
-        'Operating Systems': {'background': '#d9a441', 'border': '#775a23'},
-        'Research': {'background': '#6f9db5', 'border': '#3d5663'},
-    }
-    return colors.get(category, {'background': '#d99a68', 'border': '#775439'})

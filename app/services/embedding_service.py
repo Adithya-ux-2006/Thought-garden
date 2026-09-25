@@ -1,4 +1,5 @@
-import pickle
+import hashlib
+
 import numpy as np
 from app import db
 from app.models import Note, NoteEmbedding
@@ -6,7 +7,6 @@ from config import Config
 
 _model = None
 _model_name = Config.EMBEDDING_MODEL
-_embedding_cache = {}
 
 
 def cosine_similarity(a, b):
@@ -16,6 +16,15 @@ def cosine_similarity(a, b):
 
 
 def get_model():
+    """Load (once) and return the sentence-transformer model.
+
+    Only the background indexer worker (app/services/indexer.py) calls
+    this, at process startup. Request-handling code must never call it -
+    that reintroduces the ~14s in-request model load this replaced. Code
+    that runs on a request thread should use get_ready_model() instead,
+    which returns whatever is already loaded (possibly None) without ever
+    triggering a load itself.
+    """
     global _model
     if _model is None:
         from sentence_transformers import SentenceTransformer
@@ -23,16 +32,39 @@ def get_model():
     return _model
 
 
+def get_ready_model():
+    """The already-loaded model, or None if the indexer hasn't loaded one
+    yet (or never will, e.g. no network). Never loads anything itself -
+    safe to call from a request handler."""
+    return _model
+
+
+def model_loaded():
+    return _model is not None
+
+
 def get_embedding_text(note):
     parts = [note.title, note.content]
     if note.tags:
-        parts.append(' '.join([t.name for t in note.tags]))
+        # Sorted so re-tagging with the same set in a different order
+        # doesn't change the hash below and trigger a needless re-embed.
+        parts.append(' '.join(sorted(t.name for t in note.tags)))
     if note.category:
         parts.append(note.category)
     return ' '.join(parts)
 
 
+def content_hash(note):
+    """Hash of the exact text generate_embedding() would encode for this
+    note right now. Compared against NoteEmbedding.content_hash to decide
+    whether a save actually changed anything embedding-relevant."""
+    return hashlib.sha256(get_embedding_text(note).encode('utf-8')).hexdigest()
+
+
 def generate_embedding(note):
+    """Compute and store `note`'s embedding. Only ever called from the
+    indexer worker thread (which has already loaded the model) or from a
+    CLI command - never from a request handler."""
     model = get_model()
     embedding_text = get_embedding_text(note)
     embedding = model.encode(embedding_text, convert_to_numpy=True, normalize_embeddings=True)
@@ -43,73 +75,66 @@ def generate_embedding(note):
     # tampered with, and it buys nothing here since a raw byte dump is
     # just as fast to read back with np.frombuffer().
     embedding_blob = embedding.tobytes()
+    note_hash = content_hash(note)
 
     row = db.session.get(NoteEmbedding, note.id)
     if row is None:
-        row = NoteEmbedding(note_id=note.id, embedding=embedding_blob)
+        row = NoteEmbedding(note_id=note.id, embedding=embedding_blob, content_hash=note_hash)
         db.session.add(row)
     else:
         row.embedding = embedding_blob
+        row.content_hash = note_hash
     db.session.commit()
 
-    _embedding_cache[note.id] = embedding
     return embedding
 
 
-def _decode_embedding_blob(blob):
-    """Read back an embedding stored by generate_embedding(). Falls back
-    to unpickling for rows written before the pickle -> raw-bytes switch,
-    so existing databases don't need a migration to keep working.
+def _looks_like_pickle(blob):
+    # Legacy rows were pickled: protocol 2-5 header and trailing STOP opcode.
+    return blob[:1] == b'\x80' and blob[1:2] in (b'\x02', b'\x03', b'\x04', b'\x05') and blob[-1:] == b'.'
 
-    Pickle protocol 2+ (what pickle.dumps uses by default since Python
-    3.8) always starts with the byte 0x80, which raw float32 data from
-    a unit-normalized embedding essentially never does - but checking
-    is cheap and correct either way, whereas trying frombuffer() first
-    and catching ValueError is NOT reliable: pickled bytes are still
-    "valid" bytes, so frombuffer() happily reinterprets them as the
-    wrong number of nonsense floats instead of raising.
-    """
-    if blob[:1] == b'\x80':
-        return pickle.loads(blob)
+
+def _decode_embedding_blob(blob):
+    """Raw float32 bytes as written by generate_embedding(), or None for
+    anything else. Never unpickled: that would execute database content."""
+    if not blob or len(blob) % 4 or _looks_like_pickle(blob):
+        return None
     return np.frombuffer(blob, dtype=np.float32)
 
 
-def get_embedding(note_id, generate_if_missing=True):
-    if note_id in _embedding_cache:
-        return _embedding_cache[note_id]
-
+def get_embedding(note_id, generate_if_missing=False):
+    """Read whatever's stored for `note_id`. Defaults to read-only: callers
+    on a request thread must never pass generate_if_missing=True, since
+    that calls generate_embedding() (and therefore get_model()) inline."""
     row = db.session.get(NoteEmbedding, note_id)
 
     if row is not None:
         embedding = _decode_embedding_blob(row.embedding)
-        _embedding_cache[note_id] = embedding
-        return embedding
+        if embedding is not None:
+            return embedding
 
-    note = db.session.get(Note, note_id)
-    if note and generate_if_missing:
-        return generate_embedding(note)
+    if generate_if_missing:
+        note = db.session.get(Note, note_id)
+        if note is not None:
+            return generate_embedding(note)
 
     return None
 
 
-def clear_embedding_cache():
-    global _embedding_cache
-    _embedding_cache.clear()
-
-
-def invalidate_embedding_cache(note_id):
-    """Drop a single note's cached embedding. Needed on delete: the
-    note_embeddings row cascades away via the ORM relationship, but the
-    in-process cache doesn't know that on its own and would otherwise
-    keep serving a stale vector for a note_id that no longer exists."""
-    _embedding_cache.pop(note_id, None)
-
-
-def get_all_embeddings(user_id, generate_if_missing=True):
-    notes = Note.query.filter_by(user_id=user_id).all()
+def get_all_embeddings(user_id):
+    """Every ready embedding for `user_id`'s notes, read straight from the
+    database - no in-process cache. Notes without a usable embedding yet
+    (still queued, or the indexer isn't ready) are simply absent from the
+    result; callers fall back to keyword scoring for those."""
+    rows = (
+        db.session.query(NoteEmbedding)
+        .join(Note, NoteEmbedding.note_id == Note.id)
+        .filter(Note.user_id == user_id)
+        .all()
+    )
     embeddings = {}
-    for note in notes:
-        emb = get_embedding(note.id, generate_if_missing=generate_if_missing)
-        if emb is not None:
-            embeddings[note.id] = emb
+    for row in rows:
+        embedding = _decode_embedding_blob(row.embedding)
+        if embedding is not None:
+            embeddings[row.note_id] = embedding
     return embeddings

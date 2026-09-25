@@ -1,45 +1,57 @@
+import json
+import os
+from datetime import datetime, timedelta, timezone
+
 from app import db
-from app.models import Note, Tag, User
-from app.services.similarity_service import update_relationships_for_note
+from app.models import Note, Relationship
+from app.services import indexer
+from app.services.similarity_service import rebuild_user_graph
+from app.services.tag_service import get_or_create_tags
+
+STARTER_NOTES_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'starter_notes.json')
 
 
-SEED_USER_EMAIL = 'demo@thoughtgarden.app'
+def load_starter_notes():
+    with open(STARTER_NOTES_PATH, encoding='utf-8') as f:
+        return json.load(f)
+
+
+def add_starter_notes(user, source_type='starter', backdate=False):
+    """Create the starter notes for `user` from the bundled fixture and
+    discover their connections. `backdate` applies each note's `days_old`."""
+    new_notes = []
+    for item in load_starter_notes():
+        note = Note(
+            user_id=user.id,
+            title=item['title'],
+            content=item['content'],
+            category=item.get('category'),
+            source_type=source_type,
+            is_pinned=item.get('is_pinned', False),
+        )
+        if backdate and item.get('days_old'):
+            note.created_at = datetime.now(timezone.utc) - timedelta(days=item['days_old'])
+        note.tags = get_or_create_tags(user.id, item.get('tags', []))
+        db.session.add(note)
+        new_notes.append(note)
+    db.session.commit()
+
+    # Connect everything before the user first sees the garden, then queue
+    # each note for embedding so the background worker can upgrade these
+    # keyword-tier connections once it gets to them.
+    rebuild_user_graph(user.id)
+    for note in new_notes:
+        indexer.enqueue(note)
+    return new_notes
 
 
 def prepare_starter_garden(user):
-    """Copy the starter garden to a new user and connect it in one flow."""
-    seed_user = User.query.filter_by(email=SEED_USER_EMAIL).first()
-    if seed_user is None or seed_user.id == user.id or user.notes.count():
+    """Give a brand-new user the starter garden; returns (notes, connections)."""
+    if user.notes.count():
         return 0, 0
-
-    seed_notes = Note.query.filter_by(user_id=seed_user.id, is_archived=False).all()
-    new_notes = []
-    for source in seed_notes:
-        note = Note(
-            user_id=user.id,
-            title=source.title,
-            content=source.content,
-            category=source.category,
-            source_type='starter',
-            is_pinned=source.is_pinned,
-        )
-        for source_tag in source.tags:
-            tag = Tag.query.filter_by(name=source_tag.name).first()
-            if tag is None:
-                tag = Tag(name=source_tag.name)
-                db.session.add(tag)
-            note.tags.append(tag)
-        db.session.add(note)
-        new_notes.append(note)
-
-    db.session.commit()
-
-    # Complete connection discovery before the user enters the Garden, so the
-    # first screen is coherent instead of gradually changing underneath them.
-    for note in new_notes:
-        update_relationships_for_note(note)
-
-    from app.models import Relationship
+    new_notes = add_starter_notes(user)
+    if not new_notes:
+        return 0, 0
     connection_count = Relationship.query.join(
         Note, Relationship.source_note_id == Note.id
     ).filter(Note.user_id == user.id).count()

@@ -102,6 +102,7 @@
     
     <script src="{{ url_for('static', filename='vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/vis-network/9.1.9/vis-network.min.js') }}"></script>
+    <script>window.GARDEN_CATEGORIES = {{ GARDEN_CATEGORIES|tojson }};</script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>

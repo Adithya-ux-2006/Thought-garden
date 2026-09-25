@@ -13,10 +13,9 @@ def _no_semantic_results(user_id, query, *args, page=1, per_page=10, **kwargs):
 
 @pytest.fixture
 def app(monkeypatch):
-    # Keep these tests off the ML model and background threads: they exercise
-    # routing/forms/queries, not embeddings.
-    monkeypatch.setattr('app.notes.routes.queue_embedding_generation', lambda *a, **k: None)
-    monkeypatch.setattr('app.services.background_indexing.queue_embedding_generation', lambda *a, **k: None)
+    # Keep these tests off the ML model: they exercise routing/forms/queries,
+    # not embeddings. indexer.enqueue() itself never touches the model (it
+    # only writes an index_job row), so it's left real.
     monkeypatch.setattr('app.services.search_service.semantic_search', _no_semantic_results)
     app = create_app({
         'TESTING': True,
@@ -50,7 +49,7 @@ def _user_id():
 def _add_note(title, content='Some content.', tags=(), **fields):
     note = Note(user_id=_user_id(), title=title, content=content, **fields)
     for name in tags:
-        tag = Tag.query.filter_by(name=name).first() or Tag(name=name)
+        tag = Tag.query.filter_by(user_id=_user_id(), name=name).first() or Tag(user_id=_user_id(), name=name)
         note.tags.append(tag)
     db.session.add(note)
     db.session.commit()
@@ -183,14 +182,19 @@ def test_edit_note_with_non_preset_category_saves(client):
     assert note.category == 'Philosophy'
 
 
-def test_edit_note_still_rejects_unlisted_category(client):
+def test_edit_note_accepts_a_brand_new_unlisted_category(client):
+    # Durable fix: category is free text with presets, not a real enum (see
+    # app/services/category_service.py + NoteForm's validate_choice=False),
+    # so switching to *any* string - not just one the note already had -
+    # must succeed, not 200-with-errors like the old choice-patching hack
+    # that only special-cased the note's pre-existing value.
     note_id = _add_note('Custom category', category='Philosophy')
 
     response = client.post(f'/notes/{note_id}/edit', data={
         'title': 'Renamed', 'content': 'Some content.', 'category': 'Anything Else', 'tags': '',
     })
 
-    assert response.status_code == 200
+    assert response.status_code == 302
     note = db.session.get(Note, note_id)
-    assert note.title == 'Custom category'
-    assert note.category == 'Philosophy'
+    assert note.title == 'Renamed'
+    assert note.category == 'Anything Else'

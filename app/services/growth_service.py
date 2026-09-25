@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # Ordered from least to most "grown" - used by the garden UI to pick an icon.
@@ -40,7 +40,9 @@ def compute_growth_score(created_at, connection_count):
     if not created_at:
         return 0.0
 
-    age_days = (datetime.utcnow() - created_at).days
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+    age_days = (datetime.now(timezone.utc) - created_at).days
     age_score = min(1.0, max(0.0, age_days) / MAX_AGE_DAYS)
 
     connection_score = min(1.0, max(0, connection_count) / MAX_CONNECTIONS)
