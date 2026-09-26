@@ -7,19 +7,20 @@ let allEdges = [];
 let selectedNode = null;
 let gardenLabelsVisible = true;
 
-// Notes in the same category start near a shared anchor point on a ring,
-// then physics (real edges + repulsion) takes over from there. Cheaper and
-// far less fragile than vis-network's clustering API - which would merge
-// nodes into meta-nodes and complicate every other feature below (click
-// handling, neighbourhood highlight, search) - while still producing
-// visible category neighbourhoods for a garden this size.
-//
-// GARDEN_CATEGORIES is injected by base.html from
-// app/services/category_service.py (the single source of truth also used
-// server-side for garden node colors and the form dropdown) so this order/
-// badge-class list can't drift from the Python one the way the old two
-// hardcoded copies did.
-const GARDEN_CATEGORY_ORDER = (window.GARDEN_CATEGORIES || []).map(c => c.value);
+// Category order/slugs come from app/services/category_service.py via a JSON
+// data block in base.html, so the client list can't drift from the server's.
+function readGardenCategories() {
+    const el = document.getElementById('gardenCategories');
+    if (!el) return [];
+    try {
+        return JSON.parse(el.textContent) || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+const GARDEN_CATEGORIES = readGardenCategories();
+const GARDEN_CATEGORY_ORDER = GARDEN_CATEGORIES.map(c => c.value);
 const GARDEN_LABEL_ZOOM_THRESHOLD = 0.8;
 const GARDEN_NODE_DIM_OPACITY = 0.12;
 const GARDEN_EDGE_DIM_OPACITY = 0.08;
@@ -47,7 +48,7 @@ function gardenLabelFont() {
 }
 
 const GARDEN_CATEGORY_BADGE_CLASS = Object.fromEntries(
-    (window.GARDEN_CATEGORIES || []).map(c => [c.value, `badge-category-${c.slug}`])
+    GARDEN_CATEGORIES.map(c => [c.value, `badge-category-${c.slug}`])
 );
 
 function gardenCategoryBadgeClass(category) {
@@ -64,6 +65,9 @@ function hexToRgba(hex, alpha) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// Notes in the same category start near a shared anchor on a ring, then
+// physics takes over. Cheaper and less fragile than vis clustering, which
+// would merge nodes and complicate click/highlight/search handling.
 function seedGardenPositions(nodes) {
     const present = [...new Set(nodes.map(n => n.category))];
     const ordered = GARDEN_CATEGORY_ORDER.filter(c => present.includes(c))
@@ -87,7 +91,7 @@ function seedGardenPositions(nodes) {
             ...n,
             x: cx + localRadius * Math.cos(localAngle),
             y: cy + localRadius * Math.sin(localAngle),
-            // shape/image/color/borderWidth all come from the server now
+            // shape/image/color/borderWidth come from the server
             // (growth-stage icon + category or pinned-gold ring) - only
             // borderWidthSelected still needs computing client-side, kept
             // relative to whatever borderWidth the payload set so a pinned
@@ -306,7 +310,8 @@ function showNotePanel(nodeId) {
 }
 
 function buildConnectionItem(conn) {
-    const item = document.createElement('div');
+    const item = document.createElement('button');
+    item.type = 'button';
     item.className = 'connection-item';
     item.addEventListener('click', () => showNotePanel(conn.id));
 
@@ -314,16 +319,20 @@ function buildConnectionItem(conn) {
     row.className = 'd-flex justify-content-between align-items-center';
     const title = document.createElement('strong');
     title.textContent = conn.title.substring(0, 30) + (conn.title.length > 30 ? '...' : '');
-    const score = document.createElement('span');
-    score.className = 'badge bg-' + (conn.similarity > 0.8 ? 'success' : conn.similarity > 0.7 ? 'primary' : 'secondary');
-    score.textContent = `${(conn.similarity * 100).toFixed(0)}%`;
-    row.append(title, score);
+    const label = document.createElement('span');
+    label.className = 'badge bg-' + (conn.label === 'Strong match' ? 'success' : 'secondary');
+    label.textContent = conn.label;
+    row.append(title, label);
+
+    const reason = document.createElement('small');
+    reason.className = 'connection-reason d-block';
+    reason.textContent = conn.reason;
 
     const category = document.createElement('small');
     category.className = 'text-muted';
     category.textContent = conn.category || 'Uncategorized';
 
-    item.append(row, category);
+    item.append(row, reason, category);
     return item;
 }
 
@@ -485,10 +494,7 @@ function initSearchAutocomplete() {
     function renderSuggestions(suggestions) {
         box.innerHTML = '';
         suggestions.forEach(function(note) {
-            // Built with createElement/textContent, not an innerHTML
-            // template string - note titles/categories are user content,
-            // and this project already had one XSS fix for exactly that
-            // kind of unescaped-user-content-in-HTML mistake.
+            // Note titles/categories are user content: textContent, never innerHTML.
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
@@ -543,28 +549,138 @@ function initDarkMode() {
     const toggle = document.getElementById('darkModeToggle');
     const icon = document.getElementById('darkModeIcon');
     const html = document.documentElement;
-    
-    const savedMode = localStorage.getItem('darkMode');
-    if (savedMode === 'true') {
-        html.setAttribute('data-bs-theme', 'dark');
-        if (icon) icon.className = 'bi bi-sun';
+
+    // theme-init.js already applied the saved theme; only sync the control.
+    function syncToggle() {
+        const isDark = html.getAttribute('data-bs-theme') === 'dark';
+        if (icon) icon.className = isDark ? 'bi bi-sun' : 'bi bi-moon';
+        if (toggle) toggle.setAttribute('aria-pressed', String(isDark));
     }
-    
+    syncToggle();
+
     if (toggle) {
         toggle.addEventListener('click', function() {
             const isDark = html.getAttribute('data-bs-theme') === 'dark';
             html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
             localStorage.setItem('darkMode', !isDark);
-            if (icon) icon.className = isDark ? 'bi bi-moon' : 'bi bi-sun';
+            syncToggle();
             if (gardenNetwork) gardenNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
             if (focusNetwork) focusNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
         });
     }
 }
 
+function initFlashAutoDismiss() {
+    const alerts = document.querySelectorAll('.alert[data-autodismiss]');
+    if (!alerts.length) return;
+    setTimeout(function() {
+        alerts.forEach(function(alert) {
+            if (window.bootstrap && bootstrap.Alert) {
+                bootstrap.Alert.getOrCreateInstance(alert).close();
+            } else {
+                alert.remove();
+            }
+        });
+    }, 5000);
+}
+
+function csrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : '';
+}
+
+function initTagSuggestions() {
+    const button = document.getElementById('suggestTagsButton');
+    const region = document.getElementById('tagSuggestions');
+    const form = button && button.closest('form');
+    if (!form || !region) return;
+    const tagsInput = form.querySelector('[name="tags"]');
+    const titleInput = form.querySelector('[name="title"]');
+    const contentInput = form.querySelector('[name="content"]');
+
+    function currentTags() {
+        return tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+    }
+
+    function addTag(name, chip) {
+        const tags = currentTags();
+        if (!tags.some(t => t.toLowerCase() === name.toLowerCase())) tags.push(name);
+        tagsInput.value = tags.join(', ');
+        chip.remove();
+        if (!region.querySelector('button')) region.replaceChildren();
+        tagsInput.focus();
+    }
+
+    function render(suggestions) {
+        region.replaceChildren();
+        if (!suggestions.length) {
+            const empty = document.createElement('small');
+            empty.className = 'text-muted';
+            empty.textContent = 'No tag suggestions yet.';
+            region.appendChild(empty);
+            return;
+        }
+        const label = document.createElement('small');
+        label.className = 'text-muted me-1';
+        label.textContent = 'Suggested:';
+        region.appendChild(label);
+        suggestions.forEach(function(name) {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'btn btn-sm btn-outline-primary tag-suggestion me-1 mb-1';
+            chip.textContent = name;
+            chip.setAttribute('aria-label', `Add tag ${name}`);
+            chip.addEventListener('click', () => addTag(name, chip));
+            region.appendChild(chip);
+        });
+    }
+
+    button.addEventListener('click', function() {
+        const body = {
+            title: titleInput ? titleInput.value : '',
+            content: contentInput ? contentInput.value : '',
+            tags: tagsInput.value,
+        };
+        if (button.dataset.noteId) body.note_id = Number(button.dataset.noteId);
+        button.disabled = true;
+        fetch(button.dataset.suggestUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+            body: JSON.stringify(body),
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => render(data.suggestions || []))
+            .catch(error => {
+                console.error('Error fetching tag suggestions:', error);
+                region.replaceChildren();
+                const failed = document.createElement('small');
+                failed.className = 'text-danger';
+                failed.textContent = 'Could not load tag suggestions.';
+                region.appendChild(failed);
+            })
+            .finally(() => { button.disabled = false; });
+    });
+}
+
+function initConfirmForms() {
+    document.querySelectorAll('form[data-confirm]').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!window.confirm(form.dataset.confirm)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    initConfirmForms();
     initDarkMode();
     initSearchAutocomplete();
+    initTagSuggestions();
 
     if (document.getElementById('gardenGraph')) {
         initGarden();
@@ -574,6 +690,30 @@ document.addEventListener('DOMContentLoaded', function() {
         initFocusGraph();
     }
     
+    [
+        ['searchNodeButton', searchNode],
+        ['fitGraphButton', fitGraph],
+        ['resetViewButton', resetView],
+        ['closePanelButton', closePanel],
+    ].forEach(function([id, handler]) {
+        const button = document.getElementById(id);
+        if (button) button.addEventListener('click', handler);
+    });
+
+    const nodeSearch = document.getElementById('searchNode');
+    if (nodeSearch) {
+        nodeSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchNode();
+            }
+        });
+    }
+
+    document.querySelectorAll('select[data-autosubmit]').forEach(function(select) {
+        select.addEventListener('change', () => select.form.submit());
+    });
+
     const physicsToggle = document.getElementById('physicsToggle');
     if (physicsToggle) {
         physicsToggle.addEventListener('change', togglePhysics);
@@ -583,23 +723,10 @@ document.addEventListener('DOMContentLoaded', function() {
         checkbox.addEventListener('change', applyGardenCategoryFilters);
     });
 
-    setTimeout(function() {
-        const flashMessages = document.getElementById('flashMessages');
-        if (flashMessages) {
-            flashMessages.style.transition = 'opacity 0.5s';
-            flashMessages.style.opacity = '0';
-            setTimeout(() => flashMessages.remove(), 500);
-        }
-    }, 5000);
+    initFlashAutoDismiss();
 
-    // Loading state for forms that trigger AI analysis (note create/edit,
-    // document import). These block on server-side relationship scoring
-    // (and, for the first search after startup, full embedding
-    // generation) with no prior visual feedback - the page just appeared
-    // to hang. Any form tagged data-ai-processing shows a spinner on its
-    // submit button and disables it, so a slow save/import reads as
-    // "working" rather than "broken". The disabled attribute also guards
-    // against duplicate submits from an impatient double-click.
+    // Saving/importing blocks on relationship scoring, so show progress and
+    // disable the submit button (which also prevents double submits).
     document.querySelectorAll('form[data-ai-processing]').forEach(function(form) {
         form.addEventListener('submit', function() {
             if (form.dataset.aiProcessingSubmitted) return;
@@ -612,10 +739,10 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = true;
 
             if (submitBtn.tagName === 'BUTTON') {
-                submitBtn.dataset.originalHtml = submitBtn.innerHTML;
-                submitBtn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
-                    loadingText;
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm me-2';
+                spinner.setAttribute('aria-hidden', 'true');
+                submitBtn.replaceChildren(spinner, document.createTextNode(loadingText));
             } else {
                 submitBtn.dataset.originalValue = submitBtn.value;
                 submitBtn.value = loadingText;

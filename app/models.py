@@ -105,31 +105,24 @@ class Note(db.Model):
         cascade='all, delete-orphan')
 
     def get_related_notes(self, limit=5, min_similarity=0.0):
-        # Relationships are stored starting at SIMILARITY_THRESHOLD (0.45
-        # by default - see similarity_service.py), so a 0.7 default here
-        # silently returned nothing unless every caller remembered to
-        # override it. Every caller already did, which was the tell.
+        """(other_note, Relationship) pairs, strongest first."""
+        # Stored relationships already start at SIMILARITY_THRESHOLD, so the
+        # default must not filter on top of it.
         rels = Relationship.query.filter(
             ((Relationship.source_note_id == self.id) | (Relationship.target_note_id == self.id)) &
             (Relationship.similarity_score >= min_similarity)
         ).order_by(Relationship.similarity_score.desc()).limit(limit).all()
-        
-        related = []
-        for rel in rels:
-            other = rel.target_note if rel.source_note_id == self.id else rel.source_note
-            related.append((other, rel.similarity_score, rel.relationship_type))
-        return related
+
+        return [(rel.target_note if rel.source_note_id == self.id else rel.source_note, rel)
+                for rel in rels]
     
     def __repr__(self):
         return f'<Note {self.title}>'
 
 
 class Tag(db.Model):
-    # Previously a single global namespace (Tag.name unique across every
-    # user), so two users typing the same tag silently shared one row - a
-    # cross-user data leak in miniature (tag suggestions, tag-cloud counts,
-    # and "used by other notes" behavior all quietly reflected an ENTIRELY
-    # different user's activity). Scoped per user like Note.
+    # Scoped per user like Note: a shared tag row would leak one user's
+    # tag suggestions and counts into another's garden.
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
     name = db.Column(db.String(50), nullable=False)
@@ -150,15 +143,7 @@ class Tag(db.Model):
 
 
 class NoteEmbedding(db.Model):
-    """Stores each note's semantic embedding vector.
-
-    Previously created via raw SQL in app/__init__.py instead of a
-    SQLAlchemy model, which meant no ORM validation, no migration
-    tracking, and every read/write going through hand-written text()
-    queries in embedding_service.py. This model replaces that raw table
-    definition; the table name/columns are kept identical so existing
-    databases need no migration.
-    """
+    """Stores each note's semantic embedding vector."""
     __tablename__ = 'note_embeddings'
 
     note_id = db.Column(db.Integer, db.ForeignKey('note.id', ondelete='CASCADE'), primary_key=True)
@@ -205,8 +190,8 @@ class Relationship(db.Model):
     relationship_type = db.Column(db.String(20), default='semantic')
     # Which scorer produced similarity_score - 'embedding' (cosine similarity,
     # comparable across all embedding-scored pairs) or 'keyword' (Jaccard-ish
-    # overlap, a different scale entirely). Previously both were stored in
-    # the same column and shown as if they were one comparable percentage.
+    # overlap, a different scale entirely), so scores are only comparable
+    # within one method.
     method = db.Column(db.String(20), nullable=False, default='embedding')
     created_at = db.Column(UTCDateTime, default=utcnow)
     updated_at = db.Column(UTCDateTime, default=utcnow, onupdate=utcnow)

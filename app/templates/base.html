@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Thought Garden{% endblock %}</title>
-    
+    <script src="{{ url_for('static', filename='js/theme-init.js') }}"></script>
+
     <link href="{{ url_for('static', filename='vendor/fonts/fonts.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/bootstrap/5.3.3/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css') }}" rel="stylesheet">
@@ -19,7 +21,8 @@
             <a class="navbar-brand fw-bold" href="{{ url_for('main.dashboard') }}">
                 <i class="bi bi-flower1 me-2"></i>Thought Garden
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -51,8 +54,9 @@
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
-                    <button id="darkModeToggle" class="btn btn-outline-light btn-sm" title="Toggle dark mode">
-                        <i class="bi bi-moon" id="darkModeIcon"></i>
+                    <button id="darkModeToggle" type="button" class="btn btn-outline-light btn-sm"
+                            title="Toggle dark mode" aria-label="Toggle dark mode" aria-pressed="false">
+                        <i class="bi bi-moon" id="darkModeIcon" aria-hidden="true"></i>
                     </button>
                     <div class="dropdown">
                         <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -80,9 +84,12 @@
             {% if messages %}
             <div class="container mt-3" id="flashMessages">
                 {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                {% set level = 'danger' if category == 'error' else category %}
+                {# Errors and warnings stay until dismissed so they can't vanish unread. #}
+                <div class="alert alert-{{ level }} alert-dismissible fade show" role="alert"
+                     {% if level not in ('danger', 'warning') %}data-autodismiss{% endif %}>
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 {% endfor %}
             </div>
@@ -101,8 +108,8 @@
     {% endif %}
     
     <script src="{{ url_for('static', filename='vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/vis-network/9.1.9/vis-network.min.js') }}"></script>
-    <script>window.GARDEN_CATEGORIES = {{ GARDEN_CATEGORIES|tojson }};</script>
+    {% block vendor_js %}{% endblock %}
+    <script type="application/json" id="gardenCategories">{{ GARDEN_CATEGORIES|tojson }}</script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>

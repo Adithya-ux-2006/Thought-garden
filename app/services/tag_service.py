@@ -29,12 +29,8 @@ def get_or_create_tags(user_id, tag_names):
 
 
 def prune_orphan_tags(user_id):
-    """Delete this user's tags no longer attached to any note.
-
-    Tags were previously global, so an unused tag could still be "in use"
-    by another user and was left alone. Now that they're scoped per user,
-    a tag with no notes left is a genuine orphan only that user can see.
-    """
+    """Delete this user's tags no longer attached to any note. Tags are
+    scoped per user, so a tag with no notes left is a genuine orphan."""
     orphans = Tag.query.filter_by(user_id=user_id).filter(~Tag.notes.any()).all()
     for tag in orphans:
         db.session.delete(tag)

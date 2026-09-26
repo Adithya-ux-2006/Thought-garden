@@ -23,23 +23,30 @@
                         </a>
                         <form method="POST" action="{{ url_for('notes.pin', note_id=note.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if note.is_pinned else 'secondary' }}">
-                                <i class="bi bi-pin{{ '-fill' if note.is_pinned else '' }}"></i>
+                            <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if note.is_pinned else 'secondary' }}"
+                                    aria-label="{{ 'Unpin note' if note.is_pinned else 'Pin note' }}" title="{{ 'Unpin note' if note.is_pinned else 'Pin note' }}">
+                                <i class="bi bi-pin{{ '-fill' if note.is_pinned else '' }}" aria-hidden="true"></i>
                             </button>
                         </form>
                         <form method="POST" action="{{ url_for('notes.archive', note_id=note.id) }}" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-archive"></i>
+                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                    aria-label="{{ 'Unarchive note' if note.is_archived else 'Archive note' }}" title="{{ 'Unarchive note' if note.is_archived else 'Archive note' }}">
+                                <i class="bi bi-archive" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}" class="d-inline"
+                              data-confirm="Delete this note? This also removes its connections and cannot be undone.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete note" title="Delete note">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
                             </button>
                         </form>
                     </div>
                 </div>
                 <div class="card-body">
                     <h2 class="card-title mb-3">{{ note.title }}</h2>
-                    <div class="note-content mb-4">
-                        {{ note.content }}
-                    </div>
+                    <div class="note-content mb-4">{{ note.content|markdown }}</div>
                     
                     {% if note.tags %}
                     <div class="mb-3">
@@ -72,21 +79,24 @@
                 </div>
                 <div class="card-body">
                     {% if related %}
-                    {% for related_note, score, rel_type in related %}
+                    {% for related_note, why in related %}
                     <div class="related-item mb-3 pb-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-start">
                             <a href="{{ url_for('notes.view', note_id=related_note.id) }}" class="text-decoration-none">
                                 <h6 class="mb-1">{{ related_note.title }}</h6>
                             </a>
-                            <span class="badge bg-{{ 'success' if score > 0.8 else 'primary' if score > 0.7 else 'secondary' }} ms-2">
-                                {{ (score * 100)|round }}%
+                            <span class="badge bg-{{ 'success' if why.label == 'Strong match' else 'secondary' }} ms-2">
+                                {{ why.label }}
                             </span>
                         </div>
+                        <p class="small mb-1 connection-reason">
+                            <span class="visually-hidden">Why connected: </span>{{ why.reason }}
+                        </p>
                         <p class="small text-muted mb-1">
                             {{ related_note.content[:100] }}{% if related_note.content|length > 100 %}...{% endif %}
                         </p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">{{ rel_type }}</small>
+                            <small class="text-muted">{{ why.basis }}</small>
                             {% if related_note.tags %}
                             <div>
                                 {% for tag in related_note.tags[:2] %}

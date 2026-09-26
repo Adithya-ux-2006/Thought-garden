@@ -100,19 +100,22 @@ def _note(connections):
 
 def test_panel_renders_user_content_as_text_not_html():
     result = _render_panel(_note([
-        {'id': 7, 'title': PAYLOAD, 'category': PAYLOAD, 'similarity': 0.9},
+        {'id': 7, 'title': PAYLOAD, 'category': PAYLOAD, 'similarity': 0.9,
+         'label': 'Strong match', 'reason': f'Shared tags: {PAYLOAD}.'},
     ]))
 
     assert not [h for h in result['htmlWrites'] if '<img' in h], result['htmlWrites']
     assert PAYLOAD in result['tagsText']
     assert 'plain' in result['tagsText']
     assert PAYLOAD in result['connectionsText']
-    assert '90%' in result['connectionsText']
+    assert 'Strong match' in result['connectionsText']
+    assert f'Shared tags: {PAYLOAD}.' in result['connectionsText']
 
 
 def test_panel_connection_click_opens_that_note():
     result = _render_panel(_note([
-        {'id': 7, 'title': 'Other note', 'category': None, 'similarity': 0.5},
+        {'id': 7, 'title': 'Other note', 'category': None, 'similarity': 0.5,
+         'label': 'Related', 'reason': 'Similar overall meaning.'},
     ]))
 
     assert result['fetched'] == ['/garden/note/1', '/garden/note/7']

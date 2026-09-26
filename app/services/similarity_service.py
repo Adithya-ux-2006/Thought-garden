@@ -39,12 +39,8 @@ def rebuild_user_graph(user_id):
     without a ready embedding yet (still queued, or the indexer never
     loaded a model) falls back to lightweight_similarity() for its pairs.
 
-    This replaces the old update_relationships_for_note(), which patched
-    one note's edges at a time and had to special-case "does the other
-    note still want this edge on its own terms" to avoid dropping a pair
-    that only the other side selected. A full, consistent rebuild scores
-    every note the same way in the same pass, so that case can't arise -
-    every relationship is either wanted by this rebuild or it isn't.
+    A full rebuild scores every note the same way in the same pass, so the
+    result doesn't depend on the order notes were edited in.
 
     Strictly scoped to one user: only that user's active notes are read,
     and only relationships between them are touched.
@@ -119,27 +115,46 @@ def rebuild_user_graph(user_id):
 
 def relationship_label(rel):
     """Human-readable strength for a relationship, method-aware: keyword
-    overlap and cosine similarity live on different scales, so the same
-    raw number ("72%") meant different things depending which scorer
-    produced it (C6). Callers show this instead of the raw score."""
+    overlap and cosine similarity live on different scales, so a raw
+    percentage isn't comparable across methods. Callers show this instead
+    of the raw score."""
     if rel.method == 'embedding':
         return 'Strong match' if rel.similarity_score >= 0.7 else 'Related'
     return 'Strong match' if rel.similarity_score >= 0.4 else 'Related'
 
 
-def get_relationship_explanation(note1, note2):
-    # max_keywords explicit: this module previously had its own
-    # extract_keywords() defaulting to 10, vs keyword_service's default
-    # of 5 - pin it here so consolidating the two didn't quietly change
-    # what "common keywords" means for this explanation text.
-    keywords1 = set(extract_keywords(note1.title + ' ' + note1.content, max_keywords=10))
-    keywords2 = set(extract_keywords(note2.title + ' ' + note2.content, max_keywords=10))
-    common = keywords1 & keywords2
+def explain_connection(note, other, rel):
+    """Why `note` and `other` are linked by the stored relationship `rel`.
 
-    common_tags = set(t.name.lower() for t in note1.tags) & set(t.name.lower() for t in note2.tags)
-    common.update(common_tags)
+    Describes the signals behind the existing edge; it never rescores the pair.
+    """
+    other_tag_keys = {t.name.casefold() for t in other.tags}
+    shared_tags = sorted({t.name for t in note.tags if t.name.casefold() in other_tag_keys},
+                         key=str.casefold)[:5]
 
-    if common:
-        top_common = sorted(list(common))[:5]
-        return f"Connected because both notes discuss: {', '.join(top_common)}."
-    return "Semantically related based on overall content similarity."
+    keywords = set(extract_keywords(f'{note.title} {note.content}', max_keywords=10))
+    other_keywords = set(extract_keywords(f'{other.title} {other.content}', max_keywords=10))
+    tag_keys = {t.casefold() for t in shared_tags}
+    shared_keywords = sorted(k for k in keywords & other_keywords if k not in tag_keys)[:5]
+
+    same_category = note.category if note.category and note.category == other.category else None
+
+    parts = []
+    if shared_tags:
+        parts.append(f"Shared tags: {', '.join(shared_tags)}.")
+    if shared_keywords:
+        parts.append(f"Both mention: {', '.join(shared_keywords)}.")
+    if same_category:
+        parts.append(f'Both in {same_category}.')
+    if not parts:
+        parts.append('Similar overall meaning.' if rel.method == 'embedding' else 'Overlapping wording.')
+
+    return {
+        'label': relationship_label(rel),
+        'method': rel.method,
+        'basis': 'Similar meaning' if rel.method == 'embedding' else 'Keyword overlap',
+        'shared_tags': shared_tags,
+        'shared_keywords': shared_keywords,
+        'same_category': same_category,
+        'reason': ' '.join(parts),
+    }

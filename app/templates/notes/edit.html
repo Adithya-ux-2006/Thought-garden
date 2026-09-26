@@ -42,6 +42,7 @@
                                 {{ form.tags.label(class="form-label") }}
                                 {{ form.tags(class="form-control" + (" is-invalid" if form.tags.errors else "")) }}
                                 <div class="form-text">Separate tags with commas</div>
+                                {% with note_id = note.id %}{% include "notes/_tag_suggestions.html" %}{% endwith %}
                             </div>
                         </div>
                         
@@ -62,7 +63,8 @@
                 <div class="card-body">
                     <h6 class="card-title text-danger"><i class="bi bi-trash me-2"></i>Danger Zone</h6>
                     <p class="text-muted small mb-3">Deleting a note will also remove all its connections. This cannot be undone.</p>
-                    <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}" onsubmit="return confirm('Are you sure you want to delete this note? This action cannot be undone.')">
+                    <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}"
+                          data-confirm="Are you sure you want to delete this note? This action cannot be undone.">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-trash me-1"></i>Delete Note

@@ -24,21 +24,32 @@ def extract_keywords(text, max_keywords=5):
     return [word for word, _ in freq.most_common(max_keywords)]
 
 
-def suggest_tags(note, user_tags, related_notes):
-    keywords = extract_keywords(note.title + ' ' + note.content, max_keywords=10)
-    
-    suggested = set()
-    
+def suggest_tags(title, content, current_tags, user_tags, related_notes, limit=5):
+    """Existing tag names worth adding to a note being written.
+
+    Only ever suggests tags the user already has: first those matching the
+    text's keywords (in keyword rank order), then tags carried by related
+    notes (most common first). Tags already on the note are skipped
+    case-insensitively.
+    """
+    keywords = extract_keywords(f'{title} {content}', max_keywords=10)
+    taken = {t.casefold() for t in current_tags}
+    suggested = []
+
+    def _add(name):
+        if name.casefold() not in taken:
+            taken.add(name.casefold())
+            suggested.append(name)
+
     for kw in keywords:
         for tag in user_tags:
-            if kw in tag.lower() or tag.lower() in kw:
-                suggested.add(tag)
-    
-    for related in related_notes:
-        for tag in related.tags:
-            suggested.add(tag.name)
-    
-    existing_tag_names = {t.name for t in note.tags}
-    suggested = [t for t in suggested if t not in existing_tag_names]
-    
-    return list(suggested)[:5]
+            key = tag.casefold()
+            # Very short tags ("AI") would match inside unrelated words.
+            if kw in key or (len(key) >= 3 and key in kw):
+                _add(tag)
+
+    related_counts = Counter(t.name for note in related_notes for t in note.tags)
+    for name, _ in sorted(related_counts.items(), key=lambda item: (-item[1], item[0].casefold())):
+        _add(name)
+
+    return suggested[:limit]

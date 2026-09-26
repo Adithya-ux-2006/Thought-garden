@@ -918,6 +918,24 @@ small, .small {
     background: var(--primary-soft-bg);
 }
 
+button.connection-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    color: inherit;
+    font: inherit;
+}
+
+button.connection-item:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.connection-reason {
+    color: var(--text-primary);
+}
+
 .related-item {
     transition: var(--transition);
     border-radius: var(--radius-sm);
@@ -926,11 +944,31 @@ small, .small {
 
 .note-content {
     max-width: 72ch;
-    white-space: pre-wrap;
     color: var(--text-primary);
     font-size: var(--fs-base);
     line-height: 1.75;
+    overflow-wrap: anywhere;
 }
+
+.note-content > :last-child { margin-bottom: 0; }
+.note-content h1, .note-content h2, .note-content h3,
+.note-content h4, .note-content h5, .note-content h6 { margin-top: 1.25em; margin-bottom: 0.5em; }
+.note-content img { max-width: 100%; height: auto; }
+.note-content pre {
+    padding: var(--space-3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+    overflow-x: auto;
+}
+.note-content blockquote {
+    margin: 0 0 1rem;
+    padding-left: var(--space-3);
+    border-left: 3px solid var(--border-color);
+    color: var(--text-secondary);
+}
+.note-content table { margin-bottom: 1rem; border-collapse: collapse; }
+.note-content th, .note-content td { padding: 0.25rem 0.75rem; border: 1px solid var(--border-color); }
 
 .empty-state {
     text-align: center;
@@ -987,6 +1025,15 @@ small, .small {
     overflow: hidden;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
+}
+
+#heroGraph .hero-edges line {
+    stroke: var(--border-color);
+}
+
+#heroGraph .hero-labels text {
+    fill: var(--text-muted);
+    font-size: 12px;
 }
 
 #featureGraph {
@@ -1117,4 +1164,22 @@ small, .small {
         height: auto;
         min-height: 300px;
     }
+}
+
+.garden-list-connections {
+    padding-left: 1.1rem;
+}
+
+.garden-list-connections li + li {
+    margin-top: var(--space-2);
+}
+
+.garden-list-pin {
+    color: var(--pinned-color);
+}
+
+/* Shown/hidden by initSearchAutocomplete(). */
+.search-suggestions {
+    z-index: 1000;
+    display: none;
 }

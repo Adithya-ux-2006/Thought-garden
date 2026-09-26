@@ -1,0 +1,9 @@
+<div class="tag-suggest mt-2">
+    <button type="button" id="suggestTagsButton" class="btn btn-sm btn-outline-secondary"
+            data-suggest-url="{{ url_for('notes.suggest_tags_api') }}"
+            {% if note_id %}data-note-id="{{ note_id }}"{% endif %}
+            aria-controls="tagSuggestions">
+        <i class="bi bi-stars me-1" aria-hidden="true"></i>Suggest tags
+    </button>
+    <div id="tagSuggestions" class="tag-suggestions mt-2" aria-live="polite"></div>
+</div>

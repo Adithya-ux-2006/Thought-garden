@@ -17,6 +17,38 @@ login_manager.login_message = 'Please log in to access your garden.'
 login_manager.login_message_category = 'info'
 csrf = CSRFProtect()
 
+# The vendored vis-network 9.1.9 standalone bundle injects its own CSS as
+# <style> elements (an empty one first, then its content). These hashes allow
+# exactly those stylesheets and nothing else; recompute them if vis-network is
+# upgraded (tests/test_browser_smoke.py fails on any CSP violation).
+VIS_NETWORK_STYLE_HASHES = (
+    "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='",
+    "'sha256-OutIf5hnp68ctx4ThtV5J02g5HTJ5bbu/hkNfqVXWWo='",
+    "'sha256-4cgFR0//m8/eHo2G/esYsuZetUHlzCUWYM59sfgE9zY='",
+    "'sha256-uepMTym1NwItBa/XV6ef6fQobLL0A0CNVDM5km5L+nQ='",
+    "'sha256-gGUn/VMBXCeWm86qX/pOf+4ZDSbe0JcaXXb4rJjw1mA='",
+    "'sha256-QuPewnJYr+SnQiTnCNHFBw99ExTsz9f8w5320PimEPw='",
+    "'sha256-IY7YKNHjbzQ1NfAKrBZvBZohgXMtxrqB9PaqhAaT3vg='",
+    "'sha256-QE7TOEDW7YIlMzvUUnm8boDWeNBN7PBbaaYJjnp34WI='",
+)
+
+# Every script, stylesheet and font is served from /static, so no inline
+# script or style attribute is ever needed. img-src allows https: so Markdown
+# images in notes still render; everything else is same-origin only.
+CONTENT_SECURITY_POLICY = '; '.join([
+    "default-src 'self'",
+    "script-src 'self'",
+    # Hash sources cover <style> elements only, so style="" attributes stay blocked.
+    f"style-src 'self' {' '.join(VIS_NETWORK_STYLE_HASHES)}",
+    "img-src 'self' data: https:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+])
+
 
 class RequestIDFilter(logging.Filter):
     """Inject the current request's ID into every log record so it appears
@@ -133,6 +165,11 @@ def create_app(config_overrides=None):
         response.headers['X-Request-ID'] = g.get('request_id', '-')
         return response
 
+    @app.after_request
+    def _add_security_headers(response):
+        response.headers['Content-Security-Policy'] = CONTENT_SECURITY_POLICY
+        return response
+
     # --- Error handlers ---
     @app.errorhandler(404)
     def not_found(e):
@@ -194,11 +231,8 @@ def create_app(config_overrides=None):
 
     @app.template_filter('display_tags')
     def display_tags_filter(tags, category):
-        # Seed data (and real user habit) often tags a note with its own
-        # category name, which then repeats the already-shown category
-        # badge as the first tag right next to it - same word twice with
-        # no added information. Used everywhere a note's tags are rendered
-        # alongside its category badge.
+        # A tag equal to the note's category would repeat the category badge
+        # shown right next to it.
         if not category:
             return list(tags)
         category_lower = category.strip().lower()
@@ -207,7 +241,11 @@ def create_app(config_overrides=None):
     from app.services.similarity_service import relationship_label
     app.template_filter('relationship_label')(relationship_label)
 
-    from app.services.category_service import garden_category_metadata
+    from app.services.markdown_service import render_markdown
+    app.template_filter('markdown')(render_markdown)
+
+    from app.services.category_service import category_badge_class, garden_category_metadata
+    app.template_filter('category_badge_class')(category_badge_class)
     app.jinja_env.globals['GARDEN_CATEGORIES'] = garden_category_metadata()
 
     return app

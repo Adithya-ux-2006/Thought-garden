@@ -14,17 +14,10 @@ GROWTH_ICON_FILES = {
 # Age/connection counts at which the growth score maxes out. Tune these
 # once there's real usage data - they're deliberately simple for now.
 #
-# MAX_AGE_DAYS was originally 30, which made 'tree' (score >= 0.75)
-# unreachable in any realistic near-term usage: with the 50/50 weighting
-# below, a note needs BOTH signals meaningfully high (neither can fully
-# compensate for the other - a brand-new note with 100 connections still
-# caps at 0.5, still a sapling), so hitting 0.75 requires age_score alone
-# to already be >= 0.5, i.e. half of MAX_AGE_DAYS old. At 30 days that's
-# two full weeks minimum, and only if also maximally connected - in
-# practice unreachable within a normal multi-week usage window. 14 keeps
-# the same "needs both" invariant (0-day-old note still caps at 0.5, never
-# tree) but makes it reachable after about a week of real use for a
-# well-connected note instead of a month.
+# With the 50/50 weighting below, a note needs BOTH signals meaningfully
+# high (a brand-new note with 100 connections still caps at 0.5, a
+# sapling), so 'tree' (score >= 0.75) needs age_score >= 0.5, i.e. half of
+# MAX_AGE_DAYS. 14 makes that about a week for a well-connected note.
 MAX_AGE_DAYS = 14
 MAX_CONNECTIONS = 6
 

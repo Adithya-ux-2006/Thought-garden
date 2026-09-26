@@ -5,13 +5,6 @@ category legend). Dark-mode values live separately in
 app/static/css/style.css's --category-* tokens (keyed by the same slug) -
 CSS can't be generated from here since Flask never knows which theme the
 browser is in.
-
-Previously hand-mirrored in four places (forms.py's SelectField choices,
-garden/routes.py's get_category_color(), main.js's category constants, and
-garden/index.html's hardcoded filter legend), which had drifted: 'AI' and
-'Artificial Intelligence' both existed as separate color-map keys even
-though only 'AI' is ever stored (the label was mistaken for a second
-value), and any category outside the five had no color mapping at all.
 """
 
 CATEGORIES = [

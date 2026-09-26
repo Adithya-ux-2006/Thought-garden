@@ -33,9 +33,9 @@
 
                         <div class="garden-toolbar-controls">
                             <div class="input-group input-group-sm garden-search-group">
-                                <input type="text" class="form-control" id="searchNode" placeholder="Find node...">
-                                <button class="btn btn-outline-secondary" type="button" onclick="searchNode()">
-                                    <i class="bi bi-search"></i>
+                                <input type="search" class="form-control" id="searchNode" placeholder="Find node..." aria-label="Find a note in the graph">
+                                <button class="btn btn-outline-secondary" type="button" id="searchNodeButton" aria-label="Find note">
+                                    <i class="bi bi-search" aria-hidden="true"></i>
                                 </button>
                             </div>
                             <div class="form-check form-switch garden-physics-toggle">
@@ -43,12 +43,15 @@
                                 <label class="form-check-label small" for="physicsToggle">Physics</label>
                             </div>
                             <div class="garden-view-btns">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="fitGraph()" title="Fit to view">
-                                    <i class="bi bi-arrows-fullscreen"></i>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="fitGraphButton" title="Fit to view" aria-label="Fit to view">
+                                    <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="resetView()" title="Reset view">
-                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="resetViewButton" title="Reset view" aria-label="Reset view">
+                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
                                 </button>
+                                <a href="{{ url_for('garden.list_view') }}" class="btn btn-sm btn-outline-secondary" id="gardenListLink">
+                                    <i class="bi bi-list-ul me-1" aria-hidden="true"></i>List view
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -71,7 +74,8 @@
                     </div>
                 </div>
             </div>
-            <div id="gardenGraph" class="garden-graph"></div>
+            <p class="visually-hidden">The graph is a visual canvas. The <a href="{{ url_for('garden.list_view') }}">list view</a> shows the same notes and connections as text.</p>
+            <div id="gardenGraph" class="garden-graph" role="img" aria-label="Knowledge graph of your notes. Use the list view for a text alternative."></div>
         </div>
         
         <div class="col-lg-3">
@@ -89,8 +93,8 @@
                     <div class="panel-header p-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-start">
                             <h5 class="mb-0" id="panelTitle"></h5>
-                            <button class="btn btn-sm btn-link" onclick="closePanel()">
-                                <i class="bi bi-x-lg"></i>
+                            <button type="button" class="btn btn-sm btn-link" id="closePanelButton" aria-label="Close note details">
+                                <i class="bi bi-x-lg" aria-hidden="true"></i>
                             </button>
                         </div>
                         <div class="panel-meta">
@@ -123,4 +127,8 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block vendor_js %}
+<script src="{{ url_for('static', filename='vendor/vis-network/9.1.9/vis-network.min.js') }}"></script>
 {% endblock %}

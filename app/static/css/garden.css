@@ -66,8 +66,7 @@
 }
 
 /* Title block - its own zone, deliberately quiet on the eyebrow so the
-   title carries the hierarchy (the eyebrow used to be brand-colored and
-   competed with the H1 for attention). */
+   title carries the hierarchy. */
 .garden-title-block {
     margin-bottom: var(--space-4);
 }

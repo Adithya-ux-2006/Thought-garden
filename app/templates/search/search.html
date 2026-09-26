@@ -14,7 +14,7 @@
                         <div class="col-md-6 position-relative">
                             {{ form.q.label(class="form-label") }}
                             {{ form.q(class="form-control form-control-lg", placeholder="Search by keyword or ask a question...", value=query, autocomplete="off") }}
-                            <div id="searchSuggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
+                            <div id="searchSuggestions" class="list-group position-absolute w-100 shadow-sm search-suggestions"></div>
                         </div>
                         <div class="col-md-2">
                             {{ form.category.label(class="form-label") }}

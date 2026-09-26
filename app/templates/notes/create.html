@@ -39,6 +39,7 @@
                                 {{ form.tags.label(class="form-label") }}
                                 {{ form.tags(class="form-control" + (" is-invalid" if form.tags.errors else ""), placeholder="AI, Research, Ideas") }}
                                 <div class="form-text">Separate tags with commas</div>
+                                {% with note_id = None %}{% include "notes/_tag_suggestions.html" %}{% endwith %}
                             </div>
                         </div>
                         

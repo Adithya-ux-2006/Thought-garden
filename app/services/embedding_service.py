@@ -10,8 +10,7 @@ _model_name = Config.EMBEDDING_MODEL
 
 
 def cosine_similarity(a, b):
-    """Shared by similarity_service and search_service - previously
-    defined separately (identically) in both files."""
+    """Shared by similarity_service and search_service."""
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 
@@ -20,7 +19,7 @@ def get_model():
 
     Only the background indexer worker (app/services/indexer.py) calls
     this, at process startup. Request-handling code must never call it -
-    that reintroduces the ~14s in-request model load this replaced. Code
+    loading the model takes ~14s and would block the request. Code
     that runs on a request thread should use get_ready_model() instead,
     which returns whatever is already loaded (possibly None) without ever
     triggering a load itself.

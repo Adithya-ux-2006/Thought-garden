@@ -10,4 +10,8 @@ PyPDF2==3.0.1
 python-dotenv==1.0.1
 Flask-Migrate==4.0.7
 email_validator==2.3.0
+markdown-it-py==4.2.0
+nh3==0.3.7
 pytest==9.1.1
+# Optional: browser smoke tests skip without it (then `playwright install chromium`)
+playwright==1.63.0

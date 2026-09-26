@@ -1,10 +1,10 @@
-from flask import render_template, redirect, url_for, flash, request, abort, current_app, g
+from flask import render_template, redirect, url_for, flash, request, abort, current_app, g, jsonify
 from flask_login import login_required, current_user
 from app.notes import bp
 from app.models import Note, Tag, Relationship, db
 from app.forms import NoteForm
-from app.services.keyword_service import extract_keywords
-from app.services.similarity_service import rebuild_user_graph
+from app.services.keyword_service import extract_keywords, suggest_tags
+from app.services.similarity_service import explain_connection, rebuild_user_graph
 from app.services.tag_service import get_or_create_tags, prune_orphan_tags
 from app.services import indexer
 
@@ -98,8 +98,28 @@ def create():
 @login_required
 def view(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
-    related = note.get_related_notes(limit=5, min_similarity=0.0)
+    related = [(other, explain_connection(note, other, rel))
+               for other, rel in note.get_related_notes(limit=5, min_similarity=0.0)]
     return render_template('notes/view.html', note=note, related=related)
+
+
+@bp.route('/api/suggest-tags', methods=['POST'])
+@login_required
+def suggest_tags_api():
+    data = request.get_json(silent=True) or {}
+    title = data.get('title') if isinstance(data.get('title'), str) else ''
+    content = data.get('content') if isinstance(data.get('content'), str) else ''
+    current = parse_tags(data.get('tags') if isinstance(data.get('tags'), str) else '')
+
+    related = []
+    note_id = data.get('note_id')
+    if isinstance(note_id, int) and not isinstance(note_id, bool):
+        note = Note.query.filter_by(id=note_id, user_id=current_user.id).first()
+        if note:
+            related = [other for other, _ in note.get_related_notes(limit=5)]
+
+    user_tags = [t.name for t in Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name)]
+    return jsonify({'suggestions': suggest_tags(title, content, current, user_tags, related)})
 
 
 @bp.route('/<int:note_id>/edit', methods=['GET', 'POST'])
@@ -162,10 +182,8 @@ def archive(note_id):
     note.is_archived = not note.is_archived
 
     if note.is_archived:
-        # Archiving used to just flip the flag and leave relationship rows
-        # in place, so the garden graph kept returning edges pointing at a
-        # node that was no longer there. Drop them here instead of relying
-        # on every reader to filter them out.
+        # Drop edges here rather than relying on every reader to filter out
+        # archived endpoints.
         Relationship.query.filter(
             (Relationship.source_note_id == note.id) | (Relationship.target_note_id == note.id)
         ).delete(synchronize_session=False)
