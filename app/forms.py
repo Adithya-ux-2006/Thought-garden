@@ -53,7 +53,9 @@ class NoteForm(FlaskForm):
         ('Other', 'Other')
     ], validators=[Optional()])
     tags = StringField('Tags (comma-separated)', validators=[Optional()])
-    is_pinned = BooleanField('Pin this note')
+    # Test client encodes Python False as the string "False"; WTForms default
+    # false_values only match lowercase "false", so pin checkbox would flip on.
+    is_pinned = BooleanField('Pin this note', false_values=(False, 'false', 'False', '0', 'off', 'no', ''))
     submit = SubmitField('Save Note')
 
 

@@ -85,7 +85,10 @@ def test_login(client):
         'password': 'password123',
         'confirm_password': 'password123'
     }, follow_redirects=True)
-    
+    # register() auto-logs-in; login while already authenticated short-circuits
+    # to a redirect and never flashes "Welcome back".
+    client.get('/auth/logout', follow_redirects=True)
+
     response = client.post('/auth/login', data={
         'email': 'test@example.com',
         'password': 'password123'

@@ -3,6 +3,7 @@ import runpy
 
 from app import create_app
 from app.models import User
+from app.services.semantic_pipeline_service import resume_semantic_jobs
 from app.services.similarity_service import ensure_all_relationships
 from config import Config
 
@@ -20,4 +21,5 @@ if __name__ == '__main__':
             f'Automatic connections ready: {connection_count} relationships '
             f'across {note_count} notes.'
         )
+    resume_semantic_jobs(app)
     app.run(debug=Config.FLASK_DEBUG, port=Config.PORT)

@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, jsonify
 from flask_login import login_required, current_user
 from app.main import bp
 from app.models import Note, Tag, Relationship, db, note_tags
+from app.services.knowledge_service import export_garden, garden_health
 from sqlalchemy import func, or_
 
 
@@ -108,5 +109,21 @@ def insights():
         'recently_growing': recently_growing,
         'total_notes': total_notes,
     }
-    
+
     return render_template('main/insights.html', insights=insights)
+
+
+@bp.route('/health')
+@login_required
+def health():
+    health = garden_health(current_user.id)
+    return render_template('main/health.html', health=health)
+
+
+@bp.route('/export')
+@login_required
+def export():
+    payload = export_garden(current_user.id)
+    response = jsonify(payload)
+    response.headers['Content-Disposition'] = 'attachment; filename=thought-garden-export.json'
+    return response

@@ -147,14 +147,3 @@ class SemanticJob(db.Model):
     def __repr__(self):
         return f'<SemanticJob note={self.note_id} status={self.status} step={self.step}>'
 
-
-class NoteEmbedding(db.Model):
-    __tablename__ = 'note_embeddings'
-    note_id = db.Column(db.Integer, db.ForeignKey('note.id', ondelete='CASCADE'), primary_key=True)
-    embedding = db.Column(db.LargeBinary, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    note = db.relationship('Note', backref=db.backref('embedding', uselist=False, cascade='all, delete-orphan'))
-
-    def __repr__(self):
-        return f'<NoteEmbedding note={self.note_id}>'
