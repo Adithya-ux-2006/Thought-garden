@@ -86,9 +86,13 @@ def main() -> None:
     except Exception as exc:  # surface startup failures instead of blank page
         st.sidebar.error(f"Startup issue: {exc}")
 
+    # st.navigation must run before any st.sidebar.page_link(): page_link
+    # resolves its target from the page registry that st.navigation populates
+    # (missing registry entry -> KeyError 'url_pathname' on first run).
+    nav = _build_navigation()
+
     _sidebar_nav()
 
-    nav = _build_navigation()
     nav.run()
 
 
