@@ -3,10 +3,6 @@
 Used wherever a result list has already been fully computed and sorted in
 Python (e.g. semantic/hybrid search, which ranks notes by similarity
 score rather than a plain SQL ORDER BY) and just needs slicing into pages.
-Previously this class was copy-pasted separately inside semantic_search()
-and hybrid_search() in search_service.py; the two copies had drifted -
-only one of them defined iter_pages(), so a template calling it on the
-other copy's result would raise AttributeError. This is the one copy.
 """
 
 

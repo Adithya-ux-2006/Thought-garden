@@ -12,9 +12,9 @@
                 <div class="card-body">
                     <form method="GET" class="row g-3" data-ai-processing>
                         <div class="col-md-6 position-relative">
-                            {{ form.query.label(class="form-label") }}
-                            {{ form.query(class="form-control form-control-lg", placeholder="Search by keyword or ask a question...", value=query, autocomplete="off") }}
-                            <div id="searchSuggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
+                            {{ form.q.label(class="form-label") }}
+                            {{ form.q(class="form-control form-control-lg", placeholder="Search by keyword or ask a question...", value=query, autocomplete="off") }}
+                            <div id="searchSuggestions" class="list-group position-absolute w-100 shadow-sm search-suggestions"></div>
                         </div>
                         <div class="col-md-2">
                             {{ form.category.label(class="form-label") }}
@@ -35,12 +35,18 @@
                     </form>
                 </div>
             </div>
-            
+
+            {% if not indexer_ready %}
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle me-2"></i>Semantic search is still warming up (or unavailable on this server) - showing keyword matches only.
+            </div>
+            {% endif %}
+
             {% if query or request.args.get('category') or request.args.get('tag') or request.args.get('source_type') %}
             <div class="mb-3">
                 <p class="text-muted">
                     {% if results %}
-                    Found {{ results|length }} result{{ 's' if results|length != 1 }}
+                    Found {{ pagination.total }} result{{ 's' if pagination.total != 1 }}
                     {% else %}
                     No results found
                     {% endif %}
@@ -67,13 +73,17 @@
                                 {% endif %}
                             </div>
                             <p class="text-muted mb-2">
+                                {% if note.snippet %}
+                                {{ note.snippet }}
+                                {% else %}
                                 {{ note.content[:200] }}{% if note.content|length > 200 %}...{% endif %}
+                                {% endif %}
                             </p>
                             <div class="d-flex align-items-center gap-2">
                                 <small class="text-muted">
                                     <i class="bi bi-clock me-1"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
                                 </small>
-                                {% for tag in note.tags[:3] %}
+                                {% for tag in (note.tags|display_tags(note.category))[:3] %}
                                 <span class="badge bg-light text-dark">{{ tag.name }}</span>
                                 {% endfor %}
                             </div>

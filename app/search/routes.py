@@ -4,6 +4,7 @@ from app.search import bp
 from app.models import Note, Tag, db
 from app.forms import SearchForm
 from app.services.search_service import hybrid_search
+from app.services import indexer
 from sqlalchemy import or_
 
 
@@ -40,8 +41,8 @@ def search():
     else:
         pagination = None
     
-    return render_template('search/search.html', form=form, results=results, 
-                           pagination=pagination, query=query)
+    return render_template('search/search.html', form=form, results=results,
+                           pagination=pagination, query=query, indexer_ready=indexer.ready)
 
 
 @bp.route('/api/suggest')
@@ -51,7 +52,7 @@ def suggest():
     if len(q) < 2:
         return jsonify([])
     
-    notes = Note.query.filter_by(user_id=current_user.id).filter(
+    notes = Note.query.filter_by(user_id=current_user.id, is_archived=False).filter(
         or_(Note.title.ilike(f'%{q}%'), Note.content.ilike(f'%{q}%'))
     ).limit(5).all()
     

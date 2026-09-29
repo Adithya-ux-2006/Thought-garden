@@ -24,6 +24,11 @@
             </div>
         </div>
     </div>
-    <div id="focusGraph" class="garden-graph" data-note-id="{{ note.id }}" data-depth="2" data-min-similarity="0"></div>
+    <p class="visually-hidden">The graph is a visual canvas. The <a href="{{ url_for('notes.view', note_id=note.id) }}">note page</a> and the <a href="{{ url_for('garden.list_view') }}">garden list view</a> describe these connections as text.</p>
+    <div id="focusGraph" class="garden-graph" role="img" aria-label="Graph of notes connected to {{ note.title }}" data-note-id="{{ note.id }}" data-depth="2" data-min-similarity="0"></div>
 </div>
+{% endblock %}
+
+{% block vendor_js %}
+<script src="{{ url_for('static', filename='vendor/vis-network/9.1.9/vis-network.min.js') }}"></script>
 {% endblock %}

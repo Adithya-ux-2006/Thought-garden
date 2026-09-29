@@ -10,7 +10,7 @@
             <h2 class="mb-0">Your notes</h2>
             <p class="text-muted mb-0">{{ notes.total }} note{{ 's' if notes.total != 1 }} in your garden</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2">
             <a href="{{ url_for('notes.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>New Note
             </a>
@@ -20,8 +20,8 @@
             <a href="{{ url_for('main.export') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-download me-1"></i>Export
             </a>
-            <a href="{{ url_for('search.search') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-search"></i>
+            <a href="{{ url_for('search.search') }}" class="btn btn-outline-secondary" aria-label="Search notes" title="Search notes">
+                <i class="bi bi-search" aria-hidden="true"></i>
             </a>
         </div>
     </div>
@@ -35,7 +35,7 @@
                             <span class="text-muted small"><i class="bi bi-funnel me-1"></i>Filter:</span>
                         </div>
                         <div class="col-auto">
-                            <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <select name="category" class="form-select form-select-sm" aria-label="Filter by category" data-autosubmit>
                                 <option value="">All Categories</option>
                                 {% for cat in categories %}
                                 <option value="{{ cat }}" {{ 'selected' if request.args.get('category') == cat }}>{{ cat }}</option>
@@ -43,7 +43,7 @@
                             </select>
                         </div>
                         <div class="col-auto">
-                            <select name="tag" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <select name="tag" class="form-select form-select-sm" aria-label="Filter by tag" data-autosubmit>
                                 <option value="">All Tags</option>
                                 {% for tag in tags %}
                                 <option value="{{ tag.name }}" {{ 'selected' if request.args.get('tag') == tag.name }}>{{ tag.name }}</option>
@@ -82,11 +82,12 @@
                         {% if note.category %}
                         <span class="badge bg-primary">{{ note.category }}</span>
                         {% endif %}
-                        {% for tag in note.tags[:3] %}
+                        {% set tags_shown = note.tags|display_tags(note.category) %}
+                        {% for tag in tags_shown[:3] %}
                         <span class="badge bg-light text-dark">{{ tag.name }}</span>
                         {% endfor %}
-                        {% if note.tags|length > 3 %}
-                        <span class="badge bg-secondary">+{{ note.tags|length - 3 }}</span>
+                        {% if tags_shown|length > 3 %}
+                        <span class="badge bg-secondary">+{{ tags_shown|length - 3 }}</span>
                         {% endif %}
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
@@ -94,24 +95,28 @@
                             <i class="bi bi-clock me-1"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
                         </small>
                         <div class="dropdown">
-                            <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">
-                                <i class="bi bi-three-dots"></i>
+                            <button type="button" class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown"
+                                    aria-expanded="false" aria-label="Actions for {{ note.title }}">
+                                <i class="bi bi-three-dots" aria-hidden="true"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{{ url_for('notes.edit', note_id=note.id) }}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
                                 <li>
                                     <form method="POST" action="{{ url_for('notes.pin', note_id=note.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="dropdown-item"><i class="bi bi-pin me-2"></i>{{ 'Unpin' if note.is_pinned else 'Pin' }}</button>
                                     </form>
                                 </li>
                                 <li>
                                     <form method="POST" action="{{ url_for('notes.archive', note_id=note.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="dropdown-item"><i class="bi bi-archive me-2"></i>{{ 'Unarchive' if note.is_archived else 'Archive' }}</button>
                                     </form>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}" class="d-inline" onsubmit="return confirm('Delete this note?')">
+                                    <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}" class="d-inline" data-confirm="Delete this note?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete</button>
                                     </form>
                                 </li>

@@ -39,6 +39,7 @@
                                 {{ form.tags.label(class="form-label") }}
                                 {{ form.tags(class="form-control" + (" is-invalid" if form.tags.errors else ""), placeholder="AI, Research, Ideas") }}
                                 <div class="form-text">Separate tags with commas</div>
+                                {% with note_id = None %}{% include "notes/_tag_suggestions.html" %}{% endwith %}
                             </div>
                         </div>
                         
@@ -65,7 +66,7 @@
                             <input type="file" class="form-control" name="file" accept=".txt,.md,.pdf" required>
                             <button type="submit" class="btn btn-outline-primary" data-loading-text="Importing & analyzing...">Import</button>
                         </div>
-                        <div class="form-text">Max file size: 10MB</div>
+                        <div class="form-text">Max file size: {{ config.UPLOAD_MAX_SIZE_MB }} MB</div>
                     </form>
                 </div>
             </div>

@@ -10,11 +10,13 @@ Read `CLAUDE.md` in the repo root — it tracks the real, current state of the p
 python -m venv .venv
 source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.example .env   # then set SECRET_KEY, or FLASK_DEBUG=1 for local development
+flask db upgrade
+flask seed-demo        # optional demo account
 python run.py
 ```
 
-First install is slow — `sentence-transformers` pulls in `torch`. See `CLAUDE.md` if you hit a build error on `scikit-learn`/`numpy` on newer Python versions.
+First install is slow — `sentence-transformers` pulls in `torch`. See `CLAUDE.md` if you hit a build error on `numpy` on newer Python versions.
 
 ## Running tests
 

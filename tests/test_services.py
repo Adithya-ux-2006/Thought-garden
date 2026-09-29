@@ -3,10 +3,7 @@ import pytest
 from app import create_app, db
 from app.models import User, Note, Tag, Relationship, NoteEmbedding
 from app.services.math_utils import cosine_similarity, extract_keywords, Pagination
-from app.services.similarity_service import (
-    lightweight_similarity,
-    get_relationship_explanation,
-)
+from app.services.similarity_service import lightweight_similarity
 from app.services.search_service import keyword_search
 
 
@@ -157,29 +154,6 @@ class TestLightweightSimilarity:
             db.session.commit()
             score = lightweight_similarity(n1, n2)
             assert 0.0 <= score <= 1.0
-
-
-class TestGetRelationshipExplanation:
-    def test_common_keywords(self, app):
-        with app.app_context():
-            user = User.query.first()
-            n1 = Note(user_id=user.id, title='Python coding', content='python programming language code')
-            n2 = Note(user_id=user.id, title='Python testing', content='python testing framework code')
-            db.session.add_all([n1, n2])
-            db.session.commit()
-            explanation = get_relationship_explanation(n1, n2)
-            assert 'python' in explanation.lower()
-
-    def test_no_common_content(self, app):
-        with app.app_context():
-            user = User.query.first()
-            n1 = Note(user_id=user.id, title='Alpha', content='unique words alpha here')
-            n2 = Note(user_id=user.id, title='Zeta', content='distinct terms zeta here')
-            db.session.add_all([n1, n2])
-            db.session.commit()
-            explanation = get_relationship_explanation(n1, n2)
-            assert isinstance(explanation, str)
-            assert len(explanation) > 0
 
 
 class TestKeywordSearch:

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Garden List - Thought Garden{% endblock %}
+
+{% block content %}
+<div class="container page-shell py-4">
+    <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
+        <div>
+            <span class="page-eyebrow"><i class="bi bi-list-ul" aria-hidden="true"></i>Explore</span>
+            <h1 class="h2 mb-0">Knowledge Garden &mdash; list view</h1>
+            <p class="text-muted mb-0">
+                {{ entries|length }} note{{ 's' if entries|length != 1 }},
+                {{ edge_count }} connection{{ 's' if edge_count != 1 }}
+            </p>
+        </div>
+        <a href="{{ url_for('garden.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Graph view
+        </a>
+    </div>
+
+    {% if entries %}
+    <ul class="list-unstyled garden-list">
+        {% for entry in entries %}
+        {% set note = entry.note %}
+        <li class="card mb-3" aria-labelledby="garden-note-{{ note.id }}">
+            <div class="card-body">
+                <div class="d-flex align-items-start gap-3">
+                    <img src="{{ entry.icon }}" alt="" width="32" height="32" class="flex-shrink-0">
+                    <div class="flex-grow-1">
+                        <h2 class="h5 mb-1" id="garden-note-{{ note.id }}">
+                            <a href="{{ url_for('notes.view', note_id=note.id) }}">{{ note.title }}</a>
+                        </h2>
+                        <p class="small mb-2">
+                            <span class="badge {{ note.category|category_badge_class }}">{{ note.category or 'Uncategorized' }}</span>
+                            <span class="ms-1">Growth: {{ entry.stage|capitalize }}</span>
+                            {% if note.is_pinned %}<span class="ms-1"><i class="bi bi-star-fill garden-list-pin" aria-hidden="true"></i> Pinned</span>{% endif %}
+                            <span class="ms-1 text-muted">&middot; {{ entry.connections|length }} connection{{ 's' if entry.connections|length != 1 }}</span>
+                        </p>
+                        {% if entry.connections %}
+                        <h3 class="visually-hidden">Connections of {{ note.title }}</h3>
+                        <ul class="garden-list-connections small mb-0">
+                            {% for other, why in entry.connections %}
+                            <li>
+                                <a href="{{ url_for('notes.view', note_id=other.id) }}">{{ other.title }}</a>
+                                <span class="badge bg-{{ 'success' if why.label == 'Strong match' else 'secondary' }} ms-1">{{ why.label }}</span>
+                                <span class="d-block text-muted">{{ why.reason }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">No notes yet. <a href="{{ url_for('notes.create') }}">Create your first note</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}
