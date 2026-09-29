@@ -1,1028 +1,1040 @@
 {
   "app/__init__.py": {
     "mtime": 1789923046.9369907,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "0db4a4fc15dbc0a0f489117c8c0b8046",
     "semantic_hash": ""
   },
   "app/auth/__init__.py": {
     "mtime": 1786264639.102182,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "318fda0a325429ae0cfe284446639d67",
     "semantic_hash": "318fda0a325429ae0cfe284446639d67"
   },
   "app/auth/routes.py": {
     "mtime": 1789918630.9449732,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "6c10388923c99eb4a7b41081a2c5086e",
     "semantic_hash": ""
   },
   "app/forms.py": {
     "mtime": 1790241068.5109835,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "1959da6cd8d1c7adcb0b0cb3635e8078",
     "semantic_hash": ""
   },
   "app/garden/__init__.py": {
     "mtime": 1786264937.4178755,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "a77812b15c5b9dcea1aa3ed759a16958",
     "semantic_hash": "a77812b15c5b9dcea1aa3ed759a16958"
   },
   "app/garden/routes.py": {
     "mtime": 1789923046.9379907,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "07b9a75748e9da5c53efe5fd3f8f727c",
     "semantic_hash": ""
   },
   "app/main/__init__.py": {
     "mtime": 1786264758.779513,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "871a10200343c961f19f530ad5d1ae46",
     "semantic_hash": "871a10200343c961f19f530ad5d1ae46"
   },
   "app/main/routes.py": {
     "mtime": 1790240459.38929,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e9e2ad8d46881dc512fe380faceb7676",
     "semantic_hash": ""
   },
   "app/models.py": {
     "mtime": 1790011158.1777027,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "a305d12c67d6b324dfb368aa4b289657",
     "semantic_hash": ""
   },
   "app/notes/__init__.py": {
     "mtime": 1786264845.4502296,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d50ae10b0e5a6c1c3929118e9e16a3c4",
     "semantic_hash": "d50ae10b0e5a6c1c3929118e9e16a3c4"
   },
   "app/notes/routes.py": {
     "mtime": 1790240456.358519,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "263c9a4fa72196c801ec8311881d2884",
     "semantic_hash": ""
   },
   "app/search/__init__.py": {
     "mtime": 1786264917.8488045,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3ced396a829a28fc708b4937fc3131c8",
     "semantic_hash": "3ced396a829a28fc708b4937fc3131c8"
   },
   "app/search/routes.py": {
     "mtime": 1789918630.878434,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "b87cc03d46f83da1327fef9b4166376a",
     "semantic_hash": ""
   },
   "app/services/__init__.py": {
     "mtime": 1789918630.9479823,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "dc914d751f266026a9f9ad062eb10015",
     "semantic_hash": ""
   },
   "app/services/document_service.py": {
     "mtime": 1789923046.9399917,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "4d8095e3c3974d3ff70fd6dd5c3a473b",
     "semantic_hash": ""
   },
   "app/services/embedding_service.py": {
     "mtime": 1789923046.9399917,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "6a150b530ab40cd97e931445baca596a",
     "semantic_hash": ""
   },
   "app/services/keyword_service.py": {
     "mtime": 1789918630.9489813,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "5ed9d8597f5a1942f635b6c61eb82da3",
     "semantic_hash": ""
   },
   "app/services/onboarding_service.py": {
     "mtime": 1789918630.949981,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "f5015be0dc0583de51208fcd37fc449f",
     "semantic_hash": ""
   },
   "app/services/search_service.py": {
     "mtime": 1789923046.9399917,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e3c3d2b9f96080e6e1c77426022ec1e6",
     "semantic_hash": ""
   },
   "app/services/similarity_service.py": {
     "mtime": 1789923046.9409902,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "924165708345af77296fee2aaa35aee1",
     "semantic_hash": ""
   },
   "app/static/js/main.js": {
     "mtime": 1789923046.9419894,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d578761df53bcb4aa601919fa629f229",
     "semantic_hash": ""
   },
   "run.py": {
     "mtime": 1790240462.0400007,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "32685e33c96f3b46605a2d129e52de1c",
     "semantic_hash": ""
   },
   "seed.py": {
     "mtime": 1789918630.99699,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "dfe523c0f3e24453e0e40b6cefa235fd",
     "semantic_hash": ""
   },
   "tests/test_app.py": {
     "mtime": 1790240487.9872596,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "0c4b3a8fcfb172b05b2bfd1ac93a2952",
     "semantic_hash": ""
   },
   "app/services/note_lifecycle_service.py": {
     "mtime": 1789918630.949981,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "62065c397d70dbd2ad456de117709a95",
     "semantic_hash": ""
   },
   "tests/test_note_lifecycle.py": {
     "mtime": 1789918630.99699,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d8f3a4ebb835c0c7a7990571622643b8",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/SKILL.md": {
     "mtime": 1789918630.9399738,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "212b55d95333d84e14262f8ec83faa2b",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/add-watch.md": {
     "mtime": 1789918630.9399738,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d59d027fe449f06aa03905a01184e779",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/exports.md": {
     "mtime": 1789918630.9409742,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "9da2a2152e60a22f07f05fed5158f287",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/extraction-spec.md": {
     "mtime": 1789918630.9409742,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "bf895ec4d4e40f5f66f7d31c2a9bd4a7",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/github-and-merge.md": {
     "mtime": 1789918630.9419732,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "cde13df085e4c492aeb7ba298a996d0d",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/hooks.md": {
     "mtime": 1789918630.9419732,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3f545db6ce646650bb9de588f5512a27",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/query.md": {
     "mtime": 1789918630.9429746,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3c46f8ad006874260614ed8657d02307",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/transcribe.md": {
     "mtime": 1789918630.9429746,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "67b6a5fa6c0974e18f60db9f8932fbd8",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/update.md": {
     "mtime": 1789918630.9429746,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "9378bd03d56baaf78bd738ab3848f142",
     "semantic_hash": ""
   },
   "AGENTS.md": {
     "mtime": 1789918630.943974,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "6a47d64fcc136324ca395065a707ef76",
     "semantic_hash": ""
   },
   "README.md": {
     "mtime": 1789918630.874432,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "b4a5f77eb01df73037bc60e1d35208a8",
     "semantic_hash": ""
   },
   "app/templates/auth/login.html": {
     "mtime": 1789918630.8984377,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e3e0661a04d8ddd3cf9b46b1168db2c9",
     "semantic_hash": ""
   },
   "app/templates/auth/profile.html": {
     "mtime": 1789918630.8984377,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "5cd834a597914f76e551577b9b204405",
     "semantic_hash": ""
   },
   "app/templates/auth/register.html": {
     "mtime": 1789918630.8984377,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d63c0ecc74c5dd0decb90036e3901bee",
     "semantic_hash": ""
   },
   "app/templates/base.html": {
     "mtime": 1790240465.7193124,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "233f78b2f5f381f2f58f7b2448909b02",
     "semantic_hash": ""
   },
   "app/templates/garden/index.html": {
     "mtime": 1789923046.9429898,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "0a8c4ee1ae9922121758f006c2c3a575",
     "semantic_hash": ""
   },
   "app/templates/main/dashboard.html": {
     "mtime": 1789918630.9014454,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "7ffc6f4a532e3db21d2cdae4d48e562f",
     "semantic_hash": ""
   },
   "app/templates/main/insights.html": {
     "mtime": 1786265846.7358806,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "4e81e42a19d70da2834eb7e279167650",
     "semantic_hash": ""
   },
   "app/templates/main/landing.html": {
     "mtime": 1786265679.594952,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3f3f432454c49a4da9474913d461547f",
     "semantic_hash": ""
   },
   "app/templates/notes/create.html": {
     "mtime": 1789923046.94399,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "8ed011f2ff6c79a1a281cb5e5459bca5",
     "semantic_hash": ""
   },
   "app/templates/notes/edit.html": {
     "mtime": 1789918630.9014454,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e27046e3cf947551d63194fe50c91b8e",
     "semantic_hash": ""
   },
   "app/templates/notes/list.html": {
     "mtime": 1790240468.364055,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "41112939ba9fd0b9ddacdfefa6666629",
     "semantic_hash": ""
   },
   "app/templates/notes/view.html": {
     "mtime": 1789918630.9559743,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "cc1bda8c8cd675812d4d90cf69085428",
     "semantic_hash": ""
   },
   "app/templates/search/search.html": {
     "mtime": 1789923046.94399,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3330f877445613163d43502d1381bf51",
     "semantic_hash": ""
   },
   "docs/CURRENT_PROJECT_INVENTORY.md": {
     "mtime": 1789918630.903973,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "026f49dc7565cae828ececf6b43e5d87",
     "semantic_hash": ""
   },
   "docs/DATABASE_AUDIT.md": {
     "mtime": 1789918630.903973,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3a94730a85131844eca38b82f8959eb6",
     "semantic_hash": ""
   },
   "docs/FIX_PLAN.md": {
     "mtime": 1786272764.4853303,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "acad72a41a77b79ecaabb89dae4235e0",
     "semantic_hash": ""
   },
   "docs/NFR.md": {
     "mtime": 1786266008.0662174,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d97a5772e74fa0c7d54caf9da79d6196",
     "semantic_hash": ""
   },
   "docs/PEAS.md": {
     "mtime": 1786266023.4888923,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "446a76e2363b766fcd3a35e74e423981",
     "semantic_hash": ""
   },
   "docs/PROJECT_HISTORY.md": {
     "mtime": 1786272796.9645636,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "59861084223adae6190454148b709950",
     "semantic_hash": ""
   },
   "docs/ROADMAP.md": {
     "mtime": 1786266035.9360385,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3a176343001d806da721692e42413d78",
     "semantic_hash": ""
   },
   "docs/ROUTE_MAP.md": {
     "mtime": 1789918630.903973,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "ef18f45ff04b8b130c0716a5918b75de",
     "semantic_hash": ""
   },
   "docs/SELF_AUDIT.md": {
     "mtime": 1786272748.1053126,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "de1afd4721fa203d840594feeb68473c",
     "semantic_hash": ""
   },
   "docs/UML_FLOWS.md": {
     "mtime": 1789918630.9569829,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "92e830e7cae934fd6a5c99bc86d45c45",
     "semantic_hash": ""
   },
   "docs/architecture.md": {
     "mtime": 1786272868.1572049,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "2aed4722455b82c715886230ce10dc6e",
     "semantic_hash": ""
   },
   "docs/database.md": {
     "mtime": 1786266105.1908493,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "60954b8439117a5b449398c2508b5568",
     "semantic_hash": ""
   },
   "requirements.txt": {
     "mtime": 1789923046.9450023,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "2690fe326955a2502ba4f4ddcb24213d",
     "semantic_hash": ""
   },
   "app/services/knowledge_service.py": {
     "mtime": 1789918630.9489813,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "c7a25f6ef9e7a9e75911c0973e7fa211",
     "semantic_hash": ""
   },
   "app/templates/main/health.html": {
     "mtime": 1789918630.953981,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e91a2b4c20bc3af2fbaf2bd4045c61fa",
     "semantic_hash": ""
   },
   "app/templates/notes/duplicates.html": {
     "mtime": 1789918630.9549806,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "398f4280b05c4f803e9bed5ef3af300a",
     "semantic_hash": ""
   },
   "app/templates/notes/study.html": {
     "mtime": 1789918630.9559743,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "dab960db02ce892dad70afa72c59bdf1",
     "semantic_hash": ""
   },
   "app/services/semantic_pipeline_service.py": {
     "mtime": 1789918630.950981,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "fa5fa9d44665dafb84a9946f16a7a7d7",
     "semantic_hash": ""
   },
   "tests/test_semantic_pipeline.py": {
     "mtime": 1789918630.9979904,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "f2064bdd7bd573ff96be1f71b04eb631",
     "semantic_hash": ""
   },
   "app/services/background_indexing.py": {
     "mtime": 1789918630.8794334,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3ee27353d204d33c51a0559e2489308b",
     "semantic_hash": ""
   },
   "app/services/growth_service.py": {
     "mtime": 1789918630.8804338,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "be03fd04df891aa55ffefaab4aade68f",
     "semantic_hash": ""
   },
   "app/services/math_utils.py": {
     "mtime": 1789918630.9489813,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "5fa430cc8c4a4bb7e13eae403574cd7e",
     "semantic_hash": ""
   },
   "app/services/pagination.py": {
     "mtime": 1789918630.881446,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "f255f0100f5940646d0a881a2fbe4070",
     "semantic_hash": ""
   },
   "app/static/vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js": {
     "mtime": 1789918630.8924477,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "2e477967e482f32e65d4ea9b2fd8e106",
     "semantic_hash": ""
   },
   "app/static/vendor/vis-network/9.1.9/vis-network.min.js": {
     "mtime": 1789918630.8974395,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e7ccb41d6a7a5f85604f64672651219b",
     "semantic_hash": ""
   },
   "config.py": {
     "mtime": 1790240485.2835476,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "0eae2b07001714481e11f739705ba368",
     "semantic_hash": ""
   },
   "migrations/env.py": {
     "mtime": 1788026365.054916,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "1a553141a22ee23acc007c6d0e1c5624",
     "semantic_hash": ""
   },
   "migrations/versions/69eb02c9eac1_initial_schema.py": {
     "mtime": 1789918630.9949899,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "efadec29cc28399d6490266d2bf27d73",
     "semantic_hash": ""
   },
   "migrations/versions/a1b2c3d4e5f6_initial_schema_baseline.py": {
     "mtime": 1789918630.904981,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "4ef20d7cf280da7e7f4f6b2e99d7075a",
     "semantic_hash": ""
   },
   "tests/test_growth_service.py": {
     "mtime": 1789918630.9069765,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "c4ae5aa09597f20f103d410ea1e9c0b3",
     "semantic_hash": ""
   },
   "tests/test_services.py": {
     "mtime": 1789918630.9979904,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "ff0ea93e9ead7732b8dcdac837422ef1",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/__init__.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "0db4a4fc15dbc0a0f489117c8c0b8046",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/auth/__init__.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "318fda0a325429ae0cfe284446639d67",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/auth/routes.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "39eb708d0489ba9814662ba22a3f601b",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/forms.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "7f8e9a65be12b2d9cba5039082daa76c",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/garden/__init__.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "a77812b15c5b9dcea1aa3ed759a16958",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/garden/routes.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "07b9a75748e9da5c53efe5fd3f8f727c",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/main/__init__.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "871a10200343c961f19f530ad5d1ae46",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/main/routes.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "767b36c9a2cd909a96f45dcdff4a1468",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/models.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d1cc3249d7a899b0d21c5947ea39d1c4",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/notes/__init__.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d50ae10b0e5a6c1c3929118e9e16a3c4",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/notes/routes.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "ed9c03248171ae36e3570308fa54fe85",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/search/__init__.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3ced396a829a28fc708b4937fc3131c8",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/search/routes.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "b87cc03d46f83da1327fef9b4166376a",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/__init__.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "160e345cba9e6cd884c197046ae281a4",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/background_indexing.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3ee27353d204d33c51a0559e2489308b",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/document_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "4d8095e3c3974d3ff70fd6dd5c3a473b",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/embedding_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "6a150b530ab40cd97e931445baca596a",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/growth_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "be03fd04df891aa55ffefaab4aade68f",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/keyword_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "bbeeceaa321cc3bd62927ee80797f0b5",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/onboarding_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d44c80cfe22d63c7b0e5d887abf803cb",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/pagination.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "f255f0100f5940646d0a881a2fbe4070",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/search_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e3c3d2b9f96080e6e1c77426022ec1e6",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/services/similarity_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "924165708345af77296fee2aaa35aee1",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/static/js/main.js": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d578761df53bcb4aa601919fa629f229",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/static/vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "2e477967e482f32e65d4ea9b2fd8e106",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/static/vendor/vis-network/9.1.9/vis-network.min.js": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e7ccb41d6a7a5f85604f64672651219b",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app_streamlit.py": {
-    "mtime": 1790092243.6876514,
-    "seen": 1790241131.917067,
-    "ast_hash": "8b26c1a415bc10bcbc158ce3d41edd8d",
+    "mtime": 1790659519.052282,
+    "seen": 1790666693.0216742,
+    "ast_hash": "1d3697c9fcaf8d627135210d1182edb0",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/background_indexing_streamlit.py": {
     "mtime": 1790094062.8243797,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "92296bcdbf5a1142f2fe87f3dd8d865c",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/config.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "0eae2b07001714481e11f739705ba368",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/migrations/env.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "1a553141a22ee23acc007c6d0e1c5624",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/migrations/versions/a1b2c3d4e5f6_initial_schema_baseline.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "4ef20d7cf280da7e7f4f6b2e99d7075a",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/run.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3abafb7af62f137c0918a657c1679bf5",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/seed.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "b1779954248b2dfefca265708044d5fd",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_auth.py": {
-    "mtime": 1790092195.4189785,
-    "seen": 1790241131.917067,
-    "ast_hash": "1c1cfe34ac204f9eafa51d822c8ebd65",
+    "mtime": 1790659518.2667909,
+    "seen": 1790666693.0216742,
+    "ast_hash": "cb2e6a8a490df58fd669410fb2244fc0",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_db.py": {
-    "mtime": 1790092182.2938204,
-    "seen": 1790241131.917067,
-    "ast_hash": "c692ed6ac563508426cdfa710b383d7b",
+    "mtime": 1790659496.2281685,
+    "seen": 1790666693.0216742,
+    "ast_hash": "963c4eeba55c5d9c9d2a2deb89cfd12b",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_notes_ops.py": {
     "mtime": 1790094221.2628071,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "6dc1d3067bfd30d33a770c891e8606a5",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_pages/1_Dashboard.py": {
-    "mtime": 1790092204.3942754,
-    "seen": 1790241131.917067,
-    "ast_hash": "77eda3e94e812ae3043fe38683297ff7",
+    "mtime": 1790659596.17901,
+    "seen": 1790666693.0216742,
+    "ast_hash": "a9a59edd1a62f80b46a37a0cce2bc86d",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_pages/2_Notes.py": {
     "mtime": 1790094110.520221,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "85e535e16dcc5da694c65b5ee519bfd6",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_pages/3_Garden.py": {
-    "mtime": 1790092206.745087,
-    "seen": 1790241131.917067,
-    "ast_hash": "ee530408702dcbb4f4c9797c4630bf52",
+    "mtime": 1790660009.5260746,
+    "seen": 1790666693.0216742,
+    "ast_hash": "91641eec61d580931892cc49481a69ea",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_pages/4_Search.py": {
-    "mtime": 1790092207.6742153,
-    "seen": 1790241131.917067,
-    "ast_hash": "7dba27a837479078c1add5d4638c106d",
+    "mtime": 1790660244.051792,
+    "seen": 1790666693.0216742,
+    "ast_hash": "e2242524306f6386c59f411615f2156f",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_pages/5_Insights.py": {
-    "mtime": 1790092208.4645386,
-    "seen": 1790241131.917067,
-    "ast_hash": "9cabb90d1919b5a1409045bc47ffcd5e",
+    "mtime": 1790659600.6977139,
+    "seen": 1790666693.0216742,
+    "ast_hash": "040b5d73f0569897a9d52096013a1300",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_pages/6_Profile.py": {
-    "mtime": 1790092210.4649131,
-    "seen": 1790241131.917067,
-    "ast_hash": "9c2ebd4d6111feba74a2421fa7cc3f76",
+    "mtime": 1790660136.0451632,
+    "seen": 1790666693.0216742,
+    "ast_hash": "7b144717ee936f51fb46a22f694ca59d",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_state.py": {
     "mtime": 1790092187.706604,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "ce255a560b23f177b2c4dafb9ddd4033",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/streamlit_widgets.py": {
     "mtime": 1790094071.3956754,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "90c152932c13bea617f5482ddb17d0c9",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/tests/test_app.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "48886e2fe7e4fc3af7c319e9f72e70f6",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/tests/test_growth_service.py": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "c4ae5aa09597f20f103d410ea1e9c0b3",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
     "mtime": 1789918630.8734324,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d77309ef001cfcc47d5ac1a36a091782",
     "semantic_hash": ""
   },
   "CONTRIBUTING.md": {
     "mtime": 1789918630.874432,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "912eed31342da18474df8d47e0ff9e98",
     "semantic_hash": ""
   },
   "app/templates/errors/404.html": {
     "mtime": 1789918630.8994377,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "f2731b6fb53c3d521d6ba3e64076acbe",
     "semantic_hash": ""
   },
   "app/templates/errors/500.html": {
     "mtime": 1789918630.9004462,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "c87bb40e443d93b6c0e4677aede3d1b7",
     "semantic_hash": ""
   },
   "app/templates/garden/focus.html": {
     "mtime": 1789918630.9004462,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "5196dc58e9adabcd350446c85dc69015",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/CLAUDE.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d77309ef001cfcc47d5ac1a36a091782",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/CONTRIBUTING.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "912eed31342da18474df8d47e0ff9e98",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/README.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "b4a5f77eb01df73037bc60e1d35208a8",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/auth/login.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e3e0661a04d8ddd3cf9b46b1168db2c9",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/auth/profile.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "5cd834a597914f76e551577b9b204405",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/auth/register.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d63c0ecc74c5dd0decb90036e3901bee",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/base.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "10448bc74816bcccf3c442e16a3f105a",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/errors/404.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "f2731b6fb53c3d521d6ba3e64076acbe",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/errors/500.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "c87bb40e443d93b6c0e4677aede3d1b7",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/garden/focus.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "5196dc58e9adabcd350446c85dc69015",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/garden/index.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "0a8c4ee1ae9922121758f006c2c3a575",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/main/dashboard.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "7ffc6f4a532e3db21d2cdae4d48e562f",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/main/insights.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "4e81e42a19d70da2834eb7e279167650",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/main/landing.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3f3f432454c49a4da9474913d461547f",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/notes/create.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "8ed011f2ff6c79a1a281cb5e5459bca5",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/notes/edit.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "e27046e3cf947551d63194fe50c91b8e",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/notes/list.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "ebce700981d24d84d133300c1d2b2fc7",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/notes/view.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "dbafc8b4989cbae28e5228e8f2f03871",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/templates/search/search.html": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3330f877445613163d43502d1381bf51",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/CURRENT_PROJECT_INVENTORY.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "026f49dc7565cae828ececf6b43e5d87",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/DATABASE_AUDIT.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3a94730a85131844eca38b82f8959eb6",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/FIX_PLAN.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "acad72a41a77b79ecaabb89dae4235e0",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/NFR.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "d97a5772e74fa0c7d54caf9da79d6196",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/PEAS.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "446a76e2363b766fcd3a35e74e423981",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/PROJECT_HISTORY.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "59861084223adae6190454148b709950",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/ROADMAP.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3a176343001d806da721692e42413d78",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/ROUTE_MAP.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "ef18f45ff04b8b130c0716a5918b75de",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/SELF_AUDIT.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "de1afd4721fa203d840594feeb68473c",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/architecture.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "2aed4722455b82c715886230ce10dc6e",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/docs/database.md": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "60954b8439117a5b449398c2508b5568",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/requirements.txt": {
     "mtime": 1790092176.564533,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "a3f4943d8dc9f54081d676fd4e820f63",
     "semantic_hash": ""
   },
   "app/static/img/garden/sapling.svg": {
     "mtime": 1789918630.883437,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3766aa66447840bf3f95d00517d3d2f8",
     "semantic_hash": ""
   },
   "app/static/img/garden/seed.svg": {
     "mtime": 1789918630.8844426,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "6dd56947108a381b717e6e8cb4c1b006",
     "semantic_hash": ""
   },
   "app/static/img/garden/sprout.svg": {
     "mtime": 1789918630.8844426,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "10b3a042def797160890eb47da7a451c",
     "semantic_hash": ""
   },
   "app/static/img/garden/tree.svg": {
     "mtime": 1789918630.8844426,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "dda9865243cd09f98550be8a27dbb86a",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/static/img/garden/sapling.svg": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "3766aa66447840bf3f95d00517d3d2f8",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/static/img/garden/seed.svg": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "6dd56947108a381b717e6e8cb4c1b006",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/static/img/garden/sprout.svg": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "10b3a042def797160890eb47da7a451c",
     "semantic_hash": ""
   },
   "thoughtgarden-src/Thought-garden-main/app/static/img/garden/tree.svg": {
     "mtime": 1789851698.0,
-    "seen": 1790241131.917067,
+    "seen": 1790666693.0216742,
     "ast_hash": "dda9865243cd09f98550be8a27dbb86a",
+    "semantic_hash": ""
+  },
+  "thoughtgarden-src/Thought-garden-main/streamlit_analytics_ops.py": {
+    "mtime": 1790659548.1827164,
+    "seen": 1790666693.0216742,
+    "ast_hash": "1e02f49d9adb60f6c63ce35a075c0242",
+    "semantic_hash": ""
+  },
+  "thoughtgarden-src/Thought-garden-main/streamlit_garden_ops.py": {
+    "mtime": 1790660139.1022277,
+    "seen": 1790666693.0216742,
+    "ast_hash": "451c9e13c3df003ec7079bf0707e3edf",
     "semantic_hash": ""
   }
 }
