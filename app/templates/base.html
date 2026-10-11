@@ -57,6 +57,12 @@
                             <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Insights{% if is_active %}<span class="nav-indicator" aria-hidden="true"></span>{% endif %}
                         </a>
                     </li>
+                    <li class="nav-item">
+                        {% set is_active = request.endpoint == 'main.health' %}
+                        <a class="nav-link {{ 'active' if is_active }}" href="{{ url_for('main.health') }}" {{ 'aria-current=page' if is_active }}>
+                            <i class="bi bi-heart-pulse me-1" aria-hidden="true"></i>Health{% if is_active %}<span class="nav-indicator" aria-hidden="true"></span>{% endif %}
+                        </a>
+                    </li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
                     <button id="darkModeToggle" type="button" class="btn btn-outline-light btn-sm"

@@ -203,3 +203,5 @@ class Relationship(db.Model):
     
     def __repr__(self):
         return f'<Relationship {self.source_note_id} -> {self.target_note_id} ({self.similarity_score:.2f})>'
+
+

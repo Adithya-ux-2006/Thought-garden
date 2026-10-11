@@ -15,6 +15,12 @@
             <a href="{{ url_for('notes.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Note
             </a>
+            <a href="{{ url_for('notes.duplicates') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-files me-1" aria-hidden="true"></i>Duplicates
+            </a>
+            <a href="{{ url_for('main.export') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-download me-1" aria-hidden="true"></i>Export
+            </a>
             <a href="{{ url_for('search.search') }}" class="btn btn-outline-secondary" aria-label="Search notes" title="Search notes">
                 <i class="bi bi-search" aria-hidden="true"></i>
             </a>

@@ -1,0 +1,328 @@
+{
+  "communities": {
+    "0": [
+      "app_auth_routes",
+      "app_auth_routes_login",
+      "app_auth_routes_logout",
+      "app_auth_routes_profile",
+      "app_auth_routes_py_login_required",
+      "app_auth_routes_py_route",
+      "app_auth_routes_register",
+      "app_forms",
+      "app_forms_documentuploadform",
+      "app_forms_loginform",
+      "app_forms_profileform",
+      "app_forms_profileform_validate_email",
+      "app_forms_registerform",
+      "app_forms_registerform_validate_email",
+      "app_forms_searchform",
+      "app_models",
+      "app_models_tag",
+      "app_models_tag_repr",
+      "app_models_user",
+      "app_models_user_check_password",
+      "app_models_user_repr",
+      "app_models_user_set_password",
+      "app_services_onboarding_service",
+      "app_services_onboarding_service_prepare_starter_garden",
+      "app_services_onboarding_service_rationale_10",
+      "flaskform",
+      "seed",
+      "usermixin"
+    ],
+    "1": [
+      "app_search_routes",
+      "app_search_routes_py_login_required",
+      "app_search_routes_py_route",
+      "app_search_routes_search",
+      "app_search_routes_suggest",
+      "app_services_embedding_service",
+      "app_services_embedding_service_clear_embedding_cache",
+      "app_services_embedding_service_generate_embedding",
+      "app_services_embedding_service_get_all_embeddings",
+      "app_services_embedding_service_get_embedding",
+      "app_services_embedding_service_get_embedding_text",
+      "app_services_embedding_service_get_model",
+      "app_services_init",
+      "app_services_keyword_service",
+      "app_services_keyword_service_extract_keywords",
+      "app_services_keyword_service_suggest_tags",
+      "app_services_search_service",
+      "app_services_search_service_cosine_similarity",
+      "app_services_search_service_hybrid_search",
+      "app_services_search_service_keyword_search",
+      "app_services_search_service_semantic_search"
+    ],
+    "2": [
+      "app_init_create_app",
+      "fixture",
+      "run",
+      "tests_test_app",
+      "tests_test_app_app",
+      "tests_test_app_auth_client",
+      "tests_test_app_client",
+      "tests_test_app_test_archive_note",
+      "tests_test_app_test_create_note",
+      "tests_test_app_test_delete_note",
+      "tests_test_app_test_edit_note",
+      "tests_test_app_test_index_page",
+      "tests_test_app_test_login",
+      "tests_test_app_test_login_invalid_credentials",
+      "tests_test_app_test_logout",
+      "tests_test_app_test_note_ownership",
+      "tests_test_app_test_pin_note",
+      "tests_test_app_test_register",
+      "tests_test_app_test_register_duplicate_email",
+      "tests_test_app_test_search"
+    ],
+    "3": [
+      "app_auth_init",
+      "app_init",
+      "app_main_init",
+      "app_main_routes",
+      "app_main_routes_dashboard",
+      "app_main_routes_index",
+      "app_main_routes_insights",
+      "app_main_routes_py_login_required",
+      "app_main_routes_py_route",
+      "app_models_note",
+      "app_models_note_get_all_relationships",
+      "app_models_note_get_related_notes",
+      "app_models_note_repr",
+      "app_models_relationship",
+      "app_models_relationship_repr",
+      "app_notes_init",
+      "app_search_init",
+      "tests_test_app_test_no_self_relationship"
+    ],
+    "4": [
+      "app_forms_noteform",
+      "app_notes_routes",
+      "app_notes_routes_archive",
+      "app_notes_routes_archived",
+      "app_notes_routes_create",
+      "app_notes_routes_delete",
+      "app_notes_routes_edit",
+      "app_notes_routes_get_or_create_tags",
+      "app_notes_routes_list_notes",
+      "app_notes_routes_parse_tags",
+      "app_notes_routes_pin",
+      "app_notes_routes_py_login_required",
+      "app_notes_routes_py_route",
+      "app_notes_routes_view"
+    ],
+    "5": [
+      "app_static_js_main",
+      "app_static_js_main_alledges",
+      "app_static_js_main_allnodes",
+      "app_static_js_main_closepanel",
+      "app_static_js_main_fitgraph",
+      "app_static_js_main_initdarkmode",
+      "app_static_js_main_initfocusgraph",
+      "app_static_js_main_initgarden",
+      "app_static_js_main_renderfocusgraph",
+      "app_static_js_main_rendergraph",
+      "app_static_js_main_resetview",
+      "app_static_js_main_searchnode",
+      "app_static_js_main_shownotepanel",
+      "app_static_js_main_togglephysics"
+    ],
+    "6": [
+      "app_notes_routes_import_document",
+      "app_services_document_service",
+      "app_services_document_service_allowed_file",
+      "app_services_document_service_chunk_text",
+      "app_services_document_service_create_notes_from_document",
+      "app_services_document_service_extract_text",
+      "app_services_document_service_extract_text_from_md",
+      "app_services_document_service_extract_text_from_pdf",
+      "app_services_document_service_extract_text_from_txt",
+      "app_services_document_service_generate_title_from_content",
+      "app_services_document_service_validate_file"
+    ],
+    "7": [
+      "app_services_similarity_service",
+      "app_services_similarity_service_cosine_similarity",
+      "app_services_similarity_service_ensure_all_relationships",
+      "app_services_similarity_service_extract_keywords",
+      "app_services_similarity_service_get_relationship_explanation",
+      "app_services_similarity_service_lightweight_similarity",
+      "app_services_similarity_service_rationale_110",
+      "app_services_similarity_service_rationale_18",
+      "app_services_similarity_service_recalculate_all_relationships",
+      "app_services_similarity_service_update_relationships_for_note"
+    ],
+    "8": [
+      "app_garden_init",
+      "app_garden_routes",
+      "app_garden_routes_data",
+      "app_garden_routes_focus",
+      "app_garden_routes_get_category_color",
+      "app_garden_routes_index",
+      "app_garden_routes_note_detail",
+      "app_garden_routes_py_login_required",
+      "app_garden_routes_py_route"
+    ],
+    "9": [
+      "app_extensions"
+    ]
+  },
+  "cohesion": {
+    "0": 0.1693121693121693,
+    "1": 0.22380952380952382,
+    "2": 0.11578947368421053,
+    "3": 0.1503267973856209,
+    "4": 0.3626373626373626,
+    "5": 0.18681318681318682,
+    "6": 0.34545454545454546,
+    "7": 0.3333333333333333,
+    "8": 0.4166666666666667,
+    "9": 1.0
+  },
+  "gods": [
+    {
+      "id": "app_models_user",
+      "label": "User",
+      "degree": 20
+    },
+    {
+      "id": "app_models_note",
+      "label": "Note",
+      "degree": 20
+    },
+    {
+      "id": "app_models_tag",
+      "label": "Tag",
+      "degree": 19
+    },
+    {
+      "id": "app_services_similarity_service_update_relationships_for_note",
+      "label": "update_relationships_for_note()",
+      "degree": 17
+    },
+    {
+      "id": "app_models_relationship",
+      "label": "Relationship",
+      "degree": 11
+    },
+    {
+      "id": "app_notes_routes_create",
+      "label": "create()",
+      "degree": 8
+    },
+    {
+      "id": "app_services_document_service_create_notes_from_document",
+      "label": "create_notes_from_document()",
+      "degree": 8
+    },
+    {
+      "id": "app_forms_profileform",
+      "label": "ProfileForm",
+      "degree": 7
+    },
+    {
+      "id": "app_forms_registerform",
+      "label": "RegisterForm",
+      "degree": 7
+    },
+    {
+      "id": "app_forms_noteform",
+      "label": "NoteForm",
+      "degree": 7
+    }
+  ],
+  "surprises": [
+    {
+      "source": "test_no_self_relationship()",
+      "target": "User",
+      "source_files": [
+        "tests/test_app.py",
+        "app/models.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "NoteForm",
+      "target": "Tag",
+      "source_files": [
+        "app/forms.py",
+        "app/models.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "NoteForm",
+      "target": "User",
+      "source_files": [
+        "app/forms.py",
+        "app/models.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    },
+    {
+      "source": "test_no_self_relationship()",
+      "target": "Note",
+      "source_files": [
+        "tests/test_app.py",
+        "app/models.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "test_no_self_relationship()",
+      "target": "Relationship",
+      "source_files": [
+        "tests/test_app.py",
+        "app/models.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `Note` connect `Community 3` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 6`, `Community 7`, `Community 8`?",
+      "why": "High betweenness centrality (0.183) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Tag` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`?",
+      "why": "High betweenness centrality (0.105) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `User` connect `Community 0` to `Community 2`, `Community 3`, `Community 4`?",
+      "why": "High betweenness centrality (0.092) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 6 inferred relationships involving `User` (e.g. with `DocumentUploadForm` and `LoginForm`) actually correct?",
+      "why": "`User` has 6 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 6 inferred relationships involving `Tag` (e.g. with `DocumentUploadForm` and `LoginForm`) actually correct?",
+      "why": "`Tag` has 6 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `allEdges`, `allNodes` to the rest of the system?",
+      "why": "2 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11578947368421053 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

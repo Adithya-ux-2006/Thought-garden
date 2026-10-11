@@ -6,6 +6,7 @@ from app.forms import NoteForm
 from app.services.keyword_service import extract_keywords, suggest_tags
 from app.services.similarity_service import explain_connection, rebuild_user_graph
 from app.services.tag_service import get_or_create_tags, prune_orphan_tags
+from app.services.knowledge_service import duplicate_candidates, make_flashcards, summarize_note
 from app.services import indexer
 
 
@@ -250,3 +251,19 @@ def import_document():
 @login_required
 def archived():
     return redirect(url_for('notes.list_notes', archived=1))
+
+
+@bp.route('/<int:note_id>/study')
+@login_required
+def study(note_id):
+    note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
+    summary = summarize_note(note)
+    cards = make_flashcards(note)
+    return render_template('notes/study.html', note=note, summary=summary, cards=cards)
+
+
+@bp.route('/duplicates')
+@login_required
+def duplicates():
+    candidates = duplicate_candidates(current_user.id)
+    return render_template('notes/duplicates.html', duplicates=candidates)

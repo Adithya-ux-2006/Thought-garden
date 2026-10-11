@@ -4,6 +4,7 @@ from app.services.keyword_service import extract_keywords, suggest_tags
 from app.services.search_service import keyword_search, semantic_search, hybrid_search
 from app.services.document_service import validate_file, extract_text, create_notes_from_document, chunk_text
 from app.services.indexer import enqueue
+from app.services.knowledge_service import duplicate_candidates, export_garden, garden_health, make_flashcards, summarize_note
 
 __all__ = [
     'generate_embedding', 'get_embedding', 'get_all_embeddings',
@@ -12,4 +13,5 @@ __all__ = [
     'keyword_search', 'semantic_search', 'hybrid_search',
     'validate_file', 'extract_text', 'create_notes_from_document', 'chunk_text',
     'enqueue',
+    'duplicate_candidates', 'export_garden', 'garden_health', 'make_flashcards', 'summarize_note',
 ]

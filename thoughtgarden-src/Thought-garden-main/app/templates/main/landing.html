@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Thought Garden - Your Knowledge Garden{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+    <section class="hero-section py-5">
+        <div class="container">
+            <div class="row align-items-center min-vh-50">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        Your ideas shouldn't live in isolation.
+                    </h1>
+                    <p class="lead mb-4 text-muted">
+                        Thought Garden understands your notes, discovers hidden connections, 
+                        and turns scattered knowledge into an explorable garden.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4">
+                            Start Your Garden
+                        </a>
+                        <a href="#how-it-works" class="btn btn-outline-secondary btn-lg px-4">
+                            See How It Works
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="graph-preview mt-5 mt-lg-0">
+                        <div id="heroGraph"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">How It Works</h2>
+            <div class="row g-4">
+                <div class="col-md-3 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-pencil-square display-4 text-primary"></i>
+                    </div>
+                    <h4>Capture</h4>
+                    <p class="text-muted">Store your notes, ideas, research, and study materials in one place.</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-cpu display-4 text-primary"></i>
+                    </div>
+                    <h4>Understand</h4>
+                    <p class="text-muted">AI analyzes your content and extracts meaningful keywords and concepts.</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-link-45deg display-4 text-primary"></i>
+                    </div>
+                    <h4>Connect</h4>
+                    <p class="text-muted">Automatic semantic relationships link related knowledge together.</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-search display-4 text-primary"></i>
+                    </div>
+                    <h4>Discover</h4>
+                    <p class="text-muted">Explore your knowledge graph and find unexpected connections.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Your Knowledge as a Living Graph</h2>
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div id="featureGraph"></div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="feature-list">
+                        <div class="feature-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-diagram-3 text-primary me-3 fs-4"></i>
+                                <div>
+                                    <h5>Interactive Knowledge Graph</h5>
+                                    <p class="text-muted">Visualize your knowledge as an explorable network of connected ideas.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feature-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-lightning text-primary me-3 fs-4"></i>
+                                <div>
+                                    <h5>Semantic Search</h5>
+                                    <p class="text-muted">Find notes by meaning, not just keywords. Ask questions naturally.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feature-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-file-earmark text-primary me-3 fs-4"></i>
+                                <div>
+                                    <h5>Document Import</h5>
+                                    <p class="text-muted">Import PDFs, Markdown, and text files. AI automatically connects them to existing knowledge.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feature-item mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-shield-lock text-primary me-3 fs-4"></i>
+                                <div>
+                                    <h5>Local-First Privacy</h5>
+                                    <p class="text-muted">Your knowledge stays on your device. No cloud sync required.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-primary text-white">
+        <div class="container text-center">
+            <h2 class="mb-4">Ready to Grow Your Knowledge Garden?</h2>
+            <p class="lead mb-4">Start connecting your ideas today. No account required to explore.</p>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5">
+                Get Started Free
+            </a>
+        </div>
+    </section>
+
+    <footer class="py-4 bg-dark text-white">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="bi bi-flower1 me-2"></i>
+                Thought Garden &mdash; Your ideas shouldn't live in isolation.
+            </p>
+        </div>
+    </footer>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof vis !== 'undefined') {
+        const heroNodes = [
+            {id: 1, label: 'Machine Learning', color: '#6366f1', size: 25},
+            {id: 2, label: 'Neural Networks', color: '#8b5cf6', size: 20},
+            {id: 3, label: 'Deep Learning', color: '#a78bfa', size: 22},
+            {id: 4, label: 'NLP', color: '#c4b5fd', size: 18},
+            {id: 5, label: 'Computer Vision', color: '#7c3aed', size: 16},
+            {id: 6, label: 'Data Science', color: '#64748b', size: 19}
+        ];
+        
+        const heroEdges = [
+            {from: 1, to: 2, width: 3},
+            {from: 2, to: 3, width: 4},
+            {from: 3, to: 4, width: 3},
+            {from: 3, to: 5, width: 2},
+            {from: 1, to: 6, width: 2}
+        ];
+        
+        const heroContainer = document.getElementById('heroGraph');
+        if (heroContainer) {
+            new vis.Network(heroContainer, {
+                nodes: new vis.DataSet(heroNodes),
+                edges: new vis.DataSet(heroEdges)
+            }, {
+                physics: {enabled: false},
+                interaction: {hover: true},
+                nodes: {shape: 'dot', font: {color: '#fff', size: 12}}
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
