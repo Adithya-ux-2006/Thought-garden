@@ -11,7 +11,7 @@
             <h1>Your notes</h1>
             <p class="text-muted mb-0">{{ notes.total }} note{{ 's' if notes.total != 1 }} in your garden</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             <a href="{{ url_for('notes.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Note
             </a>

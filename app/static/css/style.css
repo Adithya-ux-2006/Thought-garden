@@ -2115,3 +2115,78 @@ form.is-submitting [type="submit"] {
     min-width: 0;
     overflow-wrap: anywhere;
 }
+
+/* ==========================================================================
+   Duplicates, study (flashcards)
+   ========================================================================== */
+
+.duplicate-titles a {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.duplicate-titles a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.study-summary {
+    border-left: 2px solid var(--sage);
+}
+
+.study-summary p {
+    color: var(--text-primary);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+}
+
+.flashcard summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    border-bottom: 0;
+    transition: var(--transition);
+}
+
+.flashcard summary::-webkit-details-marker {
+    display: none;
+}
+
+/* A small leaf that turns as the card opens. */
+.flashcard summary::before {
+    content: "";
+    flex: none;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 1.5px solid var(--sage-text);
+    border-bottom: 1.5px solid var(--sage-text);
+    rotate: -45deg;
+    transition: rotate var(--dur-base) var(--ease-out);
+}
+
+.flashcard[open] summary::before {
+    rotate: 45deg;
+}
+
+.flashcard summary:hover {
+    background-color: var(--bg-subtle);
+}
+
+.flashcard[open] summary {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.flashcard[open] > .card-body {
+    animation: tg-rise var(--dur-base) var(--ease-out);
+}
+
+/* Header action buttons wrap as a row rather than squeezing their labels. */
+.page-header .btn {
+    white-space: nowrap;
+}
