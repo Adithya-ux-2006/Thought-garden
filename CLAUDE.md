@@ -22,6 +22,11 @@ app/{auth,notes,garden,search,main}/routes.py
 app/services/                  embedding, indexer, similarity, keyword/tag suggestions, search, markdown, category, pagination, document logic
 app/templates/errors/          404.html / 500.html
 app/templates/macros/ui.html    empty_state() macro (growth-stage plant + headline + action)
+app/services/knowledge_service.py  garden_health / export_garden / duplicate_candidates / summarize_note / make_flashcards (remote, 2026-09-29)
+thoughtgarden-src/Thought-garden-main/  Streamlit port (Adithya): self-contained copy with its OWN app/, config.py, tests/, requirements.txt; entry app_streamlit.py
+.streamlit/config.toml         Streamlit theme (Phase 4 palette); fonts in thoughtgarden-src/Thought-garden-main/static/fonts/
+.devcontainer/                 Codespaces: Python 3.11, runs the Streamlit app on :8501
+graphify-out/                  generated knowledge-graph snapshots (remote chore commits; don't edit)
 app/templates/ + app/static/   UI/assets
 app/static/vendor/             self-hosted Bootstrap 5.3.3, Bootstrap Icons 1.11.3, vis-network 9.1.9, EB Garamond, Inter
 migrations/                    Flask-Migrate/Alembic baseline (`a1b2c3d4e5f6`)
@@ -46,6 +51,13 @@ flask seed-demo       # optional: demo@thoughtgarden.app / demo1234, local only
 flask reindex         # optional: recompute all relationships
 python run.py
 ```
+Streamlit port (run from the repo root so `.streamlit/config.toml` applies; Python 3.10–3.13, tested 3.13.1 on Windows 11):
+```text
+python -m venv .venv-streamlit && pip install -r thoughtgarden-src/Thought-garden-main/requirements.txt
+streamlit run thoughtgarden-src/Thought-garden-main/app_streamlit.py --server.address 127.0.0.1
+```
+Gate password `demo1234` (override `STREAMLIT_GATE_PASSWORD` or `gate_password` in `.streamlit/secrets.toml`). Root `.env`'s relative `DATABASE_URL` resolves to the port's own `thoughtgarden-src/Thought-garden-main/instance/thought_garden.db` — separate from the Flask DB. Base env ~392 MB; `sentence-transformers` is optional (keyword fallback without it; +~540 MB torch + model). Without `--server.address 127.0.0.1` Streamlit listens on all interfaces.
+
 Existing DBs: back up `instance/thought_garden.db`, then `flask db upgrade` (a pre-migrations DB without `alembic_version` needs `flask db stamp a1b2c3d4e5f6` first). The real dev DB was at `a1b2c3d4e5f6` on 2026-09-24; a backup is at `instance/thought_garden.pre-phase1-2026-09-24.db`.
 
 ## Current architecture / important behavior
@@ -77,7 +89,7 @@ Existing DBs: back up `instance/thought_garden.db`, then `flask db upgrade` (a p
 3. **API/data-hardening roadmap remains:** formalize JSON API, input sanitization review, pagination consistency, query optimization, caching, background-job reliability, type hints/docstrings. Configuration centralization, migrations, pytest, structured errors, and SECRET_KEY hardening are done.
 4. **Browser coverage is optional:** `chosen:false`, dimming, focus ring, CSP, flashes, delete confirm, tag chips etc. are covered by `tests/test_browser_smoke.py` (real Chromium, mutation-verified), which skips silently without Playwright. Pinned-color consistency is still manual-only.
 5. **Graph canvas accessibility:** vis canvas itself isn't keyboard/screen-reader accessible; mitigated by `/garden/list`, a visually-hidden text alternative, and `role=img`.
-6. **Phase 6 parked** (`FIX_PLAN.md`): Markdown export/backup, duplicate detection, re-ranking, LLM/RAG, collaboration.
+6. **Phase 6 partly landed (remote, 2026-09-29):** JSON export (`/export`), duplicate candidates (`/notes/duplicates`), study summary/flashcards. Still parked (`FIX_PLAN.md`): Markdown export/backup, re-ranking, LLM/RAG, collaboration.
 
 ## Documentation rules
 
@@ -103,20 +115,21 @@ Existing DBs: back up `instance/thought_garden.db`, then `flask db upgrade` (a p
 - **2026-09-24 Phases 0a/0b/1 (`fix/critical-bugs`, `fix/security-and-cleanup`, `refactor/foundations`):** 0a fixed UI search, tag edits, chunker hang, filters/counts; 0b hardened panel rendering, login redirects, debug/secret defaults, logout (POST+CSRF), cookies, upload limit, error messages. Phase 1: Alembic-only schema (+ email-normalization and pickled-embedding migrations), SQLite pragmas (FK/WAL/busy_timeout), startup magic replaced by `flask seed-demo`/`flask reindex`, starter garden from a JSON fixture (no longer copied from the demo account), case-insensitive emails, login rate limit, password required to change email, dead code + scikit-learn removed. Migrations verified on a copy of the real DB.
 - **2026-09-26 Phases 2–4 (`a163074`, `feature/fts-search`):** indexer + `IndexJob` queue (model never loaded in-request), `rebuild_user_graph`, `Relationship.method`, FTS5 search, per-user tags, single category source, tz-aware timestamps.
 - **2026-09-26 Phase 5 (`feature/ux-a11y`):** safe Markdown, "why connected", tag suggestions, delete on note view, head theme init, persistent error flashes, aria-labels, `/garden/list`, vis scoped to garden pages (landing hero → static SVG), CSP, inline handlers moved to JS, history comments stripped. The 4 source-grep tests were replaced by 12 Playwright smoke tests (each mutation-verified). Full suite 243 passed, 0 skipped. No schema change.
-- **2026-10-11 Phase 4 visual identity (uncommitted on `main`):** botanical editorial redesign: EB Garamond replaces Fraunces, sage/sand/terracotta tokens, motion system, solid navbar with animated active indicator, signed-out brand header, editorial note view, composer forms, unified insight cards, botanical empty states, landing growth path (replaced the empty `#featureGraph` box), garden hover/search emphasis + growth entrance + panel transitions. 243 passed; live Playwright on a DB copy: 17 pages × desktop/tablet/phone × light/dark, zero overflow/console errors; contrast AA verified. Caveat: headless Chromium sometimes stalls the very first frame of a new browser (looks like a blank/unstyled page) — warm up before screenshots.
+- **2026-10-11 Phase 4 visual identity (`f2770d3`):** botanical editorial redesign: EB Garamond replaces Fraunces, sage/sand/terracotta tokens, motion system, solid navbar with animated active indicator, signed-out brand header, editorial note view, composer forms, unified insight cards, botanical empty states, landing growth path (replaced the empty `#featureGraph` box), garden hover/search emphasis + growth entrance + panel transitions. 243 passed; live Playwright on a DB copy: 17 pages × desktop/tablet/phone × light/dark, zero overflow/console errors; contrast AA verified. Caveat: headless Chromium sometimes stalls the very first frame of a new browser (looks like a blank/unstyled page) — warm up before screenshots.
+- **2026-10-11 merge + verification (`cdbd01b`, `dd55f8e`):** merged remote `origin/main` (Adithya, 2026-09-20..30: Streamlit port, `/health`, `/export`, `/notes/duplicates`, `/notes/<id>/study`, knowledge_service, devcontainer, graphify-out) — treated as correct, logic untouched. Clean auto-merge; Health nav link given the Phase 4 indicator. Restyled health/duplicates/study, wrapped notes-header buttons on phones, themed Streamlit via `.streamlit/config.toml`. Verified: `pytest tests` 268 passed; port's own tests 23 passed (run from its dir); Streamlit clean-venv install on 3.13.1, all 6 pages 0 exceptions, notes + keyword linking + garden graph work. Known in remote work (left as-is): Streamlit sidebar lists pages twice (st.navigation + page_link loop); sidebar note count cached until restart; root `pytest` collects the port's tests and errors — use `pytest tests`.
 - **2026-09-20 post-fix audit:** all six fixes independently reverified; no regressions found across Dashboard/Notes/Search/Insights/Garden, themes, filters, search, node interactions, focus view, keyboard traversal, and growth icons. `--pinned-color` and server pin ring matched exactly (`rgb(165,120,52)`). Growth boundary checks: 0-day/1000-connections caps at sapling; 7-day/6-connections reaches tree. Remaining findings are the current caveats above.
 
 ## Git / branch safety
 
 - Repo: `https://github.com/Adithya-ux-2006/Thought-garden`
 - Historical working branch: `feature/frontend-polish`; later work was pushed to `main`.
-- **Remote main is current through `ac88ac6` plus the CLAUDE.md update that follows it.**
+- **Remote `main` is current through `dd55f8e` plus the CLAUDE.md update that follows it (2026-10-11). Adithya also pushes to `main` — always `git fetch` before pushing; merge (no rebase/force) if behind.**
 - Backend commits already landed and pushed:
   - `34e5934` — `refactor: centralize application configuration`
   - `1943506` — `feat: add structured error handling`
   - `3634305` — `security: enforce production secret key`
-- Phase branches: `fix/critical-bugs`, `fix/security-and-cleanup` pushed; `feature/ux-a11y` (Phase 5, on top of `a163074` Phases 1–4) pushed 2026-09-26. Not yet merged to `main`.
-- Most recent documented test checkpoint (2026-09-26, `feature/ux-a11y`): 243 passed, 0 skipped (Playwright present).
+- Phase branches: `fix/critical-bugs`, `fix/security-and-cleanup` pushed; `feature/ux-a11y` (Phase 5, on top of `a163074` Phases 1–4) pushed 2026-09-26; all merged into `main` (local branches are stale and can be deleted).
+- Most recent documented test checkpoint (2026-10-11, `main`): `pytest tests` 268 passed (Playwright present).
 - Pre-existing garden/frontend work must not be included in unrelated backend commits. Before committing: inspect `git status --short`, `git diff --stat`, and `git diff`; stage only files for the current task.
 
 ## Working conventions
