@@ -43,6 +43,11 @@ const GARDEN_GROW_MS = 750;
 const GARDEN_GROW_START_SCALE = 0.2;
 const GARDEN_MAX_TWEEN_ITEMS = 600;
 const GARDEN_CAMERA_ANIMATION = { duration: 500, easingFunction: 'easeInOutCubic' };
+// Fitting leaves this much breathing room so the floating dock and legend
+// sit over open ground rather than over plants.
+const GARDEN_FIT_MARGIN = 0.86;
+const GARDEN_ZOOM_STEP = 1.3;
+const GARDEN_HINT_MS = 9000;
 
 function prefersReducedMotion() {
     return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -63,17 +68,24 @@ function easeOutBack(t) {
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }
 
-function themeColor(varName, fallback) {
-    const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+function themeColor(varName, fallback, el = document.documentElement) {
+    const value = getComputedStyle(el).getPropertyValue(varName).trim();
     return value || fallback;
+}
+
+// The garden is an always-dark environment (data-bs-theme="dark" on its
+// container), so its canvas colours are read from there, not from <html>.
+function gardenScope() {
+    return document.getElementById('gardenGraph') || document.getElementById('focusGraph') || document.documentElement;
 }
 
 // Read at use time (not once at render) so a theme toggle recolors edges too.
 function gardenEdgeColors() {
+    const scope = gardenScope();
     return {
-        base: themeColor('--border-color', '#e2dccd'),
-        highlight: themeColor('--primary-color', '#193c32'),
-        hover: themeColor('--text-secondary', '#5c645f')
+        base: themeColor('--garden-edge', '#4f8f76', scope),
+        highlight: themeColor('--garden-edge-highlight', '#b8e8ce', scope),
+        hover: themeColor('--garden-edge-hover', '#8fddb8', scope)
     };
 }
 
@@ -84,13 +96,12 @@ function gardenEdgeColors() {
 // since flat text over graph lines/edges needs the contrast either way) and
 // is called both at initial render and again from the toggle handler.
 function gardenLabelFont() {
-    const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     return {
-        size: 12,
-        face: 'Inter, sans-serif',
-        color: themeColor('--text-primary', dark ? '#ece7dc' : '#26332e'),
+        size: 14,
+        face: '"Times New Roman", Times, "Liberation Serif", serif',
+        color: themeColor('--garden-label', '#eaf7f0', gardenScope()),
         strokeWidth: 4,
-        strokeColor: dark ? 'rgba(12, 12, 15, 0.85)' : 'rgba(255, 255, 255, 0.92)'
+        strokeColor: 'rgba(4, 24, 17, 0.9)'
     };
 }
 
@@ -158,30 +169,271 @@ function gardenSeenKey() {
     return `tg.gardenSeen.${container ? container.dataset.userId : ''}`;
 }
 
-function takeNewGardenNodeIds(nodes) {
+// Returns {planted, advanced}: notes new since the last visit, and notes
+// whose growth stage moved on (seed -> sprout etc.) since then. Stored as
+// {id: stage}; an older plain id list is still read, just without stages.
+function takeGardenChanges(nodes) {
+    const none = { planted: new Set(), advanced: new Set() };
     let seen = null;
     try {
         const raw = localStorage.getItem(gardenSeenKey());
-        seen = raw ? new Set(JSON.parse(raw)) : null;
-        localStorage.setItem(gardenSeenKey(), JSON.stringify(nodes.map(n => n.id)));
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            seen = Array.isArray(parsed) ? Object.fromEntries(parsed.map(id => [id, null])) : parsed;
+        }
+        localStorage.setItem(gardenSeenKey(), JSON.stringify(Object.fromEntries(nodes.map(n => [n.id, n.stage]))));
     } catch (e) {
-        return new Set();
+        return none;
     }
-    if (!seen || prefersReducedMotion() || nodes.length > GARDEN_MAX_TWEEN_ITEMS) return new Set();
-    return new Set(nodes.filter(n => !seen.has(n.id)).map(n => n.id));
+    if (!seen || prefersReducedMotion() || nodes.length > GARDEN_MAX_TWEEN_ITEMS) return none;
+    const order = ['seed', 'sprout', 'sapling', 'tree'];
+    return {
+        planted: new Set(nodes.filter(n => !(n.id in seen)).map(n => n.id)),
+        advanced: new Set(nodes.filter(n => n.id in seen && seen[n.id]
+            && order.indexOf(n.stage) > order.indexOf(seen[n.id])).map(n => n.id))
+    };
 }
 
-function growGardenNodes(growingIds) {
-    if (!growingIds.size || !gardenNodesDataSet) return;
-    const targets = allNodes.filter(n => growingIds.has(n.id));
+// Planting: new notes spring up from a seed with a ripple in the soil;
+// notes that reached a new growth stage swell once and ripple in gold-green.
+function growGardenNodes(changes) {
+    if (!gardenNodesDataSet) return;
+    const planted = allNodes.filter(n => changes.planted.has(n.id));
+    const advanced = allNodes.filter(n => changes.advanced.has(n.id));
+    if (!planted.length && !advanced.length) return;
+    gardenGrowing = true;
+    planted.forEach((n, i) => addGardenRipple(n.id, 'rgba(184, 232, 206, ', i * 90));
+    advanced.forEach((n, i) => addGardenRipple(n.id, 'rgba(221, 190, 110, ', i * 90));
     const start = performance.now();
     function step(now) {
         const p = Math.min(1, (now - start) / GARDEN_GROW_MS);
-        const scale = p >= 1 ? 1 : GARDEN_GROW_START_SCALE + (1 - GARDEN_GROW_START_SCALE) * easeOutBack(p);
-        gardenNodesDataSet.update(targets.map(n => ({ id: n.id, size: (n.size || 20) * scale })));
-        if (p < 1) requestAnimationFrame(step);
+        const plantScale = p >= 1 ? 1 : GARDEN_GROW_START_SCALE + (1 - GARDEN_GROW_START_SCALE) * easeOutBack(p);
+        const pulse = p >= 1 ? 1 : 1 + 0.22 * Math.sin(Math.PI * p);
+        gardenNodesDataSet.update(
+            planted.map(n => ({ id: n.id, size: (n.size || 20) * plantScale }))
+                .concat(advanced.map(n => ({ id: n.id, size: (n.size || 20) * pulse })))
+        );
+        if (p < 1) {
+            requestAnimationFrame(step);
+        } else {
+            gardenGrowing = false;
+        }
     }
     requestAnimationFrame(step);
+}
+
+// ---------------------------------------------------------------------------
+// Garden atmosphere - drawn beneath the nodes on each frame vis renders.
+// Nothing here runs continuously: halos are drawn only when vis redraws
+// anyway, and the short-lived effects (light flowing along a selected
+// note's connections, planting ripples, the idle breeze) each stop on
+// their own. Drawn in `beforeDrawing`, so node rings are never painted over.
+// ---------------------------------------------------------------------------
+
+const GARDEN_FLOW_MS = 2600;
+const GARDEN_RIPPLE_MS = 1500;
+const GARDEN_BREEZE_IDLE_MS = 5000;
+const GARDEN_BREEZE_SETTLE_MS = 6000;
+const GARDEN_BREEZE_EVERY_MS = 7000;
+const GARDEN_BREEZE_MS = 1200;
+const GARDEN_MAX_AMBIENT_NODES = 200;
+
+let gardenFlow = null;
+let gardenAtmosphereFrame = null;
+const gardenRipples = [];
+const gardenHiddenIds = new Set();
+let gardenGrowing = false;
+let gardenSettledAt = 0;
+let gardenLastActivity = 0;
+let gardenBreeze = null;
+
+function gardenNodeById(id) {
+    return allNodes.find(n => n.id === id);
+}
+
+// A halo that starts just outside the node's ring and fades outward. It is
+// an annulus on purpose: nothing is ever painted underneath the node, so a
+// node's own fill and category/pinned ring look identical with or without it.
+function gardenGlow(ctx, x, y, nodeSize, reach, rgb, alpha) {
+    const inner = nodeSize + 3;
+    const outer = nodeSize * reach;
+    const g = ctx.createRadialGradient(x, y, inner, x, y, outer);
+    g.addColorStop(0, `rgba(${rgb}, ${alpha})`);
+    g.addColorStop(1, `rgba(${rgb}, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, outer, 0, Math.PI * 2);
+    ctx.arc(x, y, inner, 0, Math.PI * 2, true);
+    ctx.fill('evenodd');
+}
+
+function gardenEdgePoint(edge, t) {
+    // Follows vis's own smooth curve when available, else a straight line.
+    try {
+        const body = gardenNetwork.body.edges[edge.id];
+        if (body && body.edgeType && body.edgeType.getPoint) return body.edgeType.getPoint(t);
+    } catch (e) { /* fall through */ }
+    const pos = gardenNetwork.getPositions([edge.from, edge.to]);
+    const a = pos[edge.from], b = pos[edge.to];
+    return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+function drawGardenAtmosphere(ctx) {
+    if (!gardenNetwork) return;
+    const now = performance.now();
+    const visible = allNodes.filter(n => !gardenHiddenIds.has(n.id));
+    const positions = gardenNetwork.getPositions(visible.map(n => n.id));
+    const alphaOf = id => (gardenNodeAlpha.has(id) ? gardenNodeAlpha.get(id) : 1);
+    ctx.save();
+
+    // pinned notes carry a faint gold aura
+    visible.forEach(n => {
+        if (!n.is_pinned || !positions[n.id]) return;
+        gardenGlow(ctx, positions[n.id].x, positions[n.id].y, (n.size || 20), 2, '221, 178, 98', 0.26 * alphaOf(n.id));
+    });
+
+    // search matches glow softly
+    if (gardenSelection && gardenSelection.kind === 'search') {
+        gardenSelection.nodes.forEach(id => {
+            const n = gardenNodeById(id);
+            if (n && positions[id]) gardenGlow(ctx, positions[id].x, positions[id].y, (n.size || 20), 2.2, '184, 232, 206', 0.4);
+        });
+    }
+
+    // hovered note: a pool of mint light
+    if (gardenHoverId !== null && positions[gardenHoverId]) {
+        const n = gardenNodeById(gardenHoverId);
+        if (n) gardenGlow(ctx, positions[n.id].x, positions[n.id].y, (n.size || 20), 2.3, '184, 232, 206', 0.34);
+    }
+
+    // selected note: a stronger halo that breathes while light flows out
+    if (gardenSelection && gardenSelection.kind === 'node' && positions[gardenSelection.nodeId]) {
+        const n = gardenNodeById(gardenSelection.nodeId);
+        const breathing = gardenFlow ? 0.12 * Math.sin((now - gardenFlow.start) / 260) : 0;
+        if (n) gardenGlow(ctx, positions[n.id].x, positions[n.id].y, (n.size || 20), 2.6, '143, 221, 184', 0.5 + breathing);
+    }
+
+    // light flowing along the selected note's connections
+    if (gardenFlow) {
+        const elapsed = now - gardenFlow.start;
+        const fade = Math.max(0, Math.min(1, (GARDEN_FLOW_MS - elapsed) / 500));
+        ctx.shadowColor = 'rgba(205, 255, 220, 0.9)';
+        ctx.shadowBlur = 8;
+        gardenFlow.edges.forEach(edge => {
+            if (gardenHiddenIds.has(edge.from) || gardenHiddenIds.has(edge.to)) return;
+            const outward = edge.from === gardenFlow.nodeId;
+            for (let k = 0; k < 3; k++) {
+                const t = ((elapsed / 1100) + k / 3) % 1;
+                const p = gardenEdgePoint(edge, outward ? t : 1 - t);
+                ctx.fillStyle = `rgba(214, 255, 228, ${(0.85 * fade * Math.sin(Math.PI * t)).toFixed(3)})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+        ctx.shadowBlur = 0;
+    }
+
+    // planting / growth ripples in the soil
+    gardenRipples.forEach(r => {
+        const p = (now - r.start) / GARDEN_RIPPLE_MS;
+        if (p < 0 || p > 1 || !positions[r.nodeId]) return;
+        const n = gardenNodeById(r.nodeId);
+        const base = (n && n.size) || 20;
+        for (let k = 0; k < 2; k++) {
+            const q = p - k * 0.18;
+            if (q <= 0) continue;
+            ctx.strokeStyle = `${r.rgba}${(0.7 * (1 - q)).toFixed(3)})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(positions[r.nodeId].x, positions[r.nodeId].y, base * (1 + q * 2.4), 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    });
+
+    ctx.restore();
+}
+
+// Keeps vis redrawing only while a short-lived effect is in flight.
+function runGardenAtmosphere() {
+    if (gardenAtmosphereFrame !== null || !gardenNetwork) return;
+    function tick() {
+        const now = performance.now();
+        if (gardenFlow && now - gardenFlow.start > GARDEN_FLOW_MS) gardenFlow = null;
+        for (let i = gardenRipples.length - 1; i >= 0; i--) {
+            if (now - gardenRipples[i].start > GARDEN_RIPPLE_MS) gardenRipples.splice(i, 1);
+        }
+        gardenNetwork.redraw();
+        gardenAtmosphereFrame = (gardenFlow || gardenRipples.length) ? requestAnimationFrame(tick) : null;
+    }
+    gardenAtmosphereFrame = requestAnimationFrame(tick);
+}
+
+function addGardenRipple(nodeId, rgba, delay = 0) {
+    if (prefersReducedMotion()) return;
+    gardenRipples.push({ nodeId, rgba, start: performance.now() + delay });
+    runGardenAtmosphere();
+}
+
+function startGardenFlow(nodeId) {
+    if (prefersReducedMotion() || (allNodes.length + allEdges.length) > GARDEN_MAX_TWEEN_ITEMS) return;
+    const edges = allEdges.filter(e => e.from === nodeId || e.to === nodeId);
+    if (!edges.length) return;
+    gardenFlow = { nodeId, edges, start: performance.now() };
+    runGardenAtmosphere();
+}
+
+// Idle breeze: after a quiet moment, a few plants lean gently, then settle.
+// Any pointer or key activity ends it instantly and restores exact sizes.
+function gardenBreezeAllowed() {
+    const now = performance.now();
+    return Boolean(gardenNetwork && gardenSettledAt && !gardenBreeze && !gardenGrowing && !gardenDragging
+        && !gardenSelection && gardenHoverId === null && !document.hidden && !prefersReducedMotion()
+        && allNodes.length <= GARDEN_MAX_AMBIENT_NODES
+        && now - gardenSettledAt > GARDEN_BREEZE_SETTLE_MS
+        && now - gardenLastActivity > GARDEN_BREEZE_IDLE_MS);
+}
+
+function startGardenBreeze() {
+    if (!gardenBreezeAllowed()) return;
+    const pool = allNodes.filter(n => !gardenHiddenIds.has(n.id));
+    const targets = pool.sort(() => Math.random() - 0.5).slice(0, 3);
+    if (!targets.length) return;
+    const start = performance.now();
+    gardenBreeze = { targets, frame: null };
+    function step(now) {
+        if (!gardenBreeze) return;
+        const p = Math.min(1, (now - start) / GARDEN_BREEZE_MS);
+        gardenNodesDataSet.update(targets.map((n, i) => {
+            const local = Math.min(1, Math.max(0, p * 1.4 - i * 0.2));
+            return { id: n.id, size: (n.size || 20) * (1 + 0.07 * Math.sin(Math.PI * local)) };
+        }));
+        if (p < 1) {
+            gardenBreeze.frame = requestAnimationFrame(step);
+        } else {
+            endGardenBreeze();
+        }
+    }
+    gardenBreeze.frame = requestAnimationFrame(step);
+}
+
+function endGardenBreeze() {
+    if (!gardenBreeze) return;
+    if (gardenBreeze.frame) cancelAnimationFrame(gardenBreeze.frame);
+    gardenNodesDataSet.update(gardenBreeze.targets.map(n => ({ id: n.id, size: n.size || 20 })));
+    gardenBreeze = null;
+    if (gardenNetwork) gardenNetwork.redraw();
+}
+
+function initGardenAmbience() {
+    gardenLastActivity = performance.now();
+    const activity = () => {
+        gardenLastActivity = performance.now();
+        endGardenBreeze();
+    };
+    ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(type =>
+        window.addEventListener(type, activity, { passive: true, capture: true }));
+    setInterval(startGardenBreeze, GARDEN_BREEZE_EVERY_MS);
 }
 
 function initGarden() {
@@ -190,12 +442,15 @@ function initGarden() {
         .then(data => {
             allNodes = data.nodes;
             allEdges = data.edges;
-            renderGraph(allNodes, allEdges, takeNewGardenNodeIds(allNodes));
+            updateGardenStats();
+            const empty = document.getElementById('gardenEmpty');
+            if (empty) empty.classList.toggle('d-none', allNodes.length > 0);
+            renderGraph(allNodes, allEdges, takeGardenChanges(allNodes));
         })
         .catch(error => console.error('Error loading garden data:', error));
 }
 
-function renderGraph(nodes, edges, growingIds) {
+function renderGraph(nodes, edges, changes) {
     const container = document.getElementById('gardenGraph');
     if (!container) return;
 
@@ -207,7 +462,7 @@ function renderGraph(nodes, edges, growingIds) {
             size: 20,
             font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(38, 51, 46, 0.24)', size: 10, x: 0, y: 4 },
+            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.5)', size: 14, x: 0, y: 5 },
             // Without this, vis-network's default selection style replaces a
             // clicked node's real color/border (category ring, pinned gold
             // ring) with a flat blue highlight - wiping the exact visual
@@ -229,22 +484,26 @@ function renderGraph(nodes, edges, growingIds) {
                 hover: edgeColors.hover,
                 opacity: GARDEN_EDGE_BASE_OPACITY
             },
+            hoverWidth: 0.8,
+            selectionWidth: 0,
             shadow: false
         },
         physics: {
             enabled: true,
             solver: 'forceAtlas2Based',
             forceAtlas2Based: {
-                gravitationalConstant: -50,
-                centralGravity: 0.01,
-                springLength: 150,
+                gravitationalConstant: -65,
+                centralGravity: 0.012,
+                springLength: 165,
                 springConstant: 0.08,
-                damping: 0.4
+                damping: 0.4,
+                avoidOverlap: 0.35
             },
             stabilization: {
                 enabled: true,
                 iterations: 1000,
-                updateInterval: 25
+                updateInterval: 25,
+                fit: false
             }
         },
         interaction: {
@@ -261,7 +520,7 @@ function renderGraph(nodes, edges, growingIds) {
     gardenHoverId = null;
     gardenNodeAlpha.clear();
     gardenEdgeAlpha.clear();
-    gardenNodesDataSet = new vis.DataSet(seedGardenPositions(nodes, growingIds));
+    gardenNodesDataSet = new vis.DataSet(seedGardenPositions(nodes, changes.planted));
     gardenEdgesDataSet = new vis.DataSet(edges);
     // Edges arrive from the server without an id; vis.DataSet assigns one
     // on insert. Re-read them back out so later per-edge .update() calls
@@ -274,12 +533,15 @@ function renderGraph(nodes, edges, growingIds) {
     };
 
     gardenNetwork = new vis.Network(container, dataset, options);
+    gardenNetwork.on('beforeDrawing', drawGardenAtmosphere);
 
     gardenNetwork.once('stabilizationIterationsDone', function() {
         gardenNetwork.setOptions({ physics: { enabled: false } });
         const toggle = document.getElementById('physicsToggle');
         if (toggle) toggle.checked = false;
-        growGardenNodes(growingIds);
+        gardenFitView({ animate: false });
+        gardenSettledAt = performance.now();
+        growGardenNodes(changes);
     });
 
     gardenNetwork.on('zoom', function() {
@@ -287,6 +549,7 @@ function renderGraph(nodes, edges, growingIds) {
     });
 
     gardenNetwork.on('click', function(params) {
+        dismissGardenHint();
         if (params.nodes.length > 0) {
             selectGardenNode(params.nodes[0]);
         } else {
@@ -296,8 +559,13 @@ function renderGraph(nodes, edges, growingIds) {
 
     gardenNetwork.on('hoverNode', function(params) {
         container.style.cursor = 'pointer';
-        if (gardenSelection || gardenDragging) return;
+        if (gardenDragging) return;
         gardenHoverId = params.node;
+        // with a note selected, hovering another only adds its halo
+        if (gardenSelection) {
+            gardenNetwork.redraw();
+            return;
+        }
         applyGardenEmphasis();
     });
 
@@ -305,18 +573,30 @@ function renderGraph(nodes, edges, growingIds) {
         container.style.cursor = 'default';
         if (gardenHoverId === null) return;
         gardenHoverId = null;
-        if (!gardenSelection && !gardenDragging) applyGardenEmphasis();
+        if (!gardenSelection && !gardenDragging) {
+            applyGardenEmphasis();
+        } else {
+            gardenNetwork.redraw();
+        }
     });
 
-        // vis only fires blurNode on a canvas mousemove, so leaving the canvas
+    // vis only fires blurNode on a canvas mousemove, so leaving the canvas
     // straight from a node would otherwise leave the hover preview stuck.
     container.addEventListener('mouseleave', function() {
         if (gardenHoverId === null) return;
         gardenHoverId = null;
-        if (!gardenSelection) applyGardenEmphasis();
+        if (!gardenSelection) {
+            applyGardenEmphasis();
+        } else {
+            gardenNetwork.redraw();
+        }
     });
 
-    gardenNetwork.on('dragStart', function() { gardenDragging = true; });
+    gardenNetwork.on('dragStart', function() {
+        gardenDragging = true;
+        dismissGardenHint();
+    });
+    gardenNetwork.on('zoom', dismissGardenHint);
     gardenNetwork.on('dragEnd', function() { gardenDragging = false; });
 }
 
@@ -335,8 +615,9 @@ function updateGardenLabelVisibility() {
 function neighborhoodEmphasis(nodeId, nodeDim, edgeDim) {
     const nodes = new Set(gardenNetwork.getConnectedNodes(nodeId));
     nodes.add(nodeId);
-    return {
+        return {
         kind: 'node',
+        nodeId,
         nodes,
         edgeInFocus: edge => edge.from === nodeId || edge.to === nodeId,
         nodeDim,
@@ -436,6 +717,7 @@ function selectGardenNode(nodeId, { center = false } = {}) {
     if (gardenNetwork && node) {
         gardenSelection = neighborhoodEmphasis(nodeId, GARDEN_NODE_DIM_OPACITY, GARDEN_EDGE_DIM_OPACITY);
         applyGardenEmphasis();
+        if (!node.hidden) startGardenFlow(nodeId);
         if (center && !node.hidden) {
             gardenNetwork.focus(nodeId, { scale: gardenNetwork.getScale(), animation: cameraAnimation() });
         }
@@ -474,7 +756,7 @@ function showNotePanel(nodeId) {
             // Note data is user content: build nodes with textContent, never HTML strings.
             document.getElementById('panelTags').replaceChildren(...note.tags.map(tag => {
                 const badge = document.createElement('span');
-                badge.className = 'badge bg-light text-dark';
+                badge.className = 'tag';
                 badge.textContent = tag;
                 return badge;
             }));
@@ -490,6 +772,8 @@ function showNotePanel(nodeId) {
             }
 
             document.getElementById('panelViewBtn').href = `/notes/${note.id}`;
+            const focusBtn = document.getElementById('panelFocusBtn');
+            if (focusBtn) focusBtn.href = `/garden/focus/${note.id}`;
             selectedNode = nodeId;
 
             // Opening from the placeholder animates via CSS; switching from
@@ -537,6 +821,7 @@ function closePanel() {
     panel.querySelector('.panel-placeholder').classList.remove('d-none');
     document.getElementById('panelContent').classList.add('d-none');
     selectedNode = null;
+    gardenFlow = null;
     if (gardenSelection && gardenSelection.kind === 'node') {
         gardenSelection = null;
         applyGardenEmphasis();
@@ -575,9 +860,10 @@ function searchNode() {
     gardenNetwork.selectNodes(matchIds);
     // chosen:false means vis draws no selection of its own - matches stay
     // at full strength while the rest of the garden recedes.
+    gardenFlow = null;
     gardenSelection = searchEmphasis(matchIds);
     applyGardenEmphasis();
-    gardenNetwork.fit({ nodes: matchIds, animation: cameraAnimation() });
+    gardenFitView({ nodes: matchIds });
     if (feedback) {
         feedback.textContent = matchIds.length === 1
             ? '1 match found.'
@@ -599,13 +885,91 @@ function applyGardenCategoryFilters() {
         hidden: checkedCategories.length > 0 && !checkedCategories.includes(node.category)
     }));
 
+    gardenHiddenIds.clear();
+    updates.forEach(u => { if (u.hidden) gardenHiddenIds.add(u.id); });
     gardenNodesDataSet.update(updates);
+    updateGardenStats();
+}
+
+function clearGardenCategoryFilters() {
+    document.querySelectorAll('.garden-category-filter:checked').forEach(box => { box.checked = false; });
+    applyGardenCategoryFilters();
+}
+
+// "17 plants · 24 connections", or "Showing 6 of 17 plants" while filtered.
+// Built from text nodes - the numbers are ours, but keep to one pattern.
+function updateGardenStats() {
+    const stats = document.getElementById('gardenStats');
+    if (!stats) return;
+    const strong = text => {
+        const el = document.createElement('strong');
+        el.textContent = text;
+        return el;
+    };
+    const total = allNodes.length;
+    const shown = total - gardenHiddenIds.size;
+    const plural = (n, word) => `${word}${n === 1 ? '' : 's'}`;
+    if (gardenHiddenIds.size > 0) {
+        stats.replaceChildren('Showing ', strong(shown), ` of ${total} ${plural(total, 'plant')}`);
+    } else {
+        stats.replaceChildren(strong(total), ` ${plural(total, 'plant')} \u00b7 `,
+            strong(allEdges.length), ` ${plural(allEdges.length, 'connection')}`);
+    }
+}
+
+// vis 9 has no fit padding, so fit instantly, read where that landed, put
+// the camera back and glide to a slightly wider version of it.
+function gardenFitView({ nodes, animate = true } = {}) {
+    if (!gardenNetwork) return;
+    const from = { position: gardenNetwork.getViewPosition(), scale: gardenNetwork.getScale() };
+    gardenNetwork.fit(nodes ? { nodes, animation: false } : { animation: false });
+    const to = { position: gardenNetwork.getViewPosition(), scale: gardenNetwork.getScale() * GARDEN_FIT_MARGIN };
+    const animation = animate ? cameraAnimation() : false;
+    if (animation) gardenNetwork.moveTo({ ...from, animation: false });
+    gardenNetwork.moveTo({ ...to, animation });
 }
 
 function fitGraph() {
-    if (gardenNetwork) {
-        gardenNetwork.fit({ animation: cameraAnimation() });
+    gardenFitView();
+}
+
+// Same as a wheel zoom, including the label hiding the 'zoom' event drives.
+// Quick repeated presses build on the previous target, not wherever the
+// camera happens to be mid-glide.
+let gardenZoomTarget = null;
+
+function zoomGarden(factor) {
+    if (!gardenNetwork) return;
+    const animation = cameraAnimation();
+    const recent = gardenZoomTarget && performance.now() - gardenZoomTarget.at < GARDEN_CAMERA_ANIMATION.duration;
+    const scale = (recent ? gardenZoomTarget.scale : gardenNetwork.getScale()) * factor;
+    gardenZoomTarget = { scale, at: performance.now() };
+    gardenNetwork.moveTo({ scale, animation });
+    if (animation) {
+        gardenNetwork.once('animationFinished', updateGardenLabelVisibility);
+    } else {
+        updateGardenLabelVisibility();
     }
+}
+
+function dismissGardenHint() {
+    const hint = document.getElementById('gardenHint');
+    if (hint) hint.classList.add('is-dismissed');
+}
+
+// The legend opens by itself only on a first visit with room to spare;
+// after that it stays however the user last left it.
+function initGardenChrome() {
+    const legend = document.getElementById('gardenLegend');
+    if (legend) {
+        let saved = null;
+        try { saved = localStorage.getItem('tg.gardenLegend'); } catch (e) { /* storage blocked */ }
+        legend.open = saved ? saved === 'open' : !window.matchMedia('(max-width: 991.98px)').matches;
+        legend.addEventListener('toggle', () => {
+            try { localStorage.setItem('tg.gardenLegend', legend.open ? 'open' : 'closed'); } catch (e) { /* storage blocked */ }
+        });
+    }
+    setTimeout(dismissGardenHint, GARDEN_HINT_MS);
 }
 
 function resetView() {
@@ -643,7 +1007,7 @@ function renderFocusGraph(container, nodes, edges) {
             shape: 'dot',
             font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(38, 51, 46, 0.24)', size: 10, x: 0, y: 4 },
+            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.5)', size: 14, x: 0, y: 5 },
             // Same reasoning as renderGraph(): don't let vis-network's default
             // selection style replace a node's real color/border on click.
             chosen: false
@@ -654,9 +1018,9 @@ function renderFocusGraph(container, nodes, edges) {
                 roundness: 0.5
             },
             color: {
-                color: themeColor('--border-color', '#ded9ca'),
-                highlight: themeColor('--primary-color', '#193c32'),
-                hover: themeColor('--text-secondary', '#646c67')
+                color: gardenEdgeColors().base,
+                highlight: gardenEdgeColors().highlight,
+                hover: gardenEdgeColors().hover
             }
         },
         physics: {
@@ -714,7 +1078,7 @@ function initSearchAutocomplete() {
 
             if (note.category) {
                 const badge = document.createElement('span');
-                badge.className = 'badge bg-light text-dark ms-2';
+                badge.className = 'badge ms-2 ' + gardenCategoryBadgeClass(note.category);
                 badge.textContent = note.category;
                 item.appendChild(badge);
             }
@@ -873,6 +1237,146 @@ function initTagSuggestions() {
     });
 }
 
+// Moving between related notes: the page you're leaving lifts away before
+// the next one blooms in. Plain left-clicks only; modified clicks (new tab
+// etc.) and reduced motion navigate immediately.
+function initNoteTransitions() {
+    const article = document.querySelector('.note-article');
+    if (!article) return;
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[data-note-link]');
+        if (!link || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (prefersReducedMotion()) return;
+        e.preventDefault();
+        let gone = false;
+        const go = () => {
+            if (gone) return;
+            gone = true;
+            window.location.href = link.href;
+        };
+        article.animate([{ opacity: 1, translate: '0 0' }, { opacity: 0, translate: '0 -12px' }],
+            { duration: 200, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' }).onfinish = go;
+        setTimeout(go, 400);
+    });
+    // Coming back via the back/forward cache: undo the fade.
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) article.getAnimations().forEach(a => a.cancel());
+    });
+}
+
+// Garden list view: filter and sort the rendered rows in place - no new
+// requests, the server already sent every visible note. Rows that move
+// glide to their new place (FLIP); rows that reappear fade up.
+const LIBRARY_STAGE_RANK = { seed: 0, sprout: 1, sapling: 2, tree: 3 };
+const LIBRARY_SORTS = {
+    garden: (a, b) => a.dataset.order - b.dataset.order,
+    title: (a, b) => a.dataset.title.localeCompare(b.dataset.title),
+    connections: (a, b) => b.dataset.connections - a.dataset.connections || a.dataset.order - b.dataset.order,
+    growth: (a, b) => LIBRARY_STAGE_RANK[b.dataset.stage] - LIBRARY_STAGE_RANK[a.dataset.stage]
+        || b.dataset.connections - a.dataset.connections,
+    recent: (a, b) => b.dataset.updated.localeCompare(a.dataset.updated)
+};
+
+function initLibrary() {
+    const list = document.getElementById('library');
+    const form = document.getElementById('libraryControls');
+    if (!list || !form) return;
+
+    const rows = Array.from(list.children);
+    const search = document.getElementById('librarySearch');
+    const category = document.getElementById('libraryCategory');
+    const stage = document.getElementById('libraryStage');
+    const sort = document.getElementById('librarySort');
+    const count = document.getElementById('libraryCount');
+    const noMatch = document.getElementById('libraryNoMatch');
+    const noun = n => `note${n === 1 ? '' : 's'}`;
+
+    function apply(animate = true) {
+        const query = search.value.trim().toLowerCase();
+        const before = new Map(rows.filter(r => !r.hidden).map(r => [r, r.getBoundingClientRect().top]));
+
+        let shown = 0;
+        rows.forEach(row => {
+            const match = (!query || row.dataset.title.includes(query) || row.dataset.tags.includes(query))
+                && (!category.value || row.dataset.category === category.value)
+                && (!stage.value || row.dataset.stage === stage.value);
+            row.hidden = !match;
+            if (match) shown++;
+        });
+        rows.slice().sort(LIBRARY_SORTS[sort.value] || LIBRARY_SORTS.garden).forEach(row => list.appendChild(row));
+
+        const total = document.createElement('strong');
+        total.textContent = shown;
+        count.replaceChildren(...(shown === rows.length
+            ? [total, ` ${noun(shown)}`]
+            : ['Showing ', total, ` of ${rows.length} ${noun(rows.length)}`]));
+        list.classList.toggle('d-none', shown === 0);
+        noMatch.classList.toggle('d-none', shown > 0);
+
+        if (!animate || prefersReducedMotion()) return;
+        rows.forEach(row => {
+            if (row.hidden) return;
+            const top = row.getBoundingClientRect().top;
+            if (!before.has(row)) {
+                row.animate([{ opacity: 0, translate: '0 10px' }, { opacity: 1, translate: '0 0' }],
+                    { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+            } else if (Math.abs(before.get(row) - top) > 1) {
+                row.animate([{ translate: `0 ${before.get(row) - top}px` }, { translate: '0 0' }],
+                    { duration: 460, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+            }
+        });
+    }
+
+    form.addEventListener('submit', e => e.preventDefault());
+    search.addEventListener('input', () => apply());
+    [category, stage, sort].forEach(control => control.addEventListener('change', () => apply()));
+    document.getElementById('libraryReset').addEventListener('click', () => {
+        form.reset();
+        apply();
+        search.focus();
+    });
+    apply(false);
+}
+
+// Canopy foliage drifts a little slower than the page as you scroll, and
+// the hero leaf leans toward the pointer. Desktop pointers only; off under
+// reduced motion.
+function initParallax() {
+    if (prefersReducedMotion()) return;
+    const bg = document.querySelector('.canopy-bg');
+    const canopy = document.querySelector('.canopy');
+    if (bg && canopy && !document.body.classList.contains('page-immersive')) {
+        let queued = false;
+        const update = () => {
+            queued = false;
+            const y = window.scrollY;
+            if (y > canopy.offsetHeight + 200) return;
+            bg.style.setProperty('--parallax', `${(y * 0.28).toFixed(1)}px`);
+        };
+        window.addEventListener('scroll', () => {
+            if (!queued) {
+                queued = true;
+                requestAnimationFrame(update);
+            }
+        }, { passive: true });
+    }
+
+    const leaf = document.querySelector('[data-parallax-leaf] img');
+    if (leaf && window.matchMedia('(pointer: fine)').matches) {
+        let frame = null;
+        window.addEventListener('pointermove', event => {
+            if (frame) return;
+            frame = requestAnimationFrame(() => {
+                frame = null;
+                const x = event.clientX / window.innerWidth - 0.5;
+                const y = event.clientY / window.innerHeight - 0.5;
+                leaf.style.setProperty('--leaf-x', `${(x * -22).toFixed(1)}px`);
+                leaf.style.setProperty('--leaf-y', `${(y * -14).toFixed(1)}px`);
+            });
+        }, { passive: true });
+    }
+}
+
 function initConfirmForms() {
     document.querySelectorAll('form[data-confirm]').forEach(function(form) {
         form.addEventListener('submit', function(event) {
@@ -892,6 +1396,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (document.getElementById('gardenGraph')) {
         initGarden();
+        initGardenAmbience();
+        initGardenChrome();
     }
     
     if (document.getElementById('focusGraph')) {
@@ -902,6 +1408,9 @@ document.addEventListener('DOMContentLoaded', function() {
         ['searchNodeButton', searchNode],
         ['fitGraphButton', fitGraph],
         ['resetViewButton', resetView],
+        ['zoomInButton', () => zoomGarden(GARDEN_ZOOM_STEP)],
+        ['zoomOutButton', () => zoomGarden(1 / GARDEN_ZOOM_STEP)],
+        ['clearCategoryFilters', clearGardenCategoryFilters],
         ['closePanelButton', closePanel],
     ].forEach(function([id, handler]) {
         const button = document.getElementById(id);
@@ -939,6 +1448,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     initFlashAutoDismiss();
+    initParallax();
+    initLibrary();
+    initNoteTransitions();
 
     // Saving/importing blocks on relationship scoring, so show progress and
     // disable the submit button (which also prevents double submits).

@@ -3,15 +3,27 @@
 
 {% block title %}Garden Health - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container page-shell py-4 py-lg-5">
-    <div class="page-header">
-        <span class="page-eyebrow"><i class="bi bi-heart-pulse" aria-hidden="true"></i>Health</span>
-        <h1>Garden Health</h1>
-        <p class="text-muted mb-0">A quick view of how connected your knowledge is.</p>
-    </div>
+{% block canopy_class %}canopy--palms{% endblock %}
 
-    <div class="row row-cols-2 row-cols-md-4 g-3 mb-5 stagger">
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="hero-inner">
+            <div class="hero-reveal">
+                <span class="page-eyebrow"><i class="bi bi-heart-pulse" aria-hidden="true"></i>Health</span>
+                <h1>Garden Health</h1>
+                <p>A quick view of how connected your knowledge is.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container page-shell">
+    
+
+    <div class="row row-cols-2 row-cols-md-4 g-3 mb-5 stagger-flip">
         {% for icon, value, label in [
             ('bi-heart-pulse', health.score ~ '%', 'Health score'),
             ('bi-journal-text', health.total_notes, 'Notes'),

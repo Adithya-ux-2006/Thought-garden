@@ -3,18 +3,17 @@
 
 {% block title %}Search - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container py-4 py-lg-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="page-header">
-                <span class="page-eyebrow"><i class="bi bi-search" aria-hidden="true"></i>Search</span>
-                <h1>Search your knowledge</h1>
-                <p class="text-muted mb-0">Keywords and meaning together &mdash; ask a question or type a phrase.</p>
-            </div>
-
-            <div class="card search-card mb-4">
-                <div class="card-body">
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="hero-reveal">
+                    <span class="page-eyebrow"><i class="bi bi-search" aria-hidden="true"></i>Search</span>
+                    <h1>Search your knowledge</h1>
+                    <p>Keywords and meaning together &mdash; ask a question or type a phrase.</p>
+                </div>
+                <div class="glass-panel search-hero-card">
                     <form method="GET" class="row g-3" data-ai-processing>
                         <div class="col-md-6 position-relative">
                             {{ form.q.label(class="form-label") }}
@@ -34,12 +33,21 @@
                             {{ form.source_type(class="form-select") }}
                         </div>
                         <div class="col-12">
-                            {{ form.submit(class="btn btn-primary", data_loading_text="Searching your garden...") }}
-                            <a href="{{ url_for('search.search') }}" class="btn btn-outline-secondary ms-2">Clear</a>
+                            {{ form.submit(class="btn btn-light", data_loading_text="Searching your garden...") }}
+                            <a href="{{ url_for('search.search') }}" class="btn btn-glass ms-2">Clear</a>
                         </div>
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
 
             {% if not indexer_ready %}
             <div class="alert alert-info" role="alert">
@@ -59,7 +67,7 @@
             </div>
             
             {% if results %}
-            <div class="result-list stagger">
+            <div class="result-list stagger-slide">
                 {% for note in results %}
                 <div class="card card-interactive result-item p-3 p-md-4">
                     <div class="d-flex justify-content-between align-items-start">
@@ -89,7 +97,7 @@
                                     <i class="bi bi-clock me-1" aria-hidden="true"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
                                 </small>
                                 {% for tag in (note.tags|display_tags(note.category))[:3] %}
-                                <span class="badge bg-light text-dark">{{ tag.name }}</span>
+                                <span class="tag">{{ tag.name }}</span>
                                 {% endfor %}
                             </div>
                         </div>

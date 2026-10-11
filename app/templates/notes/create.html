@@ -2,15 +2,31 @@
 
 {% block title %}Create Note - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container py-4 py-lg-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="page-header">
+{% block canopy_class %}canopy--slim{% endblock %}
+
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+        <div class="hero-inner">
+            <div class="hero-reveal">
                 <span class="page-eyebrow"><i class="bi bi-plus-circle" aria-hidden="true"></i>New note</span>
                 <h1>Plant a new idea</h1>
-                <p class="text-muted mb-0">Write freely &mdash; connections to your other notes are found when you save.</p>
+                <p>Write freely &mdash; connections to your other notes are found when you save.</p>
             </div>
+        </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
             <div class="card composer">
                 <div class="card-body p-4 p-lg-5">
                     <form method="POST" novalidate data-ai-processing>

@@ -1,7 +1,9 @@
 # Streamlit theme for thoughtgarden-src/Thought-garden-main/app_streamlit.py,
-# matching the Flask app's Phase 4 "botanical editorial" palette
-# (app/static/css/style.css). Streamlit reads this from the directory it is
-# launched in - run `streamlit run thoughtgarden-src/Thought-garden-main/app_streamlit.py`
+# matching the Flask app's "living garden" design system
+# (app/static/css/style.css): deep-forest sidebar, mist-green content,
+# Times New Roman body text, EB Garamond headings. Streamlit reads this
+# from the directory it is launched in - run
+# `streamlit run thoughtgarden-src/Thought-garden-main/app_streamlit.py`
 # from the repo root (as .devcontainer and Community Cloud do).
 
 [server]
@@ -11,21 +13,18 @@ enableStaticServing = true
 
 [theme]
 base = "light"
-primaryColor = "#193C32"            # forest
-backgroundColor = "#F7F4EC"         # warm ivory
-secondaryBackgroundColor = "#EFEBE1"
-textColor = "#26332E"               # charcoal
-linkColor = "#193C32"
-borderColor = "#E2DCCD"
+primaryColor = "#126B4F"            # emerald
+backgroundColor = "#F0FBF4"         # pale mist
+secondaryBackgroundColor = "#E3F4EA"
+textColor = "#0B2A20"
+linkColor = "#126B4F"
+borderColor = "#D2E9DC"
 showWidgetBorder = true
-baseRadius = "0.5rem"
-font = "Inter, sans-serif"
-headingFont = "'EB Garamond', serif"
-
-[[theme.fontFaces]]
-family = "Inter"
-url = "app/static/fonts/inter-variable-latin.woff2"
-weight = "400 700"
+baseRadius = "0.8rem"
+# Times New Roman is a system font (Windows/macOS; Liberation Serif on
+# Linux), so it has no fontFaces entry.
+font = "'Times New Roman', Times, 'Liberation Serif', serif"
+headingFont = "'EB Garamond', 'Times New Roman', serif"
 
 [[theme.fontFaces]]
 family = "EB Garamond"
@@ -33,9 +32,9 @@ url = "app/static/fonts/eb-garamond-variable-latin.woff2"
 weight = "400 600"
 
 [theme.sidebar]
-backgroundColor = "#193C32"         # forest, like the Flask navbar
-secondaryBackgroundColor = "#24493E"
-textColor = "#F7F4EC"
-primaryColor = "#D5BFA0"            # sand
-linkColor = "#D5BFA0"
-borderColor = "#2F5548"
+backgroundColor = "#092E23"         # deep forest
+secondaryBackgroundColor = "#0D4936"
+textColor = "#F0FBF4"
+primaryColor = "#B8E8CE"            # soft mint
+linkColor = "#B8E8CE"
+borderColor = "#1E4A3B"

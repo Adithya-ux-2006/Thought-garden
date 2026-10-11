@@ -3,18 +3,28 @@
 
 {% block title %}Possible Duplicates - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container page-shell py-4 py-lg-5">
-    <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
-        <div>
-            <span class="page-eyebrow"><i class="bi bi-files" aria-hidden="true"></i>Notes</span>
-            <h1>Possible Duplicates</h1>
-            <p class="text-muted mb-0">Review highly similar notes before merging or archiving them.</p>
-        </div>
-        <a href="{{ url_for('notes.list_notes') }}" class="btn btn-outline-secondary">
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="hero-inner">
+            <div class="hero-reveal">
+                <span class="page-eyebrow"><i class="bi bi-files" aria-hidden="true"></i>Notes</span>
+                <h1>Possible Duplicates</h1>
+                <p>Review highly similar notes before merging or archiving them.</p>
+            </div>
+            <div class="hero-actions">
+                <a href="{{ url_for('notes.list_notes') }}" class="btn btn-glass">
             <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>All notes
         </a>
+            </div>
+        </div>
     </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container page-shell">
+    
 
     {% if duplicates %}
     <div class="result-list stagger">

@@ -3,131 +3,164 @@
 
 {% block title %}{{ note.title }} - Thought Garden{% endblock %}
 
+{% block canopy_class %}canopy--slim{% endblock %}
+
 {% block content %}
-<div class="container page-shell py-4 py-lg-5">
-    <div class="row g-4">
+<div class="container page-shell">
+    <nav class="note-crumbs" aria-label="Breadcrumb">
+        <a href="{{ url_for('notes.list_notes') }}"><i class="bi bi-arrow-left" aria-hidden="true"></i>Notes</a>
+        {% if note.category %}
+        <span aria-hidden="true">/</span>
+        <a href="{{ url_for('notes.list_notes', category=note.category) }}">{{ note.category }}</a>
+        {% endif %}
+    </nav>
+
+    <div class="row g-4 g-xl-5">
         <div class="col-lg-8">
-            <article class="card note-article">
-                <div class="note-toolbar">
-                    <div class="d-flex align-items-center flex-wrap gap-2">
+            <article class="card note-article" aria-labelledby="noteTitle">
+                <header class="note-head">
+                    <div class="note-kicker">
                         {% if note.category %}
-                        <span class="badge {{ note.category|category_badge_class }}">{{ note.category }}</span>
+                        <a href="{{ url_for('notes.list_notes', category=note.category) }}" aria-label="More notes in {{ note.category }}">
+                            <span class="badge {{ note.category|category_badge_class }}">{{ note.category }}</span>
+                        </a>
                         {% endif %}
-                        <span class="badge bg-secondary">{{ note.source_type }}</span>
+                        <span class="note-source">
+                            {% if note.source_type in ('manual', 'starter') %}
+                            <i class="bi bi-pencil" aria-hidden="true"></i>Written note
+                            {% else %}
+                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>Imported {{ note.source_type|upper }}
+                            {% endif %}
+                        </span>
                         {% if note.is_pinned %}
-                        <span class="badge bg-warning"><i class="bi bi-pin-fill" aria-hidden="true"></i> Pinned</span>
+                        <span class="pin-pill"><i class="bi bi-pin-fill" aria-hidden="true"></i>Pinned</span>
+                        {% endif %}
+                        {% if note.is_archived %}
+                        <span class="growth-pill"><i class="bi bi-archive" aria-hidden="true"></i>Archived</span>
                         {% endif %}
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('notes.study', note_id=note.id) }}" class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-mortarboard me-1" aria-hidden="true"></i>Study
-                        </a>
-                        <a href="{{ url_for('notes.edit', note_id=note.id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit
-                        </a>
-                        <form method="POST" action="{{ url_for('notes.pin', note_id=note.id) }}" class="d-inline">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm {{ 'btn-pinned' if note.is_pinned else 'btn-outline-secondary' }}"
-                                    aria-label="{{ 'Unpin note' if note.is_pinned else 'Pin note' }}" title="{{ 'Unpin note' if note.is_pinned else 'Pin note' }}">
-                                <i class="bi bi-pin{{ '-fill' if note.is_pinned else '' }}" aria-hidden="true"></i>
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ url_for('notes.archive', note_id=note.id) }}" class="d-inline">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                    aria-label="{{ 'Unarchive note' if note.is_archived else 'Archive note' }}" title="{{ 'Unarchive note' if note.is_archived else 'Archive note' }}">
-                                <i class="bi bi-archive" aria-hidden="true"></i>
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}" class="d-inline"
-                              data-confirm="Delete this note? This also removes its connections and cannot be undone.">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete note" title="Delete note">
-                                <i class="bi bi-trash" aria-hidden="true"></i>
-                            </button>
-                        </form>
+
+                    <h1 class="note-article-title" id="noteTitle">{{ note.title }}</h1>
+
+                    <dl class="note-meta">
+                        <div>
+                            <dt>Planted</dt>
+                            <dd><time datetime="{{ note.created_at.isoformat() }}">{{ note.created_at.strftime('%B %d, %Y') }}</time></dd>
+                        </div>
+                        {% if note.updated_at != note.created_at %}
+                        <div>
+                            <dt>Last tended</dt>
+                            <dd><time datetime="{{ note.updated_at.isoformat() }}">{{ note.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</time></dd>
+                        </div>
+                        {% endif %}
+                        {% if note.source_filename %}
+                        <div>
+                            <dt>Source file</dt>
+                            <dd>{{ note.source_filename }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+
+                    <div class="note-toolbar">
+                        <div class="note-actions-main">
+                            <a href="{{ url_for('notes.edit', note_id=note.id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit
+                            </a>
+                            <a href="{{ url_for('notes.study', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-mortarboard me-1" aria-hidden="true"></i>Study
+                            </a>
+                            <a href="{{ url_for('garden.focus', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-bullseye me-1" aria-hidden="true"></i>Focus in Graph
+                            </a>
+                        </div>
+                        <div class="note-actions-quiet">
+                            <form method="POST" action="{{ url_for('notes.pin', note_id=note.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-icon {{ 'btn-pinned' if note.is_pinned else 'btn-outline-secondary' }}"
+                                        aria-label="{{ 'Unpin note' if note.is_pinned else 'Pin note' }}" title="{{ 'Unpin note' if note.is_pinned else 'Pin note' }}">
+                                    <i class="bi bi-pin{{ '-fill' if note.is_pinned else '' }}" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('notes.archive', note_id=note.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-icon btn-outline-secondary"
+                                        aria-label="{{ 'Unarchive note' if note.is_archived else 'Archive note' }}" title="{{ 'Unarchive note' if note.is_archived else 'Archive note' }}">
+                                    <i class="bi bi-archive" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}" class="d-inline"
+                                  data-confirm="Delete this note? This also removes its connections and cannot be undone.">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" aria-label="Delete note" title="Delete note">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </header>
 
-                <h1 class="note-article-title">{{ note.title }}</h1>
-                <div class="note-meta">
-                    <span><i class="bi bi-clock me-1" aria-hidden="true"></i>Created {{ note.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
-                    {% if note.updated_at != note.created_at %}
-                    <span><i class="bi bi-pencil me-1" aria-hidden="true"></i>Updated {{ note.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
-                    {% endif %}
-                    {% if note.source_filename %}
-                    <span><i class="bi bi-file me-1" aria-hidden="true"></i>{{ note.source_filename }}</span>
-                    {% endif %}
-                </div>
-
-                <hr class="note-rule">
-
-                <div class="note-content mb-4">{{ note.content|markdown }}</div>
+                <div class="note-content">{{ note.content|markdown }}</div>
 
                 {% if note.tags %}
-                <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
-                    <span class="section-label me-2">Tags</span>
-                    {% for tag in note.tags %}
-                    <a href="{{ url_for('notes.list_notes', tag=tag.name) }}" class="badge bg-light text-dark text-decoration-none">
-                        {{ tag.name }}
-                    </a>
-                    {% endfor %}
-                </div>
+                <footer class="note-foot">
+                    <h2 class="section-label" id="noteTagsLabel">Filed under</h2>
+                    <ul class="tag-list" aria-labelledby="noteTagsLabel">
+                        {% for tag in note.tags %}
+                        <li><a href="{{ url_for('notes.list_notes', tag=tag.name) }}" class="tag">{{ tag.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </footer>
                 {% endif %}
             </article>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card mb-4">
+        <aside class="col-lg-4 note-aside" aria-label="Connections">
+            <section class="card related-card" aria-labelledby="relatedHeading">
                 <div class="card-header">
-                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Related Knowledge</h2>
+                    <h2 class="h5 mb-0" id="relatedHeading"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Related Knowledge</h2>
+                    {% if related %}<span class="related-count">{{ related|length }}</span>{% endif %}
                 </div>
-                <div class="card-body py-2">
+                <div class="card-body">
                     {% if related %}
-                    {% for related_note, why in related %}
-                    <div class="related-item">
-                        <div class="d-flex justify-content-between align-items-start gap-2">
-                            <a href="{{ url_for('notes.view', note_id=related_note.id) }}">
-                                <h3 class="h6 mb-1">{{ related_note.title }}</h3>
-                            </a>
-                            <span class="badge bg-{{ 'success' if why.label == 'Strong match' else 'secondary' }} flex-shrink-0">
-                                {{ why.label }}
-                            </span>
-                        </div>
-                        <p class="small mb-1 connection-reason">
-                            <span class="visually-hidden">Why connected: </span>{{ why.reason }}
-                        </p>
-                        <p class="small text-muted mb-1">
-                            {{ related_note.content[:100] }}{% if related_note.content|length > 100 %}...{% endif %}
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center gap-2">
-                            <small class="text-muted">{{ why.basis }}</small>
-                            {% if related_note.tags %}
-                            <div class="d-flex gap-1">
-                                {% for tag in related_note.tags[:2] %}
-                                <span class="badge bg-light text-dark small">{{ tag.name }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
+                    <ol class="related-list">
+                        {% for related_note, why in related %}
+                        <li>
+                            <details class="related-item" {{ 'open' if loop.first }}>
+                                <summary>
+                                    <span class="related-title">{{ related_note.title }}</span>
+                                    <span class="badge bg-{{ 'success' if why.label == 'Strong match' else 'secondary' }}">{{ why.label }}</span>
+                                </summary>
+                                <div class="related-body">
+                                    <p class="connection-reason">
+                                        <span class="visually-hidden">Why connected: </span>{{ why.reason }}
+                                    </p>
+                                    <p class="related-excerpt">
+                                        {{ related_note.content[:120] }}{% if related_note.content|length > 120 %}&hellip;{% endif %}
+                                    </p>
+                                    <div class="related-foot">
+                                        {% if related_note.tags %}
+                                        <span class="tag-list">
+                                            {% for tag in related_note.tags[:2] %}
+                                            <span class="tag">{{ tag.name }}</span>
+                                            {% endfor %}
+                                        </span>
+                                        {% endif %}
+                                        <a href="{{ url_for('notes.view', note_id=related_note.id) }}" class="related-open" data-note-link>
+                                            Read<span class="visually-hidden"> {{ related_note.title }}</span><i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
+                                    <small class="related-basis">{{ why.basis }}</small>
+                                </div>
+                            </details>
+                        </li>
+                        {% endfor %}
+                    </ol>
                     {% else %}
                     {{ empty_state('sprout', 'No connections yet', 'Add more notes to build your knowledge garden.', small=True) }}
                     {% endif %}
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body text-center">
-                    <h2 class="h5"><i class="bi bi-zoom-in me-2" aria-hidden="true"></i>Explore Connections</h2>
-                    <p class="text-muted small mb-3">See this note in the knowledge graph.</p>
-                    <a href="{{ url_for('garden.focus', note_id=note.id) }}" class="btn btn-outline-primary">
-                        <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Focus in Graph
-                    </a>
-                </div>
-            </div>
-        </div>
+            </section>
+        </aside>
     </div>
 </div>
 {% endblock %}

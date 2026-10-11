@@ -2,18 +2,21 @@
 
 {% block title %}Login - Thought Garden{% endblock %}
 
+{% block body_class %}page-immersive{% endblock %}
+{% block main_class %}container immersive-main{% endblock %}
+
 {% block content %}
-<div class="container py-4 py-lg-5">
-    <div class="auth-shell">
-            <div class="card auth-card">
-                <div class="card-body">
-                    <div class="text-center mb-4">
+    <div class="corner-leaf" aria-hidden="true">
+        <img src="{{ url_for('static', filename='img/botanical/leaf-monstera.webp') }}" alt="" width="1100" height="956">
+    </div>
+    <div class="glass-panel auth-panel">
+                    <div class="text-center mb-4 auth-stagger">
                         <span class="auth-mark" aria-hidden="true"><img src="{{ url_for('static', filename='img/garden/sapling.svg') }}" alt="" width="64" height="64"></span>
                         <h1 class="h2 mb-1">Welcome Back</h1>
                         <p class="text-muted">Sign in to your garden</p>
                     </div>
                     
-                    <form method="POST" novalidate>
+                    <form method="POST" novalidate class="auth-stagger">
                         {{ form.hidden_tag() }}
                         
                         <div class="mb-3">
@@ -37,14 +40,11 @@
                             {{ form.remember.label(class="form-check-label") }}
                         </div>
                         
-                        {{ form.submit(class="btn btn-primary w-100 mb-3") }}
+                        {{ form.submit(class="btn btn-light w-100 mb-3") }}
                         
                         <p class="text-center text-muted mb-0">
                             Don't have an account? <a href="{{ url_for('auth.register') }}">Create one</a>
                         </p>
                     </form>
-                </div>
-            </div>
     </div>
-</div>
 {% endblock %}

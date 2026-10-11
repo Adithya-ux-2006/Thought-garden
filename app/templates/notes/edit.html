@@ -2,19 +2,35 @@
 
 {% block title %}Edit {{ note.title }} - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container py-4 py-lg-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
-                <div>
-                    <span class="page-eyebrow"><i class="bi bi-pencil" aria-hidden="true"></i>Editing</span>
-                    <h1>Edit note</h1>
-                </div>
-                <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-eye me-1" aria-hidden="true"></i>View
+{% block canopy_class %}canopy--slim{% endblock %}
+
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+        <div class="hero-inner">
+            <div class="hero-reveal">
+                <span class="page-eyebrow"><i class="bi bi-pencil" aria-hidden="true"></i>Editing</span>
+                <h1>Edit note</h1>
+            </div>
+            <div class="hero-actions">
+                <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-glass">
+                    <i class="bi bi-eye me-1" aria-hidden="true"></i>View note
                 </a>
             </div>
+        </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
             <div class="card composer">
                 <div class="card-body p-4 p-lg-5">
                     <form method="POST" novalidate data-ai-processing>

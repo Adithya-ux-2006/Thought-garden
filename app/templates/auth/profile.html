@@ -2,14 +2,24 @@
 
 {% block title %}Profile - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="page-header">
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="hero-inner">
+            <div class="hero-reveal">
                 <span class="page-eyebrow"><i class="bi bi-person-circle" aria-hidden="true"></i>Account</span>
                 <h1>Profile settings</h1>
             </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
             <div class="card">
                 <div class="card-body p-4">
                     <form method="POST" novalidate>

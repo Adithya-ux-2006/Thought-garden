@@ -1,42 +1,64 @@
 /* ==========================================================================
-   Thought Garden — design tokens
-   Botanical editorial minimalism: warm ivory paper, forest ink, sage and
-   sand as quiet supporting tones, terracotta as the single warm accent.
+   Thought Garden — design system
+   "The living garden": every page grows out of an immersive canopy of
+   real foliage (dark emerald, atmospheric) and settles onto a mist-green
+   sheet for reading and writing. Dark immersive regions carry
+   data-bs-theme="dark", so the dark token block below re-skins everything
+   inside them - buttons, forms, cards - with no per-component overrides.
    ========================================================================== */
 
 :root {
-    /* type */
-    --font-serif: 'EB Garamond', Garamond, 'Times New Roman', Georgia, serif;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* ---- core botanical palette ---- */
+    --forest-950: #092E23;     /* deep forest */
+    --forest-800: #0D4936;     /* dark emerald */
+    --emerald-700: #126B4F;    /* emerald */
+    --green-600: #21865F;      /* botanical green */
+    --leaf-500: #39A77A;       /* leaf green */
+    --mint-200: #B8E8CE;       /* soft mint */
+    --mist-50: #F0FBF4;        /* pale mist */
 
-    --fs-xs: 0.75rem;
-    --fs-sm: 0.8125rem;
-    --fs-base: 1rem;
-    --fs-md: 1.125rem;
+    /* ---- gradients ---- */
+    --grad-primary: linear-gradient(115deg, #092E23 0%, #126B4F 50%, #39A77A 100%);
+    --grad-button: linear-gradient(115deg, #0D4936 0%, #126B4F 48%, #21865F 100%);
+    --grad-highlight: linear-gradient(90deg, #39A77A 0%, #B8E8CE 100%);
+    --grad-canopy:
+        linear-gradient(180deg, rgba(9, 46, 35, 0.62) 0%, rgba(9, 46, 35, 0.28) 38%, rgba(9, 46, 35, 0.9) 100%),
+        linear-gradient(115deg, rgba(9, 46, 35, 0.92) 0%, rgba(18, 107, 79, 0.38) 55%, rgba(57, 167, 122, 0.16) 100%);
+    --grad-glass: linear-gradient(135deg, rgba(57, 167, 122, 0.30) 0%, rgba(13, 73, 54, 0.52) 100%);
+    --grad-sheet: linear-gradient(180deg, #F0FBF4 0%, #EAF7EF 520px, #F0FBF4 100%);
+    --grad-card-sheen: linear-gradient(160deg, rgba(184, 232, 206, 0.22) 0%, rgba(255, 255, 255, 0) 42%);
+
+    /* ---- type ---- */
+    /* Body/UI: Times New Roman (user-mandated). It ships with Windows and
+       macOS and isn't licensed for web embedding, so it's referenced, not
+       vendored; Liberation Serif / Tinos are its metric-compatible stand-ins
+       on Linux/ChromeOS. Its x-height is small, so the scale below runs a
+       step larger than a sans would need. Headings stay EB Garamond. */
+    --font-body: 'Times New Roman', Times, 'Liberation Serif', Tinos, serif;
+    --font-display: 'EB Garamond', Garamond, 'Times New Roman', serif;
+    --font-ui-weight: 400;
+    --font-ui-strong: 700;    /* TNR has no 500/600 - ask for real bold */
+
+    --fs-xs: 0.84375rem;
+    --fs-sm: 0.9375rem;
+    --fs-base: 1.0625rem;
+    --fs-md: 1.1875rem;
     --fs-lg: 1.375rem;
     --fs-xl: 1.75rem;
-    --fs-2xl: 2.25rem;
-    --fs-3xl: 3rem;
-
-    /* Garamond has a small x-height, so headings run a step larger than
-       they would in a grotesque, at a lighter weight. */
-    --fs-display: clamp(2.6rem, 1.8rem + 3.2vw, 4.25rem);
-    --fs-h1: clamp(2.1rem, 1.7rem + 1.6vw, 2.9rem);
-    --fs-h2: clamp(1.8rem, 1.55rem + 1vw, 2.3rem);
-    --fs-h3: 1.6rem;
-    --fs-h4: 1.4rem;
-    --fs-h5: 1.2rem;
+    --fs-display: clamp(2.8rem, 1.5rem + 4.4vw, 4.9rem);
+    --fs-h1: clamp(2.4rem, 1.7rem + 2.4vw, 3.5rem);
+    --fs-h2: clamp(1.9rem, 1.6rem + 1.1vw, 2.5rem);
+    --fs-h3: 1.7rem;
+    --fs-h4: 1.45rem;
+    --fs-h5: 1.25rem;
     --fs-h6: 1.0625rem;
+    --lh-tight: 1.08;
+    --lh-snug: 1.28;
+    --lh-body: 1.62;
+    --tracking-display: -0.012em;
+    --tracking-label: 0.1em;
 
-    --fw-display: 400;
-    --fw-heading: 500;
-    --lh-tight: 1.12;
-    --lh-snug: 1.3;
-    --lh-body: 1.65;
-    --tracking-display: -0.015em;
-    --tracking-label: 0.08em;
-
-    /* spacing */
+    /* ---- spacing ---- */
     --space-1: 0.25rem;
     --space-2: 0.5rem;
     --space-3: 0.75rem;
@@ -47,242 +69,243 @@
     --space-8: 3rem;
     --space-10: 4.5rem;
 
-    /* core palette */
-    --forest: #193c32;
-    --sage: #78917c;
-    --ivory: #f7f4ec;
-    --sand: #d5bfa0;
-    --terracotta: #c77d69;
-    --charcoal: #26332e;
-    /* text-safe shades (>=4.5:1 on ivory and card surfaces) - the raw sage
-       and terracotta are decorative only (~3:1). */
-    --sage-text: #546556;
-    --terracotta-text: #8b5749;
+    /* ---- layout ---- */
+    --nav-h: 4.25rem;
+    --sheet-overlap: 2.75rem;
+    --page-max: 1280px;
 
-    /* surfaces + text — light mode */
-    --bg-primary: #fbf9f3;
-    --bg-secondary: var(--ivory);
-    --bg-card: #fcfbf7;
-    --bg-subtle: #efebe1;
-    --text-primary: var(--charcoal);
-    --text-secondary: #5c645f;
-    --text-muted: #636a65;
-    --border-color: #e2dccd;
-    /* Form controls need >=3:1 against their surface to read as fields. */
-    --border-strong: #87907f;
+    /* ---- surfaces + text: light (content) mode ---- */
+    --bg-primary: #F7FDF9;
+    --bg-secondary: var(--mist-50);
+    --bg-card: #FBFEFC;
+    --bg-subtle: #E3F4EA;
+    --input-bg: #FFFFFF;
+    --text-primary: #0B2A20;
+    --text-secondary: #315245;
+    --text-muted: #456658;
+    --border-color: #D2E9DC;
+    --border-soft: rgba(18, 107, 79, 0.12);
+    /* form controls need >=3:1 against their surface */
+    --border-strong: #6E9A86;
 
     /* brand */
-    --primary-color: var(--forest);
-    --primary-hover: #2c5246;
-    --primary-rgb: 25, 60, 50;
-    --accent-color: var(--terracotta);
-    --accent-hover: #b56c58;
-    --accent-rgb: 199, 125, 105;
+    --primary-color: var(--emerald-700);
+    --primary-hover: var(--forest-800);
+    --primary-rgb: 18, 107, 79;
+    --primary-contrast: #FFFFFF;
+    --accent-color: var(--leaf-500);
+    --accent-rgb: 57, 167, 122;
+    /* text-safe shades - the raw leaf/mint are decorative (<3:1 on mist) */
+    --leaf-text: #1C6B4C;
+    --accent-text: var(--emerald-700);
 
     /* semantic (real UI meaning - alerts, validation, destructive actions;
        deliberately independent of the garden's category palette below) */
-    --success-color: #3f8752;
-    --success-rgb: 63, 135, 82;
-    --warning-color: #b8863a;
-    --warning-rgb: 184, 134, 58;
-    --danger-color: #b34a34;
-    --danger-rgb: 179, 74, 52;
-    --info-color: #3f7f91;
-    --info-rgb: 63, 127, 145;
-    --secondary-rgb: 107, 106, 94;
+    --success-color: #23874F;
+    --success-rgb: 35, 135, 79;
+    --warning-color: #B07A21;
+    --warning-rgb: 176, 122, 33;
+    --danger-color: #B3462F;
+    --danger-rgb: 179, 70, 47;
+    --info-color: #2F7B8F;
+    --info-rgb: 47, 123, 143;
+    --secondary-rgb: 69, 102, 88;
 
     /* Knowledge Garden category palette - used for the category filter
-       chips/badges (garden.css) and independent from the semantic tokens
-       above on purpose: a note's category and "this is a destructive
-       action" have no relationship, and coupling them (as the previous
-       scheme did, reusing bg-danger/success/warning/info for categories)
-       meant a category color would silently drift if someone re-themed
-       alerts. Graph node fill/border colors are separate again - those
-       are served by app/services/category_service.py:category_color()
-       since Python can't read CSS custom properties, and are tuned to
-       work across both themes in one fixed value (see that function's
-       comment).
-       -soft-bg/-soft-text pairs follow the same tinted-badge pattern as
-       the semantic colors above (verified >=4.5:1 contrast). */
+       chips/badges and independent from the semantic tokens above on
+       purpose: a note's category and "this is a destructive action" have no
+       relationship. Graph node fill/border colors are served separately by
+       app/services/category_service.py:category_color() since Python can't
+       read CSS custom properties. -soft-bg/-soft-text pairs are >=4.5:1. */
     --category-ai: #a99bea;
     --category-ai-border: #5c5580;
-    --category-ai-soft-bg: #f1eef4;
-    --category-ai-soft-text: #544d75;
+    --category-ai-soft-bg: #EDEBF8;
+    --category-ai-soft-text: #4E4772;
 
     --category-cyber: #e58b78;
     --category-cyber-border: #7d4c42;
-    --category-cyber-soft-bg: #f8ece6;
-    --category-cyber-soft-text: #72453c;
+    --category-cyber-soft-bg: #F8EAE4;
+    --category-cyber-soft-text: #6F4137;
 
     --category-se: #6faf8f;
     --category-se-border: #3d604e;
-    --category-se-soft-bg: #eaf1e9;
-    --category-se-soft-text: #375747;
+    --category-se-soft-bg: #E1F2E8;
+    --category-se-soft-text: #2F5A44;
 
     --category-os: #d9a441;
     --category-os-border: #775a23;
-    --category-os-soft-bg: #f6efe0;
-    --category-os-soft-text: #6c5220;
+    --category-os-soft-bg: #F6EEDB;
+    --category-os-soft-text: #66501F;
 
     --category-research: #6f9db5;
     --category-research-border: #3d5663;
-    --category-research-soft-bg: #eaeeee;
-    --category-research-soft-text: #374e5a;
+    --category-research-soft-bg: #E4EEF1;
+    --category-research-soft-text: #334C59;
 
-    /* Pinned-note ring color - single value for both themes, same reasoning
-       as the category tokens (category_color() in app/services/category_service.py):
-       Flask can't know which theme the browser is in, so the server-set
-       ring color is one fixed hex. Defined once here, in :root, not
-       repeated per theme, and mirrored by hand in PINNED_BORDER_COLOR since
-       Python can't read a CSS custom property. */
+    /* Pinned-note ring color - single value for both themes, mirrored by
+       hand in PINNED_BORDER_COLOR (app/garden/routes.py) since Python can't
+       read a CSS custom property. Must stay byte-identical to it. */
     --pinned-color: #a57834;
 
     /* soft (tinted) variants for badges / alerts */
-    --primary-soft-bg: #e3e8e1;
-    --primary-soft-text: var(--forest);
-    --sage-soft-bg: #e7ece4;
-    --accent-soft-bg: #f6e7e1;
-    --accent-soft-text: var(--terracotta-text);
-    --success-soft-bg: #e2f2e6;
-    --success-soft-text: #2f6b45;
-    --warning-soft-bg: #f7ecd9;
-    --warning-soft-text: #8a6423;
-    --danger-soft-bg: #f7e2dd;
-    --danger-soft-text: #8a3a29;
-    --info-soft-bg: #e1eef1;
-    --info-soft-text: #2f6373;
-    --neutral-soft-bg: #ece7da;
-    --neutral-soft-text: #565c4d;
+    --primary-soft-bg: #DDF1E5;
+    --primary-soft-text: #0D4936;
+    --mint-soft-bg: #DFF3E7;
+    --accent-soft-bg: #DDF3E6;
+    --accent-soft-text: #0D4936;
+    --success-soft-bg: #E0F3E6;
+    --success-soft-text: #1D6B40;
+    --warning-soft-bg: #F8EDD6;
+    --warning-soft-text: #7D5718;
+    --danger-soft-bg: #F8E3DD;
+    --danger-soft-text: #883423;
+    --info-soft-bg: #DFEEF1;
+    --info-soft-text: #285F6E;
+    --neutral-soft-bg: #E4EFE8;
+    --neutral-soft-text: #3A574B;
 
-    /* elevation - warm, diffuse, never a hard drop */
-    --shadow-sm: 0 1px 2px rgba(38, 51, 46, 0.05), 0 1px 1px rgba(38, 51, 46, 0.03);
-    --shadow-md: 0 10px 24px -12px rgba(38, 51, 46, 0.2), 0 2px 6px rgba(38, 51, 46, 0.04);
-    --shadow-lg: 0 22px 44px -18px rgba(38, 51, 46, 0.28), 0 4px 10px rgba(38, 51, 46, 0.05);
+    /* glass (used on canopy/immersive regions) */
+    --glass-bg: rgba(13, 73, 54, 0.38);
+    --glass-bg-strong: rgba(9, 46, 35, 0.62);
+    --glass-border: rgba(184, 232, 206, 0.2);
+    --glass-blur: 18px;
 
-    /* restrained radii - soft corners, not pills (chips/badges excepted) */
-    --radius-sm: 0.3rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1.1rem;
+    /* elevation - green-tinted, diffuse */
+    --shadow-sm: 0 1px 2px rgba(9, 46, 35, 0.06), 0 3px 10px -4px rgba(9, 46, 35, 0.08);
+    --shadow-md: 0 16px 34px -18px rgba(9, 46, 35, 0.32), 0 3px 8px rgba(9, 46, 35, 0.05);
+    --shadow-lg: 0 30px 64px -28px rgba(9, 46, 35, 0.42), 0 6px 14px rgba(9, 46, 35, 0.06);
+    --shadow-glow: 0 10px 26px -12px rgba(18, 107, 79, 0.6);
+    --shadow-glass: 0 40px 90px -40px rgba(0, 0, 0, 0.65);
+
+    /* radii - soft, sophisticated */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.8rem;
+    --radius-lg: 1.25rem;
+    --radius-xl: 1.75rem;
+    --radius-sheet: 2rem;
     --radius-pill: 999px;
 
-    /* motion */
-    --dur-fast: 180ms;      /* interaction feedback: hover, press, focus */
-    --dur-base: 300ms;      /* state changes: panels, dropdowns, chips */
-    --dur-enter: 520ms;     /* page and section entrance */
-    --dur-ambient: 6s;      /* slow organic loops: swaying plants */
+    /* ---- motion ---- */
+    --dur-fast: 180ms;       /* hover, press, focus */
+    --dur-base: 320ms;       /* state changes: panels, dropdowns, chips */
+    --dur-enter: 620ms;      /* section entrance */
+    --dur-slow: 900ms;       /* hero / immersive entrances */
+    --dur-ambient: 7s;       /* swaying plants */
+    --dur-drift: 26s;        /* gradient light, foliage drift */
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
     --ease-organic: cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        --stagger-step: 45ms;
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --stagger-step: 55ms;
 
-    /* fixed app-bar height, so full-height layouts (the garden) can size
-       against it instead of a guessed pixel value */
-    --nav-h: 4.25rem;
-
-    /* Named properties rather than `all`, so layout properties never animate. */
+    /* Named properties rather than `all`, so layout never animates. */
     --transition:
         color var(--dur-fast) var(--ease-out),
         background-color var(--dur-fast) var(--ease-out),
+        background-position var(--dur-base) var(--ease-out),
         border-color var(--dur-fast) var(--ease-out),
-        box-shadow var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out),
         opacity var(--dur-fast) var(--ease-out),
         translate var(--dur-base) var(--ease-out),
         scale var(--dur-fast) var(--ease-out);
 }
 
+/* Dark mode AND every immersive region (canopy, nav, garden, auth). */
 [data-bs-theme="dark"] {
-    --bg-primary: #121815;
-    --bg-secondary: #161c19;
-    --bg-card: #1c231f;
-    --bg-subtle: #232b26;
-    --text-primary: #ece7dc;
-    --text-secondary: #b3b1a8;
-    --text-muted: #94958d;
-    --border-color: #2f3933;
-    --border-strong: #6d776f;
+    --bg-primary: #0A2A20;
+    --bg-secondary: #071F18;
+    --bg-card: #0C2C22;
+    --bg-subtle: #12382C;
+    --input-bg: rgba(240, 251, 244, 0.06);
+    --text-primary: #EAF7F0;
+    --text-secondary: #B6D8C8;
+    --text-muted: #98BFAE;
+    --border-color: #1E4A3B;
+    --border-soft: rgba(184, 232, 206, 0.12);
+    --border-strong: #5F8D79;
 
-    --sage-text: #a8bca9;
-    --terracotta-text: #e0a08e;
+    --primary-color: #5CC499;
+    --primary-hover: #7FD6B1;
+    --primary-rgb: 92, 196, 153;
+    --primary-contrast: #052016;
+    --accent-color: #8FDDB8;
+    --accent-rgb: 143, 221, 184;
+    --leaf-text: #8FDDB8;
+    --accent-text: #B8E8CE;
 
-    --primary-color: #74b596;
-    --primary-hover: #8cc4a9;
-    --primary-rgb: 116, 181, 150;
-    --accent-color: #e0a08e;
-    --accent-hover: #e8b2a3;
-    --accent-rgb: 224, 160, 142;
+    --grad-button: linear-gradient(115deg, #39A77A 0%, #5CC499 55%, #8FDDB8 100%);
+    --grad-sheet: linear-gradient(180deg, #08231A 0%, #071F18 600px);
+    --grad-card-sheen: linear-gradient(160deg, rgba(184, 232, 206, 0.06) 0%, rgba(255, 255, 255, 0) 45%);
 
-    --success-color: #6fc98b;
-    --success-rgb: 111, 201, 139;
-    --warning-color: #e0b262;
-    --warning-rgb: 224, 178, 98;
-    --danger-color: #e08a72;
-    --danger-rgb: 224, 138, 114;
-    --info-color: #7fcfe0;
-    --info-rgb: 127, 207, 224;
-    --secondary-rgb: 183, 188, 167;
+    --success-color: #6fcf92;
+    --success-rgb: 111, 207, 146;
+    --warning-color: #e3b866;
+    --warning-rgb: 227, 184, 102;
+    --danger-color: #ec9480;
+    --danger-rgb: 236, 148, 128;
+    --info-color: #83cfe0;
+    --info-rgb: 131, 207, 224;
+    --secondary-rgb: 182, 216, 200;
 
-    /* Category palette shifted for dark-background legibility - the raw
-       hues already clear >=5.8:1 against --bg-secondary here (verified),
-       so unlike light mode these don't need a separately darkened border
-       to read as distinct UI: the fill itself carries it. */
     --category-ai: #b3a7ec;
     --category-ai-border: #b3a7ec;
-    --category-ai-soft-bg: #363944;
-    --category-ai-soft-text: #b3a7ec;
+    --category-ai-soft-bg: #2F3446;
+    --category-ai-soft-text: #CBC2F4;
 
     --category-cyber: #e89888;
     --category-cyber-border: #e89888;
-    --category-cyber-soft-bg: #41362f;
-    --category-cyber-soft-text: #e89888;
+    --category-cyber-soft-bg: #41332E;
+    --category-cyber-soft-text: #F0B1A3;
 
     --category-se: #80b89c;
     --category-se-border: #80b89c;
-    --category-se-soft-bg: #2b3d33;
-    --category-se-soft-text: #80b89c;
+    --category-se-soft-bg: #1E4434;
+    --category-se-soft-text: #A6D9BE;
 
     --category-os: #ddae57;
     --category-os-border: #ddae57;
-    --category-os-soft-bg: #3e3b25;
-    --category-os-soft-text: #ddae57;
+    --category-os-soft-bg: #3D3922;
+    --category-os-soft-text: #EDC678;
 
     --category-research: #80a8bd;
     --category-research-border: #80a8bd;
-    --category-research-soft-bg: #2b393a;
-    --category-research-soft-text: #80a8bd;
+    --category-research-soft-bg: #213C40;
+    --category-research-soft-text: #A9CADB;
 
-    --primary-soft-bg: #263a31;
-    --primary-soft-text: #8cc4a9;
-    --sage-soft-bg: #27322b;
-    --accent-soft-bg: #3a2a24;
-    --accent-soft-text: #e8b2a3;
-    --success-soft-bg: #223428;
-    --success-soft-text: #8fd6a4;
-    --warning-soft-bg: #3a2f1c;
-    --warning-soft-text: #e0b262;
-    --danger-soft-bg: #3a231e;
-    --danger-soft-text: #e08a72;
-    --info-soft-bg: #1f3238;
-    --info-soft-text: #8fd0e0;
-    --neutral-soft-bg: #262b24;
-    --neutral-soft-text: #bcc0ae;
+    --primary-soft-bg: #17463A;
+    --primary-soft-text: #A6E8C7;
+    --mint-soft-bg: #15412F;
+    --accent-soft-bg: #15412F;
+    --accent-soft-text: #B8E8CE;
+    --success-soft-bg: #173E29;
+    --success-soft-text: #94DDB0;
+    --warning-soft-bg: #3B311C;
+    --warning-soft-text: #E8C47D;
+    --danger-soft-bg: #3D241E;
+    --danger-soft-text: #F0A896;
+    --info-soft-bg: #193A41;
+    --info-soft-text: #97D6E6;
+    --neutral-soft-bg: #193D31;
+    --neutral-soft-text: #BDDCCC;
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 10px 24px -12px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 22px 44px -18px rgba(0, 0, 0, 0.7), 0 4px 10px rgba(0, 0, 0, 0.25);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 16px 34px -18px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 30px 64px -28px rgba(0, 0, 0, 0.8), 0 6px 14px rgba(0, 0, 0, 0.25);
+    --shadow-glow: 0 10px 28px -12px rgba(92, 196, 153, 0.55);
 }
 
 /* ==========================================================================
    Bootstrap variable remap — reroutes every .bg-*/.text-*/.btn-*/.border-*
    utility class through the palette above instead of Bootstrap's defaults.
+   Declared on every theme scope so nested dark regions re-resolve them.
    ========================================================================== */
 
-:root, [data-bs-theme="light"] {
-    --bs-body-font-family: var(--font-sans);
+:root, [data-bs-theme="light"], [data-bs-theme="dark"] {
+    --bs-body-font-family: var(--font-body);
     --bs-body-bg: var(--bg-secondary);
     --bs-body-color: var(--text-primary);
     --bs-border-color: var(--border-color);
-    --bs-border-color-translucent: var(--border-color);
+    --bs-border-color-translucent: var(--border-soft);
     --bs-link-color: var(--primary-color);
     --bs-link-color-rgb: var(--primary-rgb);
     --bs-link-hover-color: var(--primary-hover);
@@ -297,7 +320,6 @@
     --bs-primary-bg-subtle: var(--primary-soft-bg);
     --bs-primary-border-subtle: var(--primary-soft-bg);
 
-    --bs-secondary: #6b6a5e;
     --bs-secondary-rgb: var(--secondary-rgb);
     --bs-secondary-text-emphasis: var(--neutral-soft-text);
     --bs-secondary-bg-subtle: var(--neutral-soft-bg);
@@ -328,78 +350,75 @@
     --bs-danger-border-subtle: var(--danger-soft-bg);
 
     --bs-light: var(--bg-subtle);
-    --bs-light-rgb: 239, 235, 225;
     --bs-dark: var(--text-primary);
-    --bs-dark-rgb: 38, 51, 46;
+
+    --bs-form-valid-color: var(--success-color);
+    --bs-form-invalid-color: var(--danger-color);
+}
+
+:root, [data-bs-theme="light"] {
+    --bs-secondary: #456658;
+    --bs-light-rgb: 227, 244, 234;
+    --bs-dark-rgb: 11, 42, 32;
 }
 
 [data-bs-theme="dark"] {
-    --bs-body-bg: var(--bg-secondary);
-    --bs-body-color: var(--text-primary);
-    --bs-border-color: var(--border-color);
-    --bs-border-color-translucent: var(--border-color);
-    --bs-link-color: var(--primary-color);
-    --bs-link-color-rgb: var(--primary-rgb);
-    --bs-link-hover-color: var(--primary-hover);
-    --bs-emphasis-color: var(--text-primary);
-    --bs-secondary-color: var(--text-secondary);
-    --bs-tertiary-bg: var(--bg-subtle);
-    --bs-heading-color: var(--text-primary);
-
-    --bs-primary: var(--primary-color);
-    --bs-primary-rgb: var(--primary-rgb);
-    --bs-primary-text-emphasis: var(--primary-soft-text);
-    --bs-primary-bg-subtle: var(--primary-soft-bg);
-    --bs-primary-border-subtle: var(--primary-soft-bg);
-
-    --bs-secondary: #b7bca7;
-    --bs-secondary-rgb: var(--secondary-rgb);
-    --bs-secondary-text-emphasis: var(--neutral-soft-text);
-    --bs-secondary-bg-subtle: var(--neutral-soft-bg);
-    --bs-secondary-border-subtle: var(--border-color);
-
-    --bs-success: var(--success-color);
-    --bs-success-rgb: var(--success-rgb);
-    --bs-success-text-emphasis: var(--success-soft-text);
-    --bs-success-bg-subtle: var(--success-soft-bg);
-    --bs-success-border-subtle: var(--success-soft-bg);
-
-    --bs-info: var(--info-color);
-    --bs-info-rgb: var(--info-rgb);
-    --bs-info-text-emphasis: var(--info-soft-text);
-    --bs-info-bg-subtle: var(--info-soft-bg);
-    --bs-info-border-subtle: var(--info-soft-bg);
-
-    --bs-warning: var(--warning-color);
-    --bs-warning-rgb: var(--warning-rgb);
-    --bs-warning-text-emphasis: var(--warning-soft-text);
-    --bs-warning-bg-subtle: var(--warning-soft-bg);
-    --bs-warning-border-subtle: var(--warning-soft-bg);
-
-    --bs-danger: var(--danger-color);
-    --bs-danger-rgb: var(--danger-rgb);
-    --bs-danger-text-emphasis: var(--danger-soft-text);
-    --bs-danger-bg-subtle: var(--danger-soft-bg);
-    --bs-danger-border-subtle: var(--danger-soft-bg);
-
-    --bs-light: var(--bg-subtle);
-    --bs-light-rgb: 35, 43, 38;
-    --bs-dark: var(--text-primary);
-    --bs-dark-rgb: 236, 231, 220;
+    --bs-secondary: #B6D8C8;
+    --bs-light-rgb: 18, 56, 44;
+    --bs-dark-rgb: 234, 247, 240;
 }
 
 /* ==========================================================================
    Motion primitives
    Entrances use `animation-fill-mode: backwards` so nothing keeps a
-   transform after it lands - a lingering transform would turn every card
-   into its own stacking context and let the next card paint over an open
-   dropdown. Individual `translate`/`scale` properties (not `transform`)
-   keep these from fighting Popper, which positions menus via transform.
+   transform after it lands (a lingering transform turns every card into a
+   stacking context and lets the next card paint over an open dropdown).
+   Individual `translate`/`scale`/`rotate` properties (not `transform`) keep
+   these from fighting Popper, which positions menus via transform.
    ========================================================================== */
 
 @keyframes tg-rise {
-    from { opacity: 0; translate: 0 10px; }
+    from { opacity: 0; translate: 0 14px; }
     to { opacity: 1; translate: 0 0; }
+}
+
+/* hero copy: rises out of a soft focus, like mist clearing */
+@keyframes tg-emerge {
+    from { opacity: 0; translate: 0 18px; filter: blur(8px); }
+    to { opacity: 1; translate: 0 0; filter: blur(0); }
+}
+
+/* cards open like a leaf unfurling */
+@keyframes tg-bloom {
+    from { opacity: 0; translate: 0 20px; scale: 0.965; }
+    to { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+/* the content sheet rises over the canopy */
+@keyframes tg-sheet {
+    from { opacity: 0.4; translate: 0 36px; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+/* glass panels settle in from depth */
+@keyframes tg-settle {
+    from { opacity: 0; scale: 0.955; filter: blur(10px); }
+    to { opacity: 1; scale: 1; filter: blur(0); }
+}
+
+@keyframes tg-slide-left {
+    from { opacity: 0; translate: -18px 0; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes tg-slide-in {
+    from { opacity: 0; translate: 22px 0; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes tg-flip {
+    from { opacity: 0; transform: perspective(900px) rotateX(14deg) translateY(16px); }
+    to { opacity: 1; transform: perspective(900px) rotateX(0) translateY(0); }
 }
 
 @keyframes tg-fade {
@@ -408,13 +427,18 @@
 }
 
 @keyframes tg-pop {
-    from { opacity: 0; translate: 0 -4px; scale: 0.98; }
+    from { opacity: 0; translate: 0 -6px; scale: 0.97; }
     to { opacity: 1; translate: 0 0; scale: 1; }
 }
 
-@keyframes tg-slide-in {
-    from { opacity: 0; translate: 14px 0; }
-    to { opacity: 1; translate: 0 0; }
+@keyframes tg-toast {
+    from { opacity: 0; translate: 28px 0; scale: 0.98; }
+    to { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+@keyframes tg-countdown {
+    from { scale: 1 1; }
+    to { scale: 0 1; }
 }
 
 /* Plants lean from the base, never spin. */
@@ -423,9 +447,19 @@
     50% { rotate: 2.5deg; }
 }
 
+@keyframes tg-sway-leaf {
+    0%, 100% { rotate: -1.6deg; }
+    50% { rotate: 1.8deg; }
+}
+
+@keyframes tg-leaf-in {
+    from { opacity: 0; translate: 80px 40px; rotate: 10deg; }
+    to { opacity: 1; translate: 0 0; rotate: 0deg; }
+}
+
 @keyframes tg-float {
     0%, 100% { translate: 0 0; }
-    50% { translate: 0 -4px; }
+    50% { translate: 0 -5px; }
 }
 
 @keyframes tg-grow {
@@ -433,38 +467,64 @@
     to { opacity: 1; scale: 1; }
 }
 
+@keyframes tg-draw {
+    from { scale: 0 1; opacity: 0; }
+    to { scale: 1 1; opacity: 1; }
+}
+
+/* slow light moving through the canopy */
+@keyframes tg-light {
+    0% { transform: translate3d(-5%, -2%, 0) scale(1); }
+    50% { transform: translate3d(3%, 3%, 0) scale(1.06); }
+    100% { transform: translate3d(5%, -3%, 0) scale(1.02); }
+}
+
+/* very slow push-in on immersive backgrounds */
+@keyframes tg-kenburns {
+    from { scale: 1.12; }
+    to { scale: 1.02; }
+}
+
+/* drifting leaves: fall, sway, fade at both ends */
+@keyframes tg-drift {
+    0% { opacity: 0; transform: translate3d(0, -30px, 0) rotate(0deg); }
+    12% { opacity: var(--mote-opacity, 0.55); }
+    35% { transform: translate3d(36px, calc(var(--fall, 520px) * 0.35), 0) rotate(120deg); }
+    65% { transform: translate3d(-24px, calc(var(--fall, 520px) * 0.65), 0) rotate(230deg); }
+    88% { opacity: var(--mote-opacity, 0.55); }
+    100% { opacity: 0; transform: translate3d(18px, var(--fall, 520px), 0) rotate(330deg); }
+}
+
 @keyframes spin {
     from { rotate: 0deg; }
     to { rotate: 360deg; }
 }
 
-/* Page content settles in once per navigation. The garden fades only:
-   moving the graph's container would shift vis-network's hit-testing
-   while it's mid-layout. */
-main > :not(#flashMessages):not(.garden-container) {
-    animation: tg-rise var(--dur-enter) var(--ease-out) backwards;
-}
+/* Staggered reveals; pages pick the flavour (rise / bloom / slide / flip). */
+.stagger > * { animation: tg-rise var(--dur-enter) var(--ease-out) backwards; }
+.stagger-bloom > * { animation: tg-bloom var(--dur-enter) var(--ease-out) backwards; }
+.stagger-slide > * { animation: tg-slide-left var(--dur-enter) var(--ease-out) backwards; }
+.stagger-flip > * { animation: tg-flip var(--dur-enter) var(--ease-out) backwards; }
 
-main > .garden-container {
-    animation: tg-fade var(--dur-enter) var(--ease-out) backwards;
-}
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(2) { animation-delay: calc(var(--stagger-step) * 1); }
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(3) { animation-delay: calc(var(--stagger-step) * 2); }
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(4) { animation-delay: calc(var(--stagger-step) * 3); }
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(5) { animation-delay: calc(var(--stagger-step) * 4); }
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(6) { animation-delay: calc(var(--stagger-step) * 5); }
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(7) { animation-delay: calc(var(--stagger-step) * 6); }
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(8) { animation-delay: calc(var(--stagger-step) * 7); }
+:is(.stagger, .stagger-bloom, .stagger-slide, .stagger-flip) > :nth-child(n+9) { animation-delay: calc(var(--stagger-step) * 8); }
 
-/* Children of a .stagger container arrive one after another. */
-.stagger > * {
-    animation: tg-rise var(--dur-enter) var(--ease-out) backwards;
-}
-.stagger > :nth-child(2) { animation-delay: calc(var(--stagger-step) * 1); }
-.stagger > :nth-child(3) { animation-delay: calc(var(--stagger-step) * 2); }
-.stagger > :nth-child(4) { animation-delay: calc(var(--stagger-step) * 3); }
-.stagger > :nth-child(5) { animation-delay: calc(var(--stagger-step) * 4); }
-.stagger > :nth-child(6) { animation-delay: calc(var(--stagger-step) * 5); }
-.stagger > :nth-child(7) { animation-delay: calc(var(--stagger-step) * 6); }
-.stagger > :nth-child(n+8) { animation-delay: calc(var(--stagger-step) * 7); }
-
-
+/* Hero copy emerges line by line. */
+.hero-reveal > * { animation: tg-emerge var(--dur-slow) var(--ease-out) backwards; }
+.hero-reveal > :nth-child(1) { animation-delay: 80ms; }
+.hero-reveal > :nth-child(2) { animation-delay: 180ms; }
+.hero-reveal > :nth-child(3) { animation-delay: 300ms; }
+.hero-reveal > :nth-child(4) { animation-delay: 420ms; }
+.hero-reveal > :nth-child(n+5) { animation-delay: 520ms; }
 
 /* ==========================================================================
-   Base
+   Base + typography
    ========================================================================== */
 
 * {
@@ -477,49 +537,52 @@ main > .garden-container {
     }
 }
 
+html, body {
+    overflow-x: clip;
+}
+
 body {
-    font-family: var(--font-sans);
-    background-color: var(--bg-secondary);
+    font-family: var(--font-body);
+    font-size: var(--fs-base);
+    font-weight: 400;
+    background: var(--bg-secondary);
     color: var(--text-primary);
     line-height: var(--lh-body);
+    letter-spacing: 0.006em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    font-variant-numeric: lining-nums;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-main {
-    flex: 1 0 auto;
-}
-
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
-    font-family: var(--font-serif);
-    font-weight: var(--fw-heading);
+    font-family: var(--font-display);
+    font-weight: 400;
     line-height: var(--lh-snug);
-    letter-spacing: -0.005em;
+    letter-spacing: -0.004em;
     color: var(--text-primary);
-    font-variant-numeric: oldstyle-nums;
 }
 
-h1, .h1 { font-size: var(--fs-h1); font-weight: var(--fw-display); line-height: var(--lh-tight); letter-spacing: var(--tracking-display); }
-h2, .h2 { font-size: var(--fs-h2); font-weight: var(--fw-display); line-height: 1.18; letter-spacing: -0.01em; }
+h1, .h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--tracking-display); }
+h2, .h2 { font-size: var(--fs-h2); line-height: 1.14; letter-spacing: -0.008em; }
 h3, .h3 { font-size: var(--fs-h3); }
 h4, .h4 { font-size: var(--fs-h4); }
-h5, .h5 { font-size: var(--fs-h5); }
-h6, .h6 { font-size: var(--fs-h6); }
+h5, .h5 { font-size: var(--fs-h5); font-weight: 500; }
+h6, .h6 { font-size: var(--fs-h6); font-weight: 500; }
 
 .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
-    font-family: var(--font-serif);
-    font-weight: var(--fw-display);
+    font-family: var(--font-display);
+    font-weight: 400;
     letter-spacing: var(--tracking-display);
     line-height: var(--lh-tight);
 }
 
 .lead {
-    font-size: 1.1875rem;
-    line-height: 1.6;
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+    line-height: 1.65;
     font-weight: 400;
 }
 
@@ -529,7 +592,7 @@ p {
 
 a {
     color: var(--primary-color);
-    text-underline-offset: 0.18em;
+    text-underline-offset: 0.2em;
     text-decoration-thickness: 1px;
     transition: color var(--dur-fast) var(--ease-out);
 }
@@ -547,26 +610,42 @@ small, .small {
 }
 
 ::selection {
-    background: var(--primary-soft-bg);
-    color: var(--primary-soft-text);
+    background: var(--mint-200);
+    color: var(--forest-950);
 }
 
 .page-shell {
-    max-width: 1280px;
+    max-width: var(--page-max);
     margin-inline: auto;
 }
 
+/* Small uppercase overline used for page and section captions. */
+.page-eyebrow,
+.section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-body);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--leaf-text);
+    margin-bottom: var(--space-2);
+}
+
+.section-label {
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+}
+
+/* In-sheet page headers (pages that keep their title with the content). */
 .page-header {
-    margin-bottom: var(--space-7);
-    padding-top: var(--space-2);
+    margin-bottom: var(--space-6);
 }
 
 .page-header h1,
 .page-header h2 {
-    font-size: var(--fs-h1);
-    font-weight: var(--fw-display);
-    line-height: var(--lh-tight);
-    letter-spacing: var(--tracking-display);
     margin-bottom: var(--space-2);
 }
 
@@ -575,97 +654,105 @@ small, .small {
     max-width: 60ch;
 }
 
-.page-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45em;
-    font-family: var(--font-sans);
-    font-size: var(--fs-xs);
+.skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -4rem;
+    z-index: 2000;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-pill);
+    background: var(--mist-50);
+    color: var(--forest-950);
     font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--sage-text);
-    margin-bottom: var(--space-2);
+    transition: top var(--dur-base) var(--ease-out);
 }
 
-/* small uppercase label used for section captions across the app */
-.section-label {
-    font-family: var(--font-sans);
-    color: var(--text-muted);
-    font-size: var(--fs-xs);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+.skip-link:focus {
+    top: 0.75rem;
 }
 
 /* ==========================================================================
-   Navbar
+   Navigation — frosted glass over the canopy, sticky over the sheet
    ========================================================================== */
 
-.navbar {
+.glass-nav,
+.site-header-anon {
     min-height: var(--nav-h);
-    background: var(--forest) !important;
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), var(--shadow-sm);
+    z-index: 1030;
 }
 
-[data-bs-theme="dark"] .navbar {
-    background: #101512 !important;
-    border-bottom: 1px solid var(--border-color);
+.glass-nav {
+    background: rgba(6, 34, 25, 0.5) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid rgba(184, 232, 206, 0.12);
+    padding-block: 0.55rem;
 }
 
-.navbar-brand {
-    font-family: var(--font-serif);
-    font-size: 1.45rem;
+.navbar-brand,
+.site-header-anon .brand {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
     font-weight: 500;
     letter-spacing: -0.01em;
+    color: var(--mist-50) !important;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
 }
 
-.navbar-brand i {
-    color: var(--sand);
-    transition: rotate var(--dur-base) var(--ease-out);
+.navbar-brand i,
+.site-header-anon .brand i {
+    color: var(--mint-200);
+    display: inline-block;
+    transition: rotate var(--dur-slow) var(--ease-spring);
 }
 
-.navbar-brand:hover i {
-    rotate: -12deg;
+.navbar-brand:hover i,
+.site-header-anon .brand:hover i {
+    rotate: 60deg;
 }
 
-.navbar .nav-link {
+.glass-nav .nav-link {
     position: relative;
-    font-size: var(--fs-sm);
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.74) !important;
-    padding-block: 0.5rem;
+    font-size: 1.0625rem;
+    letter-spacing: 0.01em;
+    color: rgba(240, 251, 244, 0.8) !important;
+    padding-block: 0.55rem;
     transition: color var(--dur-fast) var(--ease-out);
 }
 
-.navbar .nav-link:hover,
-.navbar .nav-link:focus-visible {
+.glass-nav .nav-link i {
+    opacity: 0.75;
+    transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.glass-nav .nav-link:hover,
+.glass-nav .nav-link:focus-visible,
+.glass-nav .nav-link.active {
     color: #fff !important;
 }
 
-.navbar .nav-link.active {
-    color: #fff !important;
+.glass-nav .nav-link:hover i,
+.glass-nav .nav-link.active i {
+    opacity: 1;
 }
 
-/* Hover hint: a sand hairline grows from the center. The active link gets
-   a solid indicator that draws itself in on each page load. */
-.navbar .nav-link::after {
+/* Hover: a mint hairline grows from the center. Active: a solid leaf bar
+   that draws itself in on each page load. */
+.glass-nav .nav-link::after {
     content: "";
     position: absolute;
     left: var(--bs-navbar-nav-link-padding-x, 0.5rem);
     right: var(--bs-navbar-nav-link-padding-x, 0.5rem);
-    bottom: 0.15rem;
+    bottom: 0.2rem;
     height: 1px;
-    background: rgba(213, 191, 160, 0.7);
+    background: rgba(184, 232, 206, 0.7);
     scale: 0 1;
     transition: scale var(--dur-base) var(--ease-out);
 }
 
-.navbar .nav-link:not(.active):hover::after {
+.glass-nav .nav-link:not(.active):hover::after {
     scale: 1 1;
 }
 
@@ -676,70 +763,323 @@ small, .small {
     bottom: 0.05rem;
     height: 2px;
     border-radius: 2px;
-        background: var(--sand);
+    background: var(--grad-highlight);
+    box-shadow: 0 0 12px rgba(184, 232, 206, 0.6);
     transform-origin: left center;
     animation: tg-draw var(--dur-enter) var(--ease-out) backwards;
 }
 
-@keyframes tg-draw {
-    from { scale: 0 1; opacity: 0; }
-    to { scale: 1 1; opacity: 1; }
+.navbar-toggler {
+    border-color: rgba(184, 232, 206, 0.3);
 }
 
 @media (max-width: 991.98px) {
+    .glass-nav .navbar-collapse {
+        margin-top: var(--space-3);
+        padding: var(--space-3);
+        border-radius: var(--radius-lg);
+        background: rgba(6, 34, 25, 0.75);
+        border: 1px solid var(--glass-border);
+    }
+
     .nav-indicator {
         left: 0;
         right: auto;
-        top: 0.55rem;
-        bottom: 0.55rem;
+        top: 0.6rem;
+        bottom: 0.6rem;
         width: 2px;
         height: auto;
     }
 
-    .navbar .nav-link {
+    .glass-nav .nav-link {
         padding-left: var(--space-3);
     }
 
-    .navbar .nav-link::after {
+    .glass-nav .nav-link::after {
         display: none;
+    }
+
+    .nav-tools {
+        margin-top: var(--space-3);
     }
 }
 
-.navbar .btn-outline-light {
-    border-color: rgba(255, 255, 255, 0.28);
-    color: rgba(255, 255, 255, 0.88);
-}
-
-.navbar .btn-outline-light:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.45);
-    color: #fff;
-}
-
-.navbar .btn-outline-light:focus-visible {
-    box-shadow: 0 0 0 0.2rem rgba(213, 191, 160, 0.6);
-}
-
-.navbar .dropdown-menu {
-    margin-top: 0.5rem;
-}
-
-/* Signed-out pages get a quiet brand bar instead of the app nav. */
 .site-header-anon {
-    padding-block: var(--space-4);
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
-.site-header-anon .brand {
-    font-family: var(--font-serif);
-    font-size: 1.45rem;
-    font-weight: 500;
+/* ==========================================================================
+   Canopy — the immersive foliage layer behind the nav and page hero
+   ========================================================================== */
+
+.canopy {
+    --fall: 520px;
+    position: relative;
+    isolation: isolate;
+    margin-top: calc(var(--nav-h) * -1);
+    padding-top: var(--nav-h);
+    padding-bottom: calc(var(--sheet-overlap) + 1.5rem);
     color: var(--text-primary);
-    text-decoration: none;
+    background: var(--forest-950);
+    overflow: clip;
 }
 
-.site-header-anon .brand i {
-    color: var(--sage);
+.canopy-bg,
+.canopy-light,
+.canopy-motes {
+    position: absolute;
+    pointer-events: none;
 }
+
+.canopy-bg {
+    inset: -10% 0 -4% 0;
+    z-index: -3;
+    background:
+        var(--grad-canopy),
+        url('../img/botanical/foliage-monstera.webp') center 30% / cover no-repeat;
+    transform: translate3d(0, var(--parallax, 0px), 0) scale(1.06);
+    will-change: transform;
+}
+
+.canopy--palms .canopy-bg {
+    background:
+        var(--grad-canopy),
+        url('../img/botanical/foliage-palms.webp') center 40% / cover no-repeat;
+}
+
+/* atmospheric light drifting through the leaves */
+.canopy-light {
+    inset: -25%;
+    z-index: -2;
+    background:
+        radial-gradient(32% 28% at 28% 30%, rgba(184, 232, 206, 0.22), transparent 70%),
+        radial-gradient(30% 26% at 72% 58%, rgba(57, 167, 122, 0.22), transparent 70%),
+        radial-gradient(22% 20% at 52% 12%, rgba(240, 251, 244, 0.1), transparent 70%);
+    mix-blend-mode: screen;
+    animation: tg-light var(--dur-drift) var(--ease-in-out) infinite alternate;
+}
+
+/* a few leaves falling through the light */
+.canopy-motes {
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.canopy-motes span {
+    position: absolute;
+    top: 0;
+    width: 11px;
+    height: 16px;
+    border-radius: 0 100% 0 100%;
+    background: linear-gradient(135deg, rgba(184, 232, 206, 0.9), rgba(57, 167, 122, 0.45));
+    box-shadow: 0 0 10px rgba(184, 232, 206, 0.25);
+    opacity: 0;
+    animation: tg-drift 19s linear infinite;
+}
+
+.canopy-motes span:nth-child(1) { left: 8%;  animation-duration: 21s; animation-delay: -3s; }
+.canopy-motes span:nth-child(2) { left: 22%; animation-duration: 17s; animation-delay: -11s; scale: 0.7; }
+.canopy-motes span:nth-child(3) { left: 41%; animation-duration: 24s; animation-delay: -6s; scale: 0.85; }
+.canopy-motes span:nth-child(4) { left: 57%; animation-duration: 19s; animation-delay: -15s; scale: 0.6; }
+.canopy-motes span:nth-child(5) { left: 69%; animation-duration: 23s; animation-delay: -1s; }
+.canopy-motes span:nth-child(6) { left: 83%; animation-duration: 18s; animation-delay: -9s; scale: 0.75; }
+.canopy-motes span:nth-child(7) { left: 94%; animation-duration: 26s; animation-delay: -18s; scale: 0.9; }
+
+/* Garden pages: the canopy is just the band behind the nav. */
+.canopy--bare {
+    padding-bottom: 0;
+}
+
+.canopy--bare .canopy-motes,
+.canopy--bare .canopy-light {
+    display: none;
+}
+
+/* Note view / editor: a short strip of foliage, no falling leaves near
+   the writing surface. */
+.canopy--slim .canopy-motes {
+    display: none;
+}
+
+/* ---------- page hero (inside the canopy) ---------- */
+
+.page-hero {
+    padding: clamp(2.25rem, 4vw, 4rem) 0 var(--space-4);
+}
+
+.page-hero h1 {
+    font-size: var(--fs-h1);
+    color: #fff;
+    margin-bottom: var(--space-3);
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
+}
+
+.page-hero .page-eyebrow {
+    color: var(--mint-200);
+}
+
+.page-hero p {
+    color: rgba(240, 251, 244, 0.84);
+    font-size: var(--fs-md);
+    max-width: 58ch;
+    margin-bottom: 0;
+}
+
+.hero-inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    animation: tg-emerge var(--dur-slow) var(--ease-out) 360ms backwards;
+}
+
+/* ==========================================================================
+   Sheet — the mist-green surface content sits on, rising over the canopy
+   ========================================================================== */
+
+main {
+    flex: 1 0 auto;
+}
+
+main.sheet {
+    position: relative;
+    z-index: 2;
+    margin-top: calc(var(--sheet-overlap) * -1);
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-10);
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    background: var(--grad-sheet);
+    box-shadow: 0 -20px 44px -28px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    animation: tg-sheet var(--dur-slow) var(--ease-out) 120ms backwards;
+}
+
+[data-bs-theme="dark"] main.sheet {
+    box-shadow: 0 -20px 44px -28px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(184, 232, 206, 0.1);
+}
+
+/* ==========================================================================
+   Immersive pages (sign in, register, errors): the canopy becomes the
+   whole viewport and the content floats on it in frosted glass.
+   ========================================================================== */
+
+.page-immersive .canopy {
+    --fall: 100vh;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.page-immersive .canopy-bg {
+    inset: 0;
+    animation: tg-kenburns 40s var(--ease-in-out) infinite alternate;
+}
+
+.page-immersive .site-header-anon,
+.page-immersive main,
+.page-immersive .footer {
+    position: relative;
+    z-index: 1;
+}
+
+.immersive-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--space-6) var(--space-8);
+    min-height: calc(100dvh - var(--nav-h) - 6rem);
+}
+
+/* Frosted glass, as in the reference: blurred foliage behind, soft
+   emerald tint, hairline mint edge. */
+.glass-panel {
+    position: relative;
+    background: var(--grad-glass);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(240, 251, 244, 0.12);
+    color: var(--text-primary);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-panel {
+        background: rgba(9, 46, 35, 0.86);
+    }
+}
+
+/* ==========================================================================
+   Toast notifications (flash messages)
+   ========================================================================== */
+
+.toast-stack {
+    position: fixed;
+    top: calc(var(--nav-h) + 0.75rem);
+    right: 1rem;
+    z-index: 1090;
+    width: min(25rem, calc(100vw - 2rem));
+    display: grid;
+    gap: var(--space-2);
+}
+
+.toast-stack .alert {
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+    padding: 0.9rem 3rem 0.9rem 1.1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-soft);
+    border-left: 3px solid currentColor;
+    box-shadow: var(--shadow-lg);
+    font-size: var(--fs-sm);
+    animation: tg-toast var(--dur-base) var(--ease-out) backwards;
+}
+
+.toast-stack .alert:nth-child(2) { animation-delay: 80ms; }
+.toast-stack .alert:nth-child(3) { animation-delay: 160ms; }
+
+/* time remaining before an auto-dismissing toast closes (matches the
+   5s timer in main.js initFlashAutoDismiss) */
+.toast-stack .alert[data-autodismiss]::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: currentColor;
+    opacity: 0.35;
+    transform-origin: left center;
+    animation: tg-countdown 5s linear forwards;
+}
+
+.alert {
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    border-left-width: 3px;
+    font-size: var(--fs-sm);
+}
+
+.alert.fade {
+    transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.alert-success { background-color: var(--success-soft-bg); border-left-color: var(--success-color); color: var(--success-soft-text); }
+.alert-info { background-color: var(--info-soft-bg); border-left-color: var(--info-color); color: var(--info-soft-text); }
+.alert-warning { background-color: var(--warning-soft-bg); border-left-color: var(--warning-color); color: var(--warning-soft-text); }
+.alert-danger { background-color: var(--danger-soft-bg); border-left-color: var(--danger-color); color: var(--danger-soft-text); }
 
 /* ==========================================================================
    Cards
@@ -747,7 +1087,8 @@ small, .small {
 
 .card {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background-image: var(--grad-card-sheen);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
@@ -755,17 +1096,21 @@ small, .small {
 
 .card-header {
     background-color: transparent;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-soft);
     padding: var(--space-4) var(--space-5);
 }
 
-.card-header h4, .card-header h5, .card-header h6 {
+.card-header:first-child {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.card-header h2, .card-header h4, .card-header h5, .card-header h6 {
     font-size: var(--fs-h5);
-    font-weight: var(--fw-heading);
+    font-weight: 500;
 }
 
 .card-header i {
-    color: var(--sage-text);
+    color: var(--leaf-text);
 }
 
 .card-body {
@@ -773,27 +1118,31 @@ small, .small {
 }
 
 .card-title {
-    font-family: var(--font-serif);
-    font-weight: var(--fw-heading);
+    font-family: var(--font-display);
+    font-weight: 500;
 }
 
 /* Only cards you can act on respond to the pointer. */
 .card-interactive:hover,
 .note-card:hover {
-    translate: 0 -3px;
+    translate: 0 -4px;
     box-shadow: var(--shadow-md);
-    border-color: color-mix(in srgb, var(--sage) 45%, var(--border-color));
+    border-color: rgba(57, 167, 122, 0.4);
 }
 
 .card-interactive:active,
 .note-card:active {
     translate: 0 -1px;
-    transition-duration: 80ms;
+    transition-duration: 90ms;
 }
 
-.stat-card .card-body {
-    padding: var(--space-4) var(--space-5);
+/* Editing surfaces glow softly while you work in them. */
+.composer:focus-within,
+.search-hero-card:focus-within {
+    box-shadow: var(--shadow-md), 0 0 0 1px rgba(var(--primary-rgb), 0.18);
 }
+
+/* ---------- stats ---------- */
 
 .stat-figure {
     display: flex;
@@ -802,51 +1151,54 @@ small, .small {
 }
 
 .stat-figure .stat-icon {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.4rem;
+    height: 2.4rem;
     flex-shrink: 0;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
     font-size: 1.05rem;
-    background: var(--sage-soft-bg);
-    color: var(--sage-text);
+    background: var(--mint-soft-bg);
+    color: var(--leaf-text);
 }
 
 .stat-figure .stat-number {
-    font-family: var(--font-serif);
-    font-size: 2.25rem;
+    font-family: var(--font-display);
+    font-size: 2.5rem;
     font-weight: 400;
     line-height: 1;
     margin: 0;
     color: var(--text-primary);
-    font-variant-numeric: lining-nums;
 }
 
 .stat-figure .stat-label {
     color: var(--text-muted);
     font-size: var(--fs-xs);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     font-weight: 600;
     margin-top: var(--space-1);
 }
+
+/* ---------- note cards ---------- */
 
 /* No overflow:hidden here - it would clip the card's actions dropdown. */
 .note-card {
     position: relative;
 }
 
-/* A thin vertical "stem" on the leading edge - sage on hover, gold when pinned. */
+/* A leaf-green hairline across the top that grows in on hover; gold when pinned. */
 .note-card::before {
     content: "";
     position: absolute;
-    inset: var(--space-4) auto var(--space-4) 0;
-    width: 2px;
-    border-radius: 2px;
-    background: var(--sage);
-    scale: 1 0;
+    top: 0;
+    left: var(--space-5);
+    right: var(--space-5);
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: var(--grad-highlight);
+    transform-origin: left center;
+    scale: 0 1;
     transition: scale var(--dur-base) var(--ease-out);
 }
 
@@ -855,13 +1207,13 @@ small, .small {
 }
 
 .note-card.is-pinned::before {
-    background: var(--pinned-color);
+    background: linear-gradient(90deg, var(--pinned-color), #d8b26c);
     scale: 1 1;
 }
 
 .note-card .card-title {
-    font-size: 1.3rem;
-    line-height: 1.25;
+    font-size: 1.4rem;
+    line-height: 1.22;
 }
 
 .note-card .card-title a {
@@ -870,6 +1222,10 @@ small, .small {
 
 .note-card .card-title a:hover {
     color: var(--primary-color);
+}
+
+.note-card .card-text {
+    line-height: 1.65;
 }
 
 .note-card .pin-mark {
@@ -883,27 +1239,61 @@ small, .small {
     z-index: 2;
 }
 
+/* category leads, tags follow the excerpt, date + actions sit on a rule */
+.note-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.note-card-kicker {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 1.75rem;
+    margin-bottom: var(--space-3);
+}
+
+.note-card .card-title {
+    margin-bottom: var(--space-2);
+}
+
+.note-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border-soft);
+}
+
 /* ==========================================================================
-   Buttons
+   Buttons — pills; gradient primaries; frosted glass on the canopy
    ========================================================================== */
 
 .btn {
-    border-radius: var(--radius-md);
+    --bs-btn-font-family: var(--font-body);
+    border-radius: var(--radius-pill);
     font-weight: 600;
     font-size: var(--fs-sm);
     letter-spacing: 0.01em;
-    padding: 0.55rem 1.15rem;
+    padding: 0.62rem 1.35rem;
     transition: var(--transition);
     box-shadow: none;
 }
 
 .btn-lg {
     font-size: var(--fs-base);
-    padding: 0.75rem 1.6rem;
+    padding: 0.85rem 1.85rem;
 }
 
 .btn-sm {
-    padding: 0.32rem 0.75rem;
+    font-size: var(--fs-xs);
+    padding: 0.38rem 0.9rem;
+}
+
+.btn-icon {
+    padding-inline: 0.6rem;
+    min-width: 2.25rem;
 }
 
 /* Gentle press feedback: lift on hover, settle on press. */
@@ -913,8 +1303,8 @@ small, .small {
 
 .btn:not(:disabled):not(.disabled):active {
     translate: 0 0;
-    scale: 0.98;
-    transition-duration: 80ms;
+    scale: 0.97;
+    transition-duration: 90ms;
 }
 
 /* Joined controls must stay flush with their input. */
@@ -925,36 +1315,72 @@ small, .small {
 }
 
 .btn:disabled, .btn.disabled {
-    opacity: 0.55;
+    opacity: 0.6;
 }
 
 .btn-primary {
     --bs-btn-disabled-bg: var(--primary-color);
-    --bs-btn-disabled-border-color: var(--primary-color);
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: #fff;
+    --bs-btn-disabled-border-color: transparent;
+    background: var(--grad-button);
+    background-size: 160% 100%;
+    background-position: 0% 50%;
+    border-color: transparent;
+    color: var(--primary-contrast);
+    box-shadow: var(--shadow-glow);
 }
 
+/* the gradient slides on hover, like light moving across a leaf */
 .btn-primary:hover, .btn-primary:focus {
-    background-color: var(--primary-hover);
-    border-color: var(--primary-hover);
-    color: #fff;
+    background: var(--grad-button);
+    background-size: 160% 100%;
+    background-position: 100% 50%;
+    border-color: transparent;
+    color: var(--primary-contrast);
 }
 
 .btn-primary:hover {
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 14px 30px -12px rgba(var(--primary-rgb), 0.75);
 }
 
-[data-bs-theme="dark"] .btn-primary,
-[data-bs-theme="dark"] .btn-primary:hover,
-[data-bs-theme="dark"] .btn-primary:focus {
-    color: #0f1a15;
+.btn-primary:active, .btn-primary.active {
+    background: var(--grad-button) !important;
+    color: var(--primary-contrast) !important;
+    border-color: transparent !important;
+}
+
+/* White pill - the reference's call to action on dark foliage. */
+.btn-light {
+    background-color: var(--mist-50);
+    border-color: var(--mist-50);
+    color: var(--forest-950);
+    box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+}
+
+.btn-light:hover, .btn-light:focus {
+    background-color: #fff;
+    border-color: #fff;
+    color: var(--forest-950);
+}
+
+/* Frosted glass button for canopy/immersive areas. */
+.btn-glass {
+    background: rgba(240, 251, 244, 0.1);
+    border: 1px solid rgba(184, 232, 206, 0.3);
+    color: var(--mist-50);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.btn-glass:hover, .btn-glass:focus, .btn-glass.show {
+    background: rgba(240, 251, 244, 0.18);
+    border-color: rgba(184, 232, 206, 0.55);
+    color: #fff;
 }
 
 .btn-outline-primary {
     color: var(--primary-color);
-    border-color: color-mix(in srgb, var(--primary-color) 55%, transparent);
+    border-color: rgba(var(--primary-rgb), 0.5);
+    background-color: transparent;
 }
 
 .btn-outline-primary:hover {
@@ -973,6 +1399,18 @@ small, .small {
     background-color: var(--bg-subtle);
     border-color: var(--border-strong);
     color: var(--text-primary);
+}
+
+.btn-outline-success {
+    color: var(--success-soft-text);
+    border-color: rgba(var(--success-rgb), 0.5);
+    background-color: var(--bg-card);
+}
+
+.btn-outline-success:hover {
+    color: var(--success-soft-text);
+    background-color: var(--success-soft-bg);
+    border-color: var(--success-color);
 }
 
 .btn-danger {
@@ -1020,21 +1458,19 @@ small, .small {
     background-color: var(--warning-soft-bg);
 }
 
-.btn-light {
-    background-color: var(--ivory);
-    border-color: var(--ivory);
-    color: var(--forest);
-}
-
-.btn-light:hover {
-    background-color: #fff;
-    border-color: #fff;
-    color: var(--forest);
-}
-
+/* Bootstrap points .btn-link at its own blue link colour; route it
+   through the palette like everything else. */
 .btn-link {
+    --bs-btn-color: var(--text-secondary);
+    --bs-btn-hover-color: var(--primary-color);
+    --bs-btn-active-color: var(--primary-color);
+    color: var(--text-secondary);
     font-weight: 500;
     text-decoration: none;
+}
+
+.btn-link:hover, .btn-link:focus-visible {
+    color: var(--primary-color);
 }
 
 .btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible {
@@ -1044,17 +1480,13 @@ small, .small {
 /* Bootstrap's own .btn:focus-visible rule (vendored bootstrap.min.css)
    composes its box-shadow from --bs-btn-focus-shadow-rgb, which every
    .btn-* variant re-hardcodes to Bootstrap's own stock color at its own
-   specificity (e.g. .btn-primary sets it to 49,132,253) - the
-   --bs-primary-rgb remap at the top of this file never reaches that
-   nested variable. This matches Bootstrap's exact selector instead and
-   sets the real box-shadow directly, overriding it outright.
+   specificity - the --bs-primary-rgb remap at the top of this file never
+   reaches that nested variable. This matches Bootstrap's exact selector
+   instead and sets the real box-shadow directly, overriding it outright.
    Note for whoever verifies this next: .btn transitions box-shadow
    (--transition). Reading getComputedStyle() synchronously right after a
-   Tab keypress (or right after setting the style at all) catches the
-   transition mid-flight and reports something close to the old value -
-   looks exactly like the rule "isn't applying" even when it is. Wait for
-   the transition to finish (~400ms) before asserting on the computed
-   box-shadow. */
+   Tab keypress catches the transition mid-flight and reports something
+   close to the old value. Wait for it to finish (~400ms) before asserting. */
 .btn:focus-visible {
     box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.5);
 }
@@ -1064,13 +1496,14 @@ a:focus-visible,
 button:not(.btn):focus-visible,
 summary:focus-visible {
     outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+    outline-offset: 3px;
     border-radius: var(--radius-sm);
 }
 
-.navbar a:focus-visible,
-.navbar button:not(.btn):focus-visible {
-    outline-color: var(--sand);
+.glass-nav a:focus-visible,
+.glass-nav button:not(.btn):focus-visible,
+.site-header-anon a:focus-visible {
+    outline-color: var(--mint-200);
 }
 
 /* ==========================================================================
@@ -1082,20 +1515,28 @@ summary:focus-visible {
     font-size: var(--fs-sm);
     color: var(--text-primary);
     margin-bottom: 0.45rem;
+    letter-spacing: 0.01em;
 }
 
 .form-control, .form-select {
-    background-color: var(--bg-card);
+    font-family: var(--font-body);
+    background-color: var(--input-bg);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-strong);
     color: var(--text-primary);
-    padding: 0.6rem 0.9rem;
+    padding: 0.7rem 1rem;
     transition: var(--transition);
 }
 
 .form-control-lg {
-    font-size: var(--fs-base);
-    padding: 0.8rem 1.05rem;
+    font-size: var(--fs-md);
+    padding: 0.9rem 1.15rem;
+    border-radius: var(--radius-lg);
+}
+
+.form-select-sm {
+    border-radius: var(--radius-pill);
+    padding-left: 1rem;
 }
 
 .form-control:hover:not(:focus):not(:disabled),
@@ -1105,13 +1546,14 @@ summary:focus-visible {
 
 .form-control::placeholder {
     color: var(--text-muted);
+    opacity: 0.85;
 }
 
 .form-control:focus, .form-select:focus {
-    background-color: var(--bg-card);
+    background-color: var(--input-bg);
     color: var(--text-primary);
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.18);
+    box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.16), 0 8px 22px -14px rgba(var(--primary-rgb), 0.7);
 }
 
 textarea.form-control {
@@ -1120,6 +1562,7 @@ textarea.form-control {
 
 .form-check-input {
     border-color: var(--border-strong);
+    background-color: var(--input-bg);
     transition: var(--transition);
 }
 
@@ -1130,7 +1573,7 @@ textarea.form-control {
 
 .form-check-input:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.18);
+    box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.18);
 }
 
 .form-text {
@@ -1140,134 +1583,207 @@ textarea.form-control {
 
 .invalid-feedback {
     color: var(--danger-color);
+    font-size: var(--fs-xs);
+    animation: tg-rise var(--dur-base) var(--ease-out);
 }
 
 .is-invalid {
     border-color: var(--danger-color) !important;
 }
 
+/* Saving/importing/searching: fields settle back while the button works. */
+form.is-submitting .form-control,
+form.is-submitting .form-select,
+form.is-submitting .form-check {
+    opacity: 0.6;
+    transition: opacity var(--dur-base) var(--ease-out);
+}
+
+form.is-submitting [type="submit"] {
+    cursor: progress;
+}
+
 /* ==========================================================================
-   Badges — soft/tinted instead of flat saturated Bootstrap defaults
+   Badges, categories and tags
+   Two tiers, so a note's labels read in order of importance:
+   - category: a tinted, small-caps label led by a dot in the category's
+     garden hue (the same hue as its node in the graph);
+   - tag: a quiet outlined "#tag" pill, clickable wherever it filters.
+   Status badges (Strong match, Related...) stay soft semantic pills.
    ========================================================================== */
 
 .badge {
-    font-family: var(--font-sans);
-    font-weight: 600;
-    font-size: 0.72rem;
+    font-family: var(--font-body);
+    font-weight: var(--font-ui-strong);
+    font-size: var(--fs-xs);
     letter-spacing: 0.02em;
-    padding: 0.4em 0.75em;
+    line-height: 1.2;
+    padding: 0.36em 0.8em;
     border-radius: var(--radius-pill);
     border: 1px solid transparent;
 }
 
-.badge.bg-primary, .badge.text-bg-primary {
+.badge.bg-primary, .badge.text-bg-primary { background-color: var(--primary-soft-bg) !important; color: var(--primary-soft-text) !important; }
+.badge.bg-success, .badge.text-bg-success { background-color: var(--success-soft-bg) !important; color: var(--success-soft-text) !important; }
+.badge.bg-info, .badge.text-bg-info { background-color: var(--info-soft-bg) !important; color: var(--info-soft-text) !important; }
+.badge.bg-warning, .badge.text-bg-warning { background-color: var(--warning-soft-bg) !important; color: var(--warning-soft-text) !important; }
+.badge.bg-danger, .badge.text-bg-danger { background-color: var(--danger-soft-bg) !important; color: var(--danger-soft-text) !important; }
+.badge.bg-secondary, .badge.text-bg-secondary { background-color: var(--neutral-soft-bg) !important; color: var(--neutral-soft-text) !important; }
+
+/* ---- tags ---- */
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* .badge.bg-light is the older tag markup still used on a few pages and by
+   main.js; it gets exactly the same look as .tag. */
+.tag,
+.badge.bg-light,
+.badge.bg-light.text-dark {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2em 0.75em 0.22em 0.62em;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--bg-card) 70%, transparent) !important;
+    color: var(--text-secondary) !important;
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+    font-weight: var(--font-ui-weight);
+    letter-spacing: 0.01em;
+    line-height: 1.35;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tag::before,
+.badge.bg-light::before {
+    content: "#";
+    margin-right: 0.12em;
+    color: var(--leaf-text);
+    opacity: 0.75;
+}
+
+/* "+3" overflow counters and link counts aren't tags */
+.tag.tag-more::before,
+.badge.bg-light.badge-count::before {
+    content: none;
+}
+
+.tag.tag-more {
+    color: var(--text-muted) !important;
+    border-style: dashed;
+}
+
+a.tag,
+a.badge {
+    transition:
+        color var(--dur-fast) var(--ease-out),
+        background-color var(--dur-fast) var(--ease-out),
+        border-color var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out),
+        translate var(--dur-base) var(--ease-spring);
+}
+
+a.tag:hover,
+a.badge.bg-light:hover {
+    border-color: var(--leaf-500);
+    background-color: var(--mint-soft-bg) !important;
+    color: var(--text-primary) !important;
+    translate: 0 -1px;
+    box-shadow: 0 6px 14px -10px rgba(var(--primary-rgb), 0.8);
+}
+
+a.tag:active,
+a.badge.bg-light:active {
+    translate: 0 0;
+}
+
+/* the tag currently filtering a list */
+.tag.is-active,
+a.tag[aria-current] {
+    border-color: var(--primary-color);
     background-color: var(--primary-soft-bg) !important;
     color: var(--primary-soft-text) !important;
 }
 
-.badge.bg-success, .badge.text-bg-success {
-    background-color: var(--success-soft-bg) !important;
-    color: var(--success-soft-text) !important;
+/* ---- categories ---- */
+
+/* Deliberately their own classes, not Bootstrap's bg-primary/danger/...
+   (those are the app's real semantic tokens). Colors come entirely from
+   the --category-* tokens; used on every page as well as the garden. */
+.badge-category-ai       { --cat-hue: var(--category-ai);       --cat-bg: var(--category-ai-soft-bg);       --cat-text: var(--category-ai-soft-text); }
+.badge-category-cyber    { --cat-hue: var(--category-cyber);    --cat-bg: var(--category-cyber-soft-bg);    --cat-text: var(--category-cyber-soft-text); }
+.badge-category-se       { --cat-hue: var(--category-se);       --cat-bg: var(--category-se-soft-bg);       --cat-text: var(--category-se-soft-text); }
+.badge-category-os       { --cat-hue: var(--category-os);       --cat-bg: var(--category-os-soft-bg);       --cat-text: var(--category-os-soft-text); }
+.badge-category-research { --cat-hue: var(--category-research); --cat-bg: var(--category-research-soft-bg); --cat-text: var(--category-research-soft-text); }
+.badge-category-none     { --cat-hue: var(--text-muted);        --cat-bg: var(--neutral-soft-bg);           --cat-text: var(--neutral-soft-text); }
+
+.badge[class*="badge-category-"] {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--cat-bg) !important;
+    color: var(--cat-text) !important;
+    border-color: color-mix(in srgb, var(--cat-hue) 34%, transparent);
+    font-size: 0.78rem;
+    font-weight: var(--font-ui-strong);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.38em 0.85em 0.34em 0.75em;
 }
 
-.badge.bg-info, .badge.text-bg-info {
-    background-color: var(--info-soft-bg) !important;
-    color: var(--info-soft-text) !important;
+/* a small dot in the category's own garden hue leads each category label */
+[class*="badge-category-"]::before {
+    content: "";
+    display: inline-block;
+    flex: none;
+    width: 0.5em;
+    height: 0.5em;
+    margin-right: 0.5em;
+    border-radius: 50%;
+    background: var(--cat-hue, currentColor);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat-hue, currentColor) 22%, transparent);
 }
 
-.badge.bg-warning, .badge.text-bg-warning {
-    background-color: var(--warning-soft-bg) !important;
-    color: var(--warning-soft-text) !important;
+a:has(> .badge[class*="badge-category-"]),
+a.badge[class*="badge-category-"] {
+    text-decoration: none;
 }
 
-.badge.bg-danger, .badge.text-bg-danger {
-    background-color: var(--danger-soft-bg) !important;
-    color: var(--danger-soft-text) !important;
+a:hover > .badge[class*="badge-category-"],
+a.badge[class*="badge-category-"]:hover {
+    border-color: var(--cat-hue);
 }
 
-.badge.bg-secondary, .badge.text-bg-secondary {
-    background-color: var(--neutral-soft-bg) !important;
-    color: var(--neutral-soft-text) !important;
-}
+/* ---- small inline markers ---- */
 
-/* Tags: outlined so they read as secondary to the filled category badge. */
-.badge.bg-light {
-    background-color: transparent !important;
-    color: var(--text-secondary) !important;
-    border-color: var(--border-color);
-    font-weight: 500;
-}
-
-.badge.bg-light.text-dark {
-    color: var(--text-secondary) !important;
-}
-
-a.badge {
-    transition: var(--transition);
-}
-
-a.badge.bg-light:hover {
-    border-color: var(--sage);
-    color: var(--text-primary) !important;
-    background-color: var(--sage-soft-bg) !important;
-}
-
-/* Category badges - deliberately their own classes, not Bootstrap's
-   bg-primary/danger/success/warning/info: those utility colors are the
-   app's real semantic tokens (alerts, validation, destructive actions)
-   and a note's category has nothing to do with any of that. Colors come
-   entirely from the --category-* tokens above, so light/dark
-   variants (and any future retune) live in exactly one place. Lives here,
-   not in garden.css, because dashboard/notes/search/list use them too. */
-.badge-category-ai       { background-color: var(--category-ai-soft-bg) !important; color: var(--category-ai-soft-text) !important; }
-.badge-category-cyber    { background-color: var(--category-cyber-soft-bg) !important; color: var(--category-cyber-soft-text) !important; }
-.badge-category-se       { background-color: var(--category-se-soft-bg) !important; color: var(--category-se-soft-text) !important; }
-.badge-category-os       { background-color: var(--category-os-soft-bg) !important; color: var(--category-os-soft-text) !important; }
-.badge-category-research { background-color: var(--category-research-soft-bg) !important; color: var(--category-research-soft-text) !important; }
-.badge-category-none     { background-color: var(--neutral-soft-bg) !important; color: var(--neutral-soft-text) !important; }
-
-/* ==========================================================================
-   Alerts
-   ========================================================================== */
-
-.alert {
-    border-radius: var(--radius-md);
-    border: 1px solid transparent;
-    border-left-width: 3px;
+.growth-pill,
+.pin-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
     font-size: var(--fs-sm);
-    box-shadow: var(--shadow-sm);
+    font-style: italic;
+    color: var(--text-muted);
 }
 
-#flashMessages .alert {
-    animation: tg-pop var(--dur-base) var(--ease-out) backwards;
+.pin-pill {
+    font-style: normal;
+    color: var(--pinned-text, #8a6326);
 }
 
-.alert.fade {
-    transition: opacity var(--dur-base) var(--ease-out);
+.pin-pill i {
+    color: var(--pinned-color);
 }
 
-.alert-success {
-    background-color: var(--success-soft-bg);
-    border-left-color: var(--success-color);
-    color: var(--success-soft-text);
-}
-
-.alert-info {
-    background-color: var(--info-soft-bg);
-    border-left-color: var(--info-color);
-    color: var(--info-soft-text);
-}
-
-.alert-warning {
-    background-color: var(--warning-soft-bg);
-    border-left-color: var(--warning-color);
-    color: var(--warning-soft-text);
-}
-
-.alert-danger {
-    background-color: var(--danger-soft-bg);
-    border-left-color: var(--danger-color);
-    color: var(--danger-soft-text);
+[data-bs-theme="dark"] .pin-pill {
+    --pinned-text: #e1b874;
 }
 
 /* ==========================================================================
@@ -1276,7 +1792,7 @@ a.badge.bg-light:hover {
 
 .list-group-item {
     background-color: var(--bg-card);
-    border-color: var(--border-color);
+    border-color: var(--border-soft);
     color: var(--text-primary);
 }
 
@@ -1288,23 +1804,19 @@ a.badge.bg-light:hover {
     background-color: var(--bg-subtle);
 }
 
-/* Dashboard "recently added" rows. */
-.list-group-flush .list-group-item-action {
-    border-radius: var(--radius-md);
-    margin-inline: calc(var(--space-3) * -1);
-    padding-inline: var(--space-3) !important;
-}
-
-.list-group-flush .list-group-item-action + .list-group-item-action {
-    border-top: 1px solid var(--border-color) !important;
-}
-
 .dropdown-menu {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    padding: 0.35rem;
+    box-shadow: var(--shadow-lg);
+    padding: 0.4rem;
+    font-family: var(--font-body);
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: rgba(9, 40, 30, 0.95);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
 }
 
 .dropdown-menu.show {
@@ -1314,7 +1826,7 @@ a.badge.bg-light:hover {
 .dropdown-item {
     border-radius: var(--radius-sm);
     font-size: var(--fs-sm);
-    padding: 0.5rem 0.75rem;
+    padding: 0.55rem 0.8rem;
     color: var(--text-primary);
     transition: var(--transition);
 }
@@ -1338,7 +1850,7 @@ a.badge.bg-light:hover {
 }
 
 .dropdown-divider {
-    border-color: var(--border-color);
+    border-color: var(--border-soft);
 }
 
 .pagination {
@@ -1349,8 +1861,8 @@ a.badge.bg-light:hover {
     background-color: transparent;
     border-color: transparent;
     color: var(--text-secondary);
-    border-radius: var(--radius-md) !important;
-    min-width: 2.4rem;
+    border-radius: var(--radius-pill) !important;
+    min-width: 2.5rem;
     text-align: center;
     transition: var(--transition);
 }
@@ -1362,13 +1874,10 @@ a.badge.bg-light:hover {
 }
 
 .pagination .page-item.active .page-link {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: #fff;
-}
-
-[data-bs-theme="dark"] .pagination .page-item.active .page-link {
-    color: #0f1a15;
+    background: var(--grad-button);
+    border-color: transparent;
+    color: var(--primary-contrast);
+    box-shadow: var(--shadow-glow);
 }
 
 .pagination .page-item.disabled .page-link {
@@ -1379,17 +1888,26 @@ a.badge.bg-light:hover {
 
 .modal-content {
     background-color: var(--bg-card);
-    border-color: var(--border-color);
-    border-radius: var(--radius-lg);
+    border-color: var(--border-soft);
+    border-radius: var(--radius-xl);
     box-shadow: var(--shadow-lg);
 }
 
 .modal.fade .modal-dialog {
     transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
+    transform: translateY(16px) scale(0.97);
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+.spinner-border {
+    --bs-spinner-animation-speed: 0.9s;
 }
 
 /* ==========================================================================
-   Empty states — a single growth-stage plant swaying, a headline, a nudge
+   Empty states — a single growth-stage plant swaying in a pool of light
    ========================================================================== */
 
 .empty-state {
@@ -1398,6 +1916,7 @@ a.badge.bg-light:hover {
     align-items: center;
     text-align: center;
     padding: var(--space-8) var(--space-4);
+    animation: tg-bloom var(--dur-enter) var(--ease-out) backwards;
 }
 
 .empty-state-sm {
@@ -1408,16 +1927,18 @@ a.badge.bg-light:hover {
     position: relative;
     display: grid;
     place-items: center;
-    width: 6rem;
-    height: 6rem;
+    width: 6.5rem;
+    height: 6.5rem;
     margin-bottom: var(--space-4);
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 70%, var(--sage-soft-bg) 0 58%, transparent 59%);
+    background:
+        radial-gradient(circle at 50% 70%, var(--mint-soft-bg) 0 56%, transparent 57%),
+        radial-gradient(circle at 50% 60%, rgba(57, 167, 122, 0.18), transparent 70%);
 }
 
 .empty-state-sm .empty-state-art {
-    width: 4.25rem;
-    height: 4.25rem;
+    width: 4.5rem;
+    height: 4.5rem;
     margin-bottom: var(--space-3);
 }
 
@@ -1429,7 +1950,8 @@ a.badge.bg-light:hover {
     right: 22%;
     bottom: 18%;
     height: 1px;
-    background: var(--sand);
+    background: var(--leaf-500);
+    opacity: 0.6;
 }
 
 .empty-state-art img {
@@ -1439,7 +1961,7 @@ a.badge.bg-light:hover {
     animation: tg-sway var(--dur-ambient) var(--ease-organic) infinite;
 }
 
-.empty-state h3, .empty-state h4, .empty-state h5 {
+.empty-state h2, .empty-state h3, .empty-state h4, .empty-state h5 {
     margin-bottom: var(--space-2);
 }
 
@@ -1449,26 +1971,349 @@ a.badge.bg-light:hover {
 }
 
 .empty-state .btn {
-    margin-top: var(--space-3);
+    margin-top: var(--space-4);
 }
 
 /* ==========================================================================
-   Page-specific: dashboard, notes, note detail
+   Dashboard — the glass hero from the reference
    ========================================================================== */
 
-.filter-bar {
-    background-color: transparent;
-    border: 0;
-    box-shadow: none;
+.garden-hero {
+    position: relative;
+    padding: clamp(1.5rem, 3vw, 3rem) 0 var(--space-6);
 }
 
-.filter-bar .card-body {
-    padding: 0;
+.garden-hero .glass-panel {
+    padding: clamp(1.75rem, 1rem + 3.2vw, 3.75rem);
+    max-width: 62rem;
+    animation: tg-settle var(--dur-slow) var(--ease-out) backwards;
 }
 
-.filter-bar .form-select-sm {
-    min-width: 10rem;
+.garden-hero h1 {
+    font-size: var(--fs-display);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+        color: #fff;
+    max-width: 14ch;
+    margin-bottom: var(--space-4);
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
 }
+
+.garden-hero .lead {
+    color: rgba(240, 251, 244, 0.86);
+    max-width: 38rem;
+    margin-bottom: var(--space-5);
+}
+
+.garden-hero .page-eyebrow {
+    color: var(--mint-200);
+}
+
+.hero-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    margin: var(--space-6) 0 0;
+    padding: var(--space-5) 0 0;
+    border-top: 1px solid rgba(184, 232, 206, 0.18);
+}
+
+.hero-stat {
+    min-width: 5rem;
+}
+
+.hero-stat dd {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 2.3rem;
+    font-weight: 400;
+    line-height: 1;
+    color: #fff;
+    margin: 0;
+}
+
+.hero-stat dt {
+    order: 2;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(240, 251, 244, 0.78);
+}
+
+.hero-stat {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--space-1);
+}
+
+/* A real monstera grows in from the right and overlaps the glass edge. */
+/* Anchored past the viewport's right edge (50% - 50vw from a centered
+   container) because the cutout's right/bottom sides are the photo's
+   crop line - they must never be visible. The sheet covers the bottom. */
+.hero-leaf {
+    position: absolute;
+    right: calc(50% - 50vw - 2.5rem);
+    bottom: -22%;
+    width: clamp(260px, 34vw, 560px);
+    z-index: 3;
+    pointer-events: none;
+    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.45));
+    animation: tg-leaf-in 1.2s var(--ease-out) 250ms backwards;
+}
+
+.hero-leaf img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transform-origin: 85% 100%;
+    animation: tg-sway-leaf 9s var(--ease-organic) infinite;
+    translate: var(--leaf-x, 0px) var(--leaf-y, 0px);
+    transition: translate 600ms var(--ease-out);
+}
+
+/* recently added notes as a card grid on the sheet */
+.note-tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    height: 100%;
+    padding: var(--space-5);
+    color: inherit;
+    text-decoration: none;
+}
+
+.note-tile:hover {
+    color: inherit;
+}
+
+.note-tile h3 {
+    font-size: 1.35rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.note-tile p {
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+}
+
+.note-tile-meta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-top: var(--space-2);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+}
+
+.section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.section-head h2 {
+    font-size: var(--fs-h3);
+    margin: 0;
+}
+
+.section-head p {
+    margin: 0;
+    font-size: var(--fs-sm);
+}
+
+/* Dashboard side cards: rows joined by a vine */
+.link-row {
+    padding-block: var(--space-3);
+}
+
+.link-row + .link-row {
+    border-top: 1px solid var(--border-soft);
+}
+
+.link-row a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
+}
+
+.link-row a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.link-row .bi-arrow-right {
+    color: var(--leaf-500);
+}
+
+/* ==========================================================================
+   Notes list filters (in the canopy)
+   ========================================================================== */
+
+.hero-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    background: rgba(240, 251, 244, 0.08);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    width: fit-content;
+    max-width: 100%;
+    animation: tg-emerge var(--dur-slow) var(--ease-out) 420ms backwards;
+}
+
+.hero-filters .section-label {
+    color: var(--mint-200);
+    margin: 0 var(--space-1) 0 0;
+}
+
+.hero-filters .form-select-sm {
+    min-width: 11rem;
+}
+
+/* All / Pinned / Archived - a segmented control on the glass */
+.view-switch {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--radius-pill);
+    background: rgba(4, 22, 16, 0.35);
+    border: 1px solid var(--glass-border);
+}
+
+.view-switch a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 0.28rem 0.9rem;
+    border-radius: var(--radius-pill);
+    color: rgba(240, 251, 244, 0.8);
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    transition:
+        background-color var(--dur-base) var(--ease-out),
+        color var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out);
+}
+
+.view-switch a:hover {
+    color: #fff;
+    background: rgba(184, 232, 206, 0.12);
+}
+
+.view-switch a[aria-current] {
+    background: var(--mist-50);
+    color: var(--forest-950);
+    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+}
+
+.view-switch a:focus-visible {
+    outline: 2px solid var(--mint-200);
+    outline-offset: 2px;
+}
+
+.hero-filters-sep {
+    align-self: stretch;
+    width: 1px;
+    margin-inline: var(--space-1);
+    background: var(--glass-border);
+}
+
+/* active filters on the sheet: each one a token you can remove */
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+    animation: tg-rise var(--dur-base) var(--ease-out) backwards;
+}
+
+.active-filters .section-label {
+    margin: 0 var(--space-1) 0 0;
+}
+
+.filter-token {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.25rem 0.2rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition:
+        border-color var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out);
+}
+
+/* tokens that hold a badge/tag let it be the label */
+.filter-token:has(> .badge, > .tag) {
+    padding-left: 0.25rem;
+}
+
+.filter-token > .badge,
+.filter-token > .tag {
+    border-color: transparent;
+}
+
+.filter-token .bi-x {
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    transition:
+        background-color var(--dur-fast) var(--ease-out),
+        color var(--dur-fast) var(--ease-out),
+        rotate var(--dur-base) var(--ease-spring);
+}
+
+.filter-token:hover {
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.filter-token:hover .bi-x {
+    background: var(--danger-soft-bg);
+    color: var(--danger-soft-text);
+    rotate: 90deg;
+}
+
+.active-filters-clear {
+    margin-left: var(--space-1);
+    font-size: var(--fs-sm);
+}
+
+/* ==========================================================================
+   Note view — an editorial reading column
+   ========================================================================== */
 
 .connection-item {
     padding: var(--space-3);
@@ -1501,78 +2346,136 @@ button.connection-item:focus-visible {
     color: var(--text-primary);
 }
 
-/* Dashboard connection rows: two titles joined by a vine */
-.link-row {
-    padding-block: var(--space-3);
+.note-rule {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--leaf-500), transparent);
+    opacity: 0.6;
+    margin-block: var(--space-5);
 }
 
-.link-row + .link-row {
-    border-top: 1px solid var(--border-color);
+.note-toolbar .btn,
+.hero-actions .btn {
+    white-space: nowrap;
 }
 
-.link-row a {
-    color: var(--text-primary);
+/* ---- the journal page ---- */
+
+.note-crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-4) var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    animation: tg-fade var(--dur-enter) var(--ease-out) backwards;
+}
+
+.note-crumbs a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--text-secondary);
     text-decoration: none;
 }
 
-.link-row a:hover {
-    color: var(--primary-color);
-    text-decoration: underline;
-}
-
-.link-row .bi-arrow-right {
-    color: var(--sage);
-}
-
-.related-item {
-    padding-block: var(--space-3);
-    transition: var(--transition);
-}
-
-.related-item + .related-item {
-    border-top: 1px solid var(--border-color);
-}
-
-.related-item h6 {
-    font-size: 1.1rem;
-}
-
-.related-item a {
-    color: var(--text-primary);
-    text-decoration: none;
-}
-
-.related-item a:hover {
+.note-crumbs a:hover {
     color: var(--primary-color);
 }
 
-/* Note reading view: an editorial column. */
+.note-crumbs a i {
+    transition: translate var(--dur-base) var(--ease-spring);
+}
+
+.note-crumbs a:hover i {
+    translate: -3px 0;
+}
+
 .note-article {
-    padding: var(--space-6) var(--space-6) var(--space-5);
+    padding: clamp(1.75rem, 1rem + 3vw, 3.75rem) clamp(1.5rem, 0.5rem + 4.4vw, 4.75rem);
+    animation: tg-bloom var(--dur-slow) var(--ease-out) 120ms backwards;
+}
+
+.note-head {
+    position: relative;
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--border-soft);
+}
+
+/* a short leaf-green rule set into the divider, like a journal's ornament */
+.note-head::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 4.5rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--grad-highlight);
+    transform-origin: left center;
+    animation: tg-draw var(--dur-slow) var(--ease-out) 600ms backwards;
+}
+
+.note-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+    animation: tg-rise var(--dur-enter) var(--ease-out) 260ms backwards;
+}
+
+.note-kicker a {
+    text-decoration: none;
+}
+
+.note-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-style: italic;
 }
 
 .note-article-title {
-    font-size: clamp(2rem, 1.6rem + 1.8vw, 2.9rem);
-    font-weight: var(--fw-display);
-    line-height: var(--lh-tight);
+    max-width: 22ch;
+    margin-bottom: var(--space-5);
+    font-size: clamp(2.3rem, 1.6rem + 2.4vw, 3.6rem);
+    font-weight: 400;
+    line-height: 1.06;
     letter-spacing: var(--tracking-display);
-    margin-bottom: var(--space-3);
+    text-wrap: balance;
+    animation: tg-emerge var(--dur-slow) var(--ease-out) 200ms backwards;
 }
 
 .note-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
+    gap: var(--space-3) var(--space-7);
+    margin: 0 0 var(--space-5);
+    animation: tg-rise var(--dur-enter) var(--ease-out) 360ms backwards;
 }
 
-.note-rule {
-    border: 0;
-    height: 1px;
-    background: linear-gradient(90deg, var(--sand), transparent);
-    opacity: 1;
-    margin-block: var(--space-5);
+.note-meta > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.note-meta dt {
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--font-ui-strong);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+}
+
+.note-meta dd {
+    margin: 0;
+    color: var(--text-secondary);
 }
 
 .note-toolbar {
@@ -1581,29 +2484,234 @@ button.connection-item:focus-visible {
     justify-content: space-between;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-bottom: var(--space-4);
+    animation: tg-rise var(--dur-enter) var(--ease-out) 440ms backwards;
+}
+
+.note-actions-main,
+.note-actions-quiet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.note-actions-quiet .btn-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+}
+
+.note-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    margin-top: var(--space-7);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-soft);
+}
+
+.note-foot .section-label {
+    margin: 0;
+}
+
+/* ---- related knowledge: each connection opens like a page turning ---- */
+
+@media (min-width: 992px) {
+    .note-aside .related-card {
+        position: sticky;
+        top: calc(var(--nav-h) + var(--space-4));
+    }
+}
+
+.note-aside {
+    animation: tg-slide-in var(--dur-slow) var(--ease-out) 280ms backwards;
+}
+
+.related-card .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.related-count {
+    display: grid;
+    place-items: center;
+    min-width: 1.8rem;
+    height: 1.8rem;
+    padding: 0 0.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--primary-soft-bg);
+    color: var(--primary-soft-text);
+    font-size: var(--fs-sm);
+    font-weight: var(--font-ui-strong);
+}
+
+.related-card .card-body {
+    padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.related-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.related-list > li + li {
+    border-top: 1px solid var(--border-soft);
+}
+
+.related-item summary {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--radius-md);
+    list-style: none;
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.related-item summary::-webkit-details-marker {
+    display: none;
+}
+
+/* bootstrap-icons chevron-right, turning down as the item opens */
+.related-item summary::before {
+    content: "\f285";
+    flex: none;
+    margin-top: 0.4em;
+    font-family: bootstrap-icons;
+    font-size: 0.7em;
+    color: var(--text-muted);
+    transition: rotate var(--dur-base) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.related-item[open] summary::before {
+    rotate: 90deg;
+    color: var(--leaf-text);
+}
+
+.related-item summary:hover {
+    background: var(--mint-soft-bg);
+}
+
+.related-item summary:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.related-title {
+    flex: 1 1 auto;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    line-height: 1.3;
+    transition: color var(--dur-fast) var(--ease-out);
+}
+
+.related-item summary:hover .related-title {
+    color: var(--primary-color);
+}
+
+.related-item summary .badge {
+    flex: none;
+    margin-top: 0.15rem;
+}
+
+.related-body {
+    padding: 0 var(--space-2) var(--space-4) 1.65rem;
+}
+
+.related-item[open] .related-body {
+    animation: tg-rise var(--dur-base) var(--ease-out);
+}
+
+.related-body .connection-reason {
+    margin-bottom: var(--space-1);
+    font-size: var(--fs-sm);
+    font-style: italic;
+}
+
+.related-excerpt {
+    margin-bottom: var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+}
+
+.related-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.related-foot .tag {
+    font-size: var(--fs-xs);
+}
+
+.related-open {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    font-size: var(--fs-sm);
+    font-weight: var(--font-ui-strong);
+    text-decoration: none;
+}
+
+.related-open i {
+    transition: translate var(--dur-base) var(--ease-spring);
+}
+
+.related-open:hover i {
+    translate: 3px 0;
+}
+
+.related-basis {
+    display: block;
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
 }
 
 .note-content {
     max-width: 68ch;
     color: var(--text-primary);
-    font-size: 1.0625rem;
-    line-height: 1.78;
+    font-size: 1.1875rem;
+    line-height: 1.8;
     overflow-wrap: anywhere;
+    hanging-punctuation: first;
+    animation: tg-fade var(--dur-slow) var(--ease-out) 520ms backwards;
 }
+
+/* a quiet drop cap when a note opens with prose */
+.note-content > p:first-child::first-letter {
+    float: left;
+    margin: 0.06em 0.04em 0 -0.02em;
+    font-family: var(--font-display);
+    font-size: 3.35em;
+    line-height: 0.82;
+    color: var(--leaf-text);
+}
+
+.note-content p { margin-bottom: 1.1em; }
 
 .note-content > :last-child { margin-bottom: 0; }
 .note-content p { color: var(--text-primary); }
 .note-content h1, .note-content h2, .note-content h3,
 .note-content h4, .note-content h5, .note-content h6 { margin-top: 1.4em; margin-bottom: 0.5em; }
-.note-content h1 { font-size: 1.9rem; }
-.note-content h2 { font-size: 1.6rem; }
-.note-content h3 { font-size: 1.35rem; }
+.note-content h1 { font-size: 2rem; }
+.note-content h2 { font-size: 1.7rem; }
+.note-content h3 { font-size: 1.4rem; }
 .note-content img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
-.note-content code { color: var(--terracotta-text); font-size: 0.9em; }
+.note-content code { color: var(--accent-text); font-size: 0.88em; }
 .note-content pre {
     padding: var(--space-4);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius-md);
     background: var(--bg-subtle);
     overflow-x: auto;
@@ -1612,79 +2720,171 @@ button.connection-item:focus-visible {
 .note-content blockquote {
     margin: 0 0 1rem;
     padding-left: var(--space-4);
-    border-left: 2px solid var(--sage);
+    border-left: 2px solid var(--leaf-500);
     color: var(--text-secondary);
-    font-family: var(--font-serif);
-    font-size: 1.2rem;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-style: italic;
 }
 .note-content table { margin-bottom: 1rem; border-collapse: collapse; }
 .note-content th, .note-content td { padding: 0.25rem 0.75rem; border: 1px solid var(--border-color); }
 
-/* Search results: rows that lift like cards */
+/* ==========================================================================
+   Note composer (create / edit) — calm, still, no ambient motion
+   ========================================================================== */
+
+.composer {
+    animation: tg-bloom var(--dur-slow) var(--ease-out) 120ms backwards;
+}
+
+.composer .composer-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    padding-block: 0.6rem;
+}
+
+.composer textarea.form-control {
+    font-size: 1.0625rem;
+    line-height: 1.85;
+    min-height: 18rem;
+    padding: 1rem 1.15rem;
+}
+
+.import-card {
+    animation: tg-rise var(--dur-enter) var(--ease-out) 260ms backwards;
+}
+
+.import-card input[type="file"] {
+    font-size: var(--fs-sm);
+}
+
+.danger-zone {
+    border-color: color-mix(in srgb, var(--danger-color) 30%, var(--border-color));
+    box-shadow: none;
+}
+
+.danger-zone .card-title {
+    color: var(--danger-soft-text);
+}
+
+[data-bs-theme="dark"] .danger-zone .card-title {
+    color: var(--danger-color);
+}
+
+.tag-suggestions .btn {
+    animation: tg-pop var(--dur-base) var(--ease-spring) backwards;
+}
+
+/* ==========================================================================
+   Search — the search bar lives in the canopy, results on the sheet
+   ========================================================================== */
+
+.search-hero-card {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    animation: tg-settle var(--dur-slow) var(--ease-out) 200ms backwards;
+}
+
+.search-hero-card .form-label {
+    color: rgba(240, 251, 244, 0.9);
+}
+
 .result-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
 }
 
-.result-item h5 {
-    font-size: 1.3rem;
+.result-item h2 {
+    font-size: 1.4rem;
 }
 
-.result-item h5 a {
+.result-item h2 a {
     color: var(--text-primary);
     text-decoration: none;
 }
 
-.result-item h5 a:hover {
+.result-item h2 a:hover {
     color: var(--primary-color);
 }
 
+.result-item .flex-grow-1 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 .result-item mark {
-    background: var(--accent-soft-bg);
-    color: var(--accent-soft-text);
-    padding: 0 0.15em;
-    border-radius: 2px;
+    background: linear-gradient(transparent 55%, rgba(57, 167, 122, 0.32) 55%);
+    color: inherit;
+    padding: 0 0.1em;
 }
 
-.search-card .card-body {
-    padding: var(--space-5) var(--space-5) var(--space-4);
+/* Shown/hidden by initSearchAutocomplete(); animates each time it opens. */
+.search-suggestions {
+    z-index: 1000;
+    display: none;
+    margin-top: var(--space-1);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg) !important;
+    animation: tg-pop var(--dur-fast) var(--ease-out) backwards;
 }
 
-/* Insights */
+/* ==========================================================================
+   Insights / health
+   ========================================================================== */
+
+.insight-card {
+    overflow: hidden;
+}
+
 .insight-card .card-body {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    padding: var(--space-5);
+    padding: var(--space-5) var(--space-5) var(--space-6);
+}
+
+/* a soft pool of light in the corner of each insight */
+.insight-card::after {
+    content: "";
+    position: absolute;
+    right: -2.5rem;
+    top: -2.5rem;
+    width: 9rem;
+    height: 9rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(57, 167, 122, 0.18), transparent 70%);
+    pointer-events: none;
 }
 
 .insight-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius-md);
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
     display: grid;
     place-items: center;
-    font-size: 1.15rem;
-    background: var(--sage-soft-bg);
-    color: var(--sage-text);
+    font-size: 1.2rem;
+    background: var(--mint-soft-bg);
+    color: var(--leaf-text);
     margin-bottom: var(--space-2);
 }
 
 .insight-icon-accent {
-    background: var(--accent-soft-bg);
-    color: var(--accent-soft-text);
+    background: var(--warning-soft-bg);
+    color: var(--warning-soft-text);
 }
 
 .insight-value {
-    font-family: var(--font-serif);
-    font-size: 2rem;
-    line-height: 1.15;
+    font-family: var(--font-display);
+    font-size: 2.3rem;
+    line-height: 1.1;
     font-weight: 400;
     color: var(--text-primary);
     margin: 0;
     overflow-wrap: anywhere;
-    font-variant-numeric: lining-nums;
 }
 
 .insight-detail {
@@ -1692,94 +2892,186 @@ button.connection-item:focus-visible {
     font-size: var(--fs-sm);
 }
 
-/* Auth */
-.auth-shell {
-    max-width: 26rem;
-    margin-inline: auto;
+/* ==========================================================================
+   Sign in / register — frosted panel floating on the foliage
+   ========================================================================== */
+
+.auth-panel {
+    position: relative;
+    z-index: 1;
+    width: min(28rem, 100%);
+    padding: clamp(1.75rem, 1rem + 3vw, 2.75rem);
+    animation: tg-settle var(--dur-slow) var(--ease-out) 100ms backwards;
 }
 
-.auth-card .card-body {
-    padding: var(--space-6);
+.auth-panel h1 {
+    color: #fff;
+    font-size: clamp(2.2rem, 1.8rem + 1.6vw, 2.8rem);
 }
+
+.auth-panel p,
+.auth-panel .text-muted {
+    color: rgba(240, 251, 244, 0.8) !important;
+}
+
+.auth-panel .form-label,
+.auth-panel .form-check-label {
+    color: rgba(240, 251, 244, 0.92);
+}
+
+.auth-panel a {
+    color: var(--mint-200);
+}
+
+.auth-panel .form-control {
+    background: rgba(240, 251, 244, 0.08);
+    border-color: rgba(184, 232, 206, 0.34);
+    color: #fff;
+}
+
+.auth-panel .form-control::placeholder {
+    color: rgba(240, 251, 244, 0.62);
+}
+
+.auth-panel .form-control:focus {
+    background: rgba(240, 251, 244, 0.12);
+    border-color: var(--mint-200);
+    box-shadow: 0 0 0 4px rgba(184, 232, 206, 0.18), 0 0 26px -6px rgba(184, 232, 206, 0.5);
+}
+
+.auth-panel .btn-light {
+    font-size: var(--fs-base);
+    padding-block: 0.8rem;
+}
+
+.auth-panel .invalid-feedback {
+    color: #FFC2B3;
+}
+
+.auth-stagger > * {
+    animation: tg-rise var(--dur-enter) var(--ease-out) backwards;
+}
+.auth-stagger > :nth-child(1) { animation-delay: 260ms; }
+.auth-stagger > :nth-child(2) { animation-delay: 330ms; }
+.auth-stagger > :nth-child(3) { animation-delay: 400ms; }
+.auth-stagger > :nth-child(4) { animation-delay: 470ms; }
+.auth-stagger > :nth-child(5) { animation-delay: 540ms; }
+.auth-stagger > :nth-child(6) { animation-delay: 610ms; }
+.auth-stagger > :nth-child(n+7) { animation-delay: 680ms; }
 
 .auth-mark {
     display: inline-grid;
     place-items: center;
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 3.75rem;
+    height: 3.75rem;
     border-radius: 50%;
-    background: var(--sage-soft-bg);
+    background: rgba(184, 232, 206, 0.14);
+    border: 1px solid rgba(184, 232, 206, 0.25);
     margin-bottom: var(--space-3);
 }
 
 .auth-mark img {
-    width: 2.25rem;
+    width: 2.3rem;
     height: auto;
     transform-origin: 50% 88%;
     animation: tg-sway var(--dur-ambient) var(--ease-organic) infinite;
 }
 
+/* a real leaf reaching in from the corner of the viewport */
+.corner-leaf {
+    position: fixed;
+    right: -4vw;
+    bottom: -8vh;
+    width: clamp(260px, 30vw, 480px);
+    z-index: 0;
+    pointer-events: none;
+    filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5));
+    animation: tg-leaf-in 1.4s var(--ease-out) 300ms backwards;
+}
+
+.corner-leaf img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transform-origin: 85% 100%;
+    animation: tg-sway-leaf 10s var(--ease-organic) infinite;
+}
+
 /* ==========================================================================
-   Landing page
+   Landing
    ========================================================================== */
 
-.hero-section {
-    min-height: 72vh;
+.landing-hero {
+    position: relative;
+    padding: clamp(1.5rem, 4vw, 3.5rem) 0 clamp(2rem, 4vw, 3rem);
+}
+
+.landing-hero .glass-panel {
+    padding: clamp(2rem, 1rem + 4vw, 4.5rem);
+    max-width: 66rem;
+    min-height: 26rem;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    animation: tg-settle var(--dur-slow) var(--ease-out) backwards;
 }
 
 .hero-title {
     font-size: var(--fs-display);
-    font-weight: var(--fw-display);
-    line-height: 1.05;
+    font-weight: 400;
+    line-height: 1.02;
     letter-spacing: -0.02em;
+    color: #fff;
+    max-width: 14ch;
     margin-bottom: var(--space-5);
 }
 
 .hero-title em {
-    font-style: normal;
-    color: var(--sage-text);
+    font-style: italic;
+    color: var(--mint-200);
 }
 
-.hero-section .lead {
+.landing-hero .lead {
+    color: rgba(240, 251, 244, 0.86);
     max-width: 34rem;
 }
 
 .section-title {
     font-size: var(--fs-h1);
-    font-weight: var(--fw-display);
     letter-spacing: var(--tracking-display);
 }
 
-.landing-band {
-    background: var(--bg-primary);
-    border-block: 1px solid var(--border-color);
+.feature-step {
+    padding: var(--space-5) var(--space-4);
+    border-radius: var(--radius-lg);
+    transition: var(--transition);
 }
 
-.feature-step {
-    padding: var(--space-4) var(--space-3);
+.feature-step:hover {
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
+    translate: 0 -4px;
 }
 
 .feature-step-index {
     display: block;
-    font-family: var(--font-serif);
-    font-size: 1rem;
-    color: var(--terracotta-text);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--leaf-text);
     margin-bottom: var(--space-2);
-    font-variant-numeric: oldstyle-nums;
 }
 
 .feature-icon {
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: var(--radius-lg);
-    background: var(--sage-soft-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 50%;
+    background: var(--mint-soft-bg);
+    display: grid;
+    place-items: center;
     margin: 0 auto;
-    color: var(--sage-text);
+    color: var(--leaf-text);
+    box-shadow: inset 0 0 0 1px rgba(57, 167, 122, 0.2);
 }
 
 .feature-icon i {
@@ -1787,32 +3079,31 @@ button.connection-item:focus-visible {
 }
 
 .feature-item i {
-    color: var(--sage-text);
+    color: var(--leaf-text);
 }
 
 #heroGraph {
     height: 320px;
     border-radius: var(--radius-xl);
     overflow: hidden;
-    background:
-        radial-gradient(ellipse 70% 60% at 50% 45%, var(--bg-card), var(--bg-primary));
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md);
+    background: radial-gradient(ellipse 70% 60% at 50% 45%, #0f3d2f, #08261c);
+    border: 1px solid rgba(184, 232, 206, 0.16);
+    box-shadow: var(--shadow-lg);
 }
 
 #heroGraph .hero-edges line {
-    stroke: var(--sand);
+    stroke: rgba(184, 232, 206, 0.45);
 }
 
 #heroGraph .hero-labels text {
-    fill: var(--text-muted);
-    font-family: var(--font-sans);
+    fill: rgba(240, 251, 244, 0.82);
+    font-family: var(--font-body);
     font-size: 12px;
 }
 
 #heroGraph .hero-nodes circle {
-    stroke: var(--bg-card);
-    stroke-width: 3;
+    stroke: rgba(240, 251, 244, 0.85);
+    stroke-width: 2;
     transform-box: fill-box;
     transform-origin: center;
     animation: tg-float var(--dur-ambient) var(--ease-organic) infinite;
@@ -1826,9 +3117,9 @@ button.connection-item:focus-visible {
 .hero-node-se { fill: var(--category-se); }
 .hero-node-os { fill: var(--category-os); }
 .hero-node-research { fill: var(--category-research); }
-.hero-node-forest { fill: var(--primary-color); }
+.hero-node-forest { fill: var(--leaf-500); }
 
-/* "Seed to tree" growth path, replacing the empty graph placeholder. */
+/* "Seed to tree" growth path */
 .growth-path {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1837,12 +3128,9 @@ button.connection-item:focus-visible {
     padding: var(--space-6) var(--space-5) var(--space-5);
     border-radius: var(--radius-xl);
     background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-    position: relative;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-md);
 }
-
-
 
 .growth-step {
     text-align: center;
@@ -1863,9 +3151,9 @@ button.connection-item:focus-visible {
 
 .growth-step strong {
     display: block;
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-weight: 500;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 .growth-step span {
@@ -1873,39 +3161,34 @@ button.connection-item:focus-visible {
     color: var(--text-muted);
 }
 
-/* main is .container-fluid; the landing's bands run edge to edge. */
-.landing-page {
-    margin-inline: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
-}
-
-/* The garden fills the viewport under the nav, edge to edge. */
-main:has(> .garden-container) {
-    padding-inline: 0;
-}
-
+/* closing call to action: a second, deeper band of foliage */
 .landing-cta {
-    background: var(--forest);
-    color: var(--ivory);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+}
+
+.landing-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+        linear-gradient(115deg, rgba(9, 46, 35, 0.94), rgba(18, 107, 79, 0.62)),
+        url('../img/botanical/foliage-palms.webp') center / cover no-repeat;
 }
 
 .landing-cta h2 {
-    color: var(--ivory);
-    font-size: var(--fs-h1);
-    font-weight: var(--fw-display);
+    color: #fff;
 }
 
 .landing-cta p {
-    color: rgba(247, 244, 236, 0.78);
-}
-
-[data-bs-theme="dark"] .landing-cta {
-    background: #101512;
-    border-top: 1px solid var(--border-color);
+    color: rgba(240, 251, 244, 0.84);
 }
 
 .footer {
     background-color: transparent;
-    border-top: 1px solid var(--border-color);
     color: var(--text-muted);
 }
 
@@ -1914,215 +3197,21 @@ main:has(> .garden-container) {
     font-size: var(--fs-sm);
 }
 
-/* ==========================================================================
-   Knowledge Garden graph
-   ========================================================================== */
-
-.garden-container {
-    height: calc(100dvh - var(--nav-h));
-    overflow: hidden;
+.footer .footer-credit {
+    font-size: var(--fs-xs);
 }
 
-.garden-container > .row,
-.garden-container .col-lg-9,
-.garden-container .col-lg-3 {
-    height: 100%;
-}
-
-.garden-container .col-lg-9 {
-    display: flex;
-    flex-direction: column;
-}
-
-.garden-graph {
-    background: var(--bg-secondary);
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-}
-
-.garden-header {
-    background: var(--bg-card);
-}
-
-.note-panel {
-    background: var(--bg-card);
-    border-left: 1px solid var(--border-color);
-    height: 100%;
-    overflow-y: auto;
-}
-
-.vis-tooltip {
-    border-radius: var(--radius-md) !important;
-    box-shadow: var(--shadow-md) !important;
-    background-color: var(--bg-card) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid var(--border-color) !important;
-    font-family: var(--font-sans) !important;
-    font-size: var(--fs-sm) !important;
-    padding: 0.4rem 0.65rem !important;
+.page-immersive .footer p {
+    color: rgba(240, 251, 244, 0.78);
 }
 
 /* ==========================================================================
-   Misc
-   ========================================================================== */
-
-.spinner-border {
-    --bs-spinner-animation-speed: 0.9s;
-}
-
-/* ==========================================================================
-   Responsive
-   ========================================================================== */
-
-@media (max-width: 768px) {
-    .hero-section {
-        min-height: auto;
-        padding: 2rem 0;
-    }
-
-    .page-header {
-        margin-bottom: var(--space-5);
-    }
-
-    .note-article {
-        padding: var(--space-5) var(--space-4) var(--space-4);
-    }
-
-    .growth-path {
-        padding: var(--space-5) var(--space-3) var(--space-4);
-        gap: var(--space-2);
-    }
-
-    .garden-container {
-        height: auto;
-        overflow: visible;
-    }
-
-    .garden-container > .row,
-    .garden-container .col-lg-9,
-    .garden-container .col-lg-3 {
-        height: auto;
-    }
-
-    .garden-graph {
-        flex: none;
-        height: 60vh;
-        min-height: 400px;
-    }
-
-    .note-panel {
-        height: auto;
-        min-height: 300px;
-    }
-}
-
-.garden-list-connections {
-    padding-left: 1.1rem;
-}
-
-.garden-list-connections li + li {
-    margin-top: var(--space-2);
-}
-
-.garden-list-pin {
-    color: var(--pinned-color);
-}
-
-.garden-list-item img {
-    transform-origin: 50% 88%;
-    transition: rotate var(--dur-base) var(--ease-out);
-}
-
-.garden-list-item:hover img {
-    rotate: -6deg;
-}
-
-/* Shown/hidden by initSearchAutocomplete(); animates each time it opens. */
-.search-suggestions {
-    z-index: 1000;
-    display: none;
-    margin-top: var(--space-1);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--shadow-md) !important;
-    animation: tg-pop var(--dur-fast) var(--ease-out) backwards;
-}
-
-/* ==========================================================================
-   Reduced motion - keep state changes, drop movement. Placed last so it
-   wins over every animation above (and in garden.css, loaded later, which
-   repeats the guard for its own rules).
-   ========================================================================== */
-
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        animation-delay: 0ms !important;
-        transition-duration: 0.01ms !important;
-    }
-
-    
-}
-
-/* ==========================================================================
-   Note composer (create / edit)
-   ========================================================================== */
-
-.composer .composer-title {
-    font-family: var(--font-serif);
-    font-size: 1.5rem;
-    font-weight: 500;
-    padding-block: 0.55rem;
-}
-
-.composer textarea.form-control {
-    font-size: 1.0625rem;
-    min-height: 16rem;
-}
-
-.import-card input[type="file"] {
-    font-size: var(--fs-sm);
-}
-
-.danger-zone {
-    border-color: color-mix(in srgb, var(--danger-color) 30%, var(--border-color));
-    box-shadow: none;
-}
-
-.danger-zone .card-title {
-    color: var(--danger-soft-text);
-}
-
-[data-bs-theme="dark"] .danger-zone .card-title {
-    color: var(--danger-color);
-}
-
-/* Saving/importing/searching: fields settle back while the button works. */
-form.is-submitting .form-control,
-form.is-submitting .form-select,
-form.is-submitting .form-check {
-    opacity: 0.6;
-    transition: opacity var(--dur-base) var(--ease-out);
-}
-
-form.is-submitting [type="submit"] {
-    cursor: progress;
-}
-
-.result-item .flex-grow-1 {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-/* ==========================================================================
-   Duplicates, study (flashcards)
+   Duplicates, study (flashcards), garden list
    ========================================================================== */
 
 .duplicate-titles a {
-    font-family: var(--font-serif);
-    font-size: 1.15rem;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
     color: var(--text-primary);
     text-decoration: none;
 }
@@ -2133,13 +3222,13 @@ form.is-submitting [type="submit"] {
 }
 
 .study-summary {
-    border-left: 2px solid var(--sage);
+    border-left: 3px solid var(--leaf-500);
 }
 
 .study-summary p {
     color: var(--text-primary);
     font-size: 1.0625rem;
-    line-height: 1.75;
+    line-height: 1.8;
 }
 
 .flashcard summary {
@@ -2148,9 +3237,10 @@ form.is-submitting [type="submit"] {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    font-family: var(--font-serif);
-    font-size: 1.15rem;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
     border-bottom: 0;
+    border-radius: var(--radius-lg);
     transition: var(--transition);
 }
 
@@ -2158,14 +3248,14 @@ form.is-submitting [type="submit"] {
     display: none;
 }
 
-/* A small leaf that turns as the card opens. */
+/* A small chevron leaf that turns as the card opens. */
 .flashcard summary::before {
     content: "";
     flex: none;
     width: 0.55rem;
     height: 0.55rem;
-    border-right: 1.5px solid var(--sage-text);
-    border-bottom: 1.5px solid var(--sage-text);
+    border-right: 1.5px solid var(--leaf-text);
+    border-bottom: 1.5px solid var(--leaf-text);
     rotate: -45deg;
     transition: rotate var(--dur-base) var(--ease-out);
 }
@@ -2179,14 +3269,495 @@ form.is-submitting [type="submit"] {
 }
 
 .flashcard[open] summary {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .flashcard[open] > .card-body {
     animation: tg-rise var(--dur-base) var(--ease-out);
 }
 
-/* Header action buttons wrap as a row rather than squeezing their labels. */
-.page-header .btn {
+/* ---------- garden list view: an editorial library of the garden ---------- */
+
+.library-controls {
+    display: grid;
+    grid-template-columns: minmax(14rem, 1.7fr) repeat(3, minmax(9.5rem, 1fr));
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    padding: var(--space-2);
+    border-radius: var(--radius-lg);
+    animation: tg-emerge var(--dur-slow) var(--ease-out) 420ms backwards;
+}
+
+.library-controls .form-control,
+.library-controls .form-select {
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-sm);
+}
+
+.library-search {
+    position: relative;
+}
+
+.library-search i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    translate: 0 -50%;
+    color: var(--mint-200);
+    pointer-events: none;
+}
+
+.library-search .form-control {
+    padding-left: 2.6rem;
+}
+
+.library-count {
+    min-height: 1.6em;
+    margin: 0 0 var(--space-3) var(--space-2);
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.library-count strong {
+    color: var(--text-primary);
+    font-style: normal;
+}
+
+.library {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: clip;
+}
+
+.library-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+    grid-template-areas:
+        "plant main meta"
+        ".     conn conn";
+    column-gap: var(--space-5);
+    padding: var(--space-5) var(--space-6);
+    transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.library-row + .library-row {
+    border-top: 1px solid var(--border-soft);
+}
+
+/* a leaf-green rule down the left edge: hover previews it, focus/open holds it */
+.library-row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: var(--space-4);
+    bottom: var(--space-4);
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, var(--leaf-500), var(--mint-200));
+    scale: 1 0;
+    transition: scale var(--dur-base) var(--ease-out);
+}
+
+.library-row:hover {
+    background: color-mix(in srgb, var(--mint-soft-bg) 42%, transparent);
+}
+
+.library-row:hover::before,
+.library-row:focus-within::before,
+.library-row:has(.library-connections[open])::before {
+    scale: 1 1;
+}
+
+.library-row:focus-within,
+.library-row:has(.library-connections[open]) {
+    background: color-mix(in srgb, var(--primary-soft-bg) 55%, transparent);
+}
+
+.library-row.is-pinned::before {
+    background: linear-gradient(180deg, var(--pinned-color), #d8b26c);
+    scale: 1 1;
+}
+
+.library-plant {
+    grid-area: plant;
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 68%, var(--mint-soft-bg), transparent 72%);
+    border: 1px solid var(--border-soft);
+}
+
+.library-plant img {
+    width: 2.4rem;
+    height: auto;
+    transform-origin: 50% 88%;
+    transition: rotate var(--dur-base) var(--ease-spring), scale var(--dur-base) var(--ease-spring);
+}
+
+.library-row:hover .library-plant img {
+    rotate: -7deg;
+    scale: 1.06;
+}
+
+.library-main {
+    grid-area: main;
+    min-width: 0;
+}
+
+.library-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.library-title {
+    margin: 0 0 var(--space-1);
+    font-size: 1.55rem;
+    line-height: 1.2;
+}
+
+/* the underline grows in from the left */
+.library-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    transition: color var(--dur-fast) var(--ease-out), background-size var(--dur-base) var(--ease-out);
+}
+
+.library-title a:hover,
+.library-title a:focus-visible {
+    color: var(--primary-color);
+    background-size: 100% 1px;
+}
+
+.library-excerpt {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 72ch;
+    margin: 0 0 var(--space-3);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.library-meta {
+    grid-area: meta;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    text-align: right;
     white-space: nowrap;
+}
+
+.library-links strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--leaf-text);
+}
+
+.library-connections {
+    grid-area: conn;
+    margin-top: var(--space-3);
+}
+
+.library-connections summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    color: var(--primary-color);
+    font-size: var(--fs-sm);
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    transition:
+        background-color var(--dur-fast) var(--ease-out),
+        border-color var(--dur-fast) var(--ease-out),
+        color var(--dur-fast) var(--ease-out);
+}
+
+.library-connections summary::-webkit-details-marker {
+    display: none;
+}
+
+/* bootstrap-icons chevron-down */
+.library-connections summary::after {
+    content: "\f282";
+    font-family: bootstrap-icons;
+    font-size: 0.75em;
+    transition: rotate var(--dur-base) var(--ease-out);
+}
+
+.library-connections summary:hover {
+    background: var(--mint-soft-bg);
+    border-color: var(--leaf-500);
+}
+
+.library-connections summary:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.library-connections[open] summary {
+    background: var(--primary-soft-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-soft-text);
+}
+
+.library-connections[open] summary::after {
+    rotate: 180deg;
+}
+
+.garden-list-connections {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.garden-list-connections li {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--bg-subtle);
+    border-left: 2px solid var(--leaf-500);
+}
+
+.library-connections[open] .garden-list-connections li {
+    animation: tg-rise var(--dur-base) var(--ease-out) backwards;
+}
+
+.library-connections[open] .garden-list-connections li:nth-child(2) { animation-delay: 45ms; }
+.library-connections[open] .garden-list-connections li:nth-child(3) { animation-delay: 90ms; }
+.library-connections[open] .garden-list-connections li:nth-child(n+4) { animation-delay: 135ms; }
+
+.garden-list-connections a {
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    text-decoration: none;
+}
+
+.garden-list-connections a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.connection-why {
+    display: block;
+    margin-top: 0.15rem;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-style: italic;
+}
+
+.library-row[hidden] {
+    display: none;
+}
+
+.library-no-match {
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-xl);
+    animation: tg-rise var(--dur-base) var(--ease-out);
+}
+
+.library-no-match .empty-state {
+    padding-block: 0 var(--space-4);
+}
+
+/* vis-network tooltips (graph pages) */
+.vis-tooltip {
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-lg) !important;
+    background-color: rgba(9, 40, 30, 0.95) !important;
+    color: #EAF7F0 !important;
+    border: 1px solid rgba(184, 232, 206, 0.2) !important;
+    font-family: var(--font-body) !important;
+    font-size: var(--fs-sm) !important;
+    padding: 0.45rem 0.75rem !important;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+        .hero-leaf {
+        width: clamp(200px, 42vw, 340px);
+        bottom: -18%;
+        opacity: 0.85;
+    }
+}
+
+@media (max-width: 767.98px) {
+    :root {
+        --sheet-overlap: 2rem;
+        --radius-sheet: 1.5rem;
+    }
+
+    .canopy {
+        --fall: 380px;
+    }
+
+    .canopy-bg {
+        background:
+            var(--grad-canopy),
+            url('../img/botanical/foliage-monstera-sm.webp') center 30% / cover no-repeat;
+    }
+
+    .canopy--palms .canopy-bg {
+        background:
+            var(--grad-canopy),
+            url('../img/botanical/foliage-palms-sm.webp') center 40% / cover no-repeat;
+    }
+
+    /* fewer falling leaves on small screens */
+    .canopy-motes span:nth-child(n+4) {
+        display: none;
+    }
+
+    .hero-leaf {
+        display: none;
+    }
+
+    .corner-leaf {
+        width: 52vw;
+        opacity: 0.55;
+    }
+
+    .hero-stats {
+        gap: var(--space-3) var(--space-5);
+    }
+
+    .growth-path {
+        padding: var(--space-5) var(--space-3) var(--space-4);
+        gap: var(--space-2);
+    }
+
+    .hero-filters {
+        border-radius: var(--radius-lg);
+        padding: var(--space-3);
+    }
+
+    .glass-panel {
+        --glass-blur: 12px;
+    }
+
+    .hero-filters-sep {
+        display: none;
+    }
+
+    /* library rows: plant + text side by side, meta becomes one quiet line */
+    .library-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .library-search {
+        grid-column: 1 / -1;
+    }
+
+    .library-row {
+        grid-template-columns: 2.75rem minmax(0, 1fr);
+        grid-template-areas:
+            "plant main"
+            "meta  meta"
+            "conn  conn";
+        column-gap: var(--space-3);
+        padding: var(--space-4);
+    }
+
+    .library-plant {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+
+    .library-plant img {
+        width: 1.9rem;
+    }
+
+    .library-title {
+        font-size: 1.3rem;
+    }
+
+    .library-meta {
+        flex-direction: row;
+        align-items: baseline;
+        gap: var(--space-4);
+        text-align: left;
+    }
+
+    .library-links strong {
+        display: inline;
+        font-size: 1.2rem;
+    }
+
+    .note-article-title {
+        max-width: none;
+    }
+
+    .note-meta {
+        gap: var(--space-3) var(--space-5);
+    }
+
+    .note-content {
+        font-size: 1.125rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .library-controls #librarySort {
+        grid-column: 1 / -1;
+    }
+
+    .note-toolbar,
+    .note-actions-main {
+        width: 100%;
+    }
+
+    .note-actions-main .btn {
+        flex: 1 1 auto;
+    }
+}
+
+/* ==========================================================================
+   Reduced motion - keep state changes, drop movement. Placed last so it
+   wins over every animation above (garden.css, loaded later, repeats the
+   guard for its own rules).
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .canopy-motes,
+    .canopy-light {
+        display: none;
+    }
 }

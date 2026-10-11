@@ -17,7 +17,8 @@ from app.models import Note, Relationship, Tag, User, utcnow
 
 PASSWORD = 'password123'
 EMAIL = 'smoke@example.com'
-FOREST_GREEN_RGB = '25, 60, 50'
+# Brand emerald (--primary-rgb, light theme) - the keyboard focus ring colour.
+FOREST_GREEN_RGB = '18, 107, 79'
 
 
 @pytest.fixture(scope='module')

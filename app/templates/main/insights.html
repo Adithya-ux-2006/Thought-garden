@@ -3,16 +3,28 @@
 
 {% block title %}Insights - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container page-shell py-4 py-lg-5">
-    <div class="page-header">
-        <span class="page-eyebrow"><i class="bi bi-lightbulb" aria-hidden="true"></i>Insights</span>
-        <h1>Knowledge insights</h1>
-        <p class="text-muted mb-0">Patterns in what you write and how it connects.</p>
+{% block canopy_class %}canopy--palms{% endblock %}
+
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="hero-inner">
+            <div class="hero-reveal">
+                <span class="page-eyebrow"><i class="bi bi-lightbulb" aria-hidden="true"></i>Insights</span>
+                <h1>Knowledge insights</h1>
+                <p>Patterns in what you write and how it connects.</p>
+            </div>
+        </div>
     </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container page-shell">
+    
 
     {% if insights.total_notes and insights.total_notes > 0 %}
-    <div class="row g-4 stagger">
+    <div class="row g-4 stagger-flip">
         <div class="col-md-6 col-lg-4">
             <div class="card insight-card h-100">
                 <div class="card-body">

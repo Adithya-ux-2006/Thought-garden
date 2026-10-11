@@ -6,127 +6,166 @@
 <link href="{{ url_for('static', filename='css/garden.css') }}" rel="stylesheet">
 {% endblock %}
 
+{% block canopy_class %}canopy--bare{% endblock %}
+{% block main_class %}container-fluid garden-main{% endblock %}
+
 {% block content %}
-<div class="container-fluid garden-container">
+<div class="container-fluid garden-container" data-bs-theme="dark">
     <div class="row g-0">
         <div class="col-lg-9">
-            <div class="garden-header">
-                <div class="garden-title-block">
-                    <span class="page-eyebrow garden-eyebrow"><i class="bi bi-diagram-3" aria-hidden="true"></i>Explore</span>
-                    <h2 class="garden-title">Knowledge Garden</h2>
+            <header class="garden-header">
+                <div class="garden-header-top">
+                    <div class="garden-title-block">
+                        <span class="page-eyebrow garden-eyebrow"><i class="bi bi-flower1" aria-hidden="true"></i>Explore</span>
+                        <h1 class="garden-title">Knowledge Garden</h1>
+                        <p class="garden-stats" id="gardenStats" aria-live="polite"></p>
+                    </div>
+
+                    <div class="garden-find" role="search">
+                        <div class="garden-search-group">
+                            <i class="bi bi-search garden-search-icon" aria-hidden="true"></i>
+                            <input type="search" class="form-control" id="searchNode" placeholder="Find a plant by title..." aria-label="Find a note in the graph" autocomplete="off">
+                            <button class="btn btn-light" type="button" id="searchNodeButton" aria-label="Find note">
+                                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div id="searchFeedback" class="garden-search-feedback" aria-live="polite"></div>
+                    </div>
                 </div>
 
-                <div class="garden-toolbar">
-                    <div class="garden-toolbar-row">
-                        <div class="garden-toolbar-filters">
-                            <span class="garden-toolbar-label">Categories</span>
-                            {% for cat in categories %}
-                            <div class="form-check garden-chip">
-                                <input class="form-check-input garden-category-filter" type="checkbox" id="filter-{{ cat.slug }}" value="{{ cat.value }}">
-                                <label class="form-check-label small" for="filter-{{ cat.slug }}">
-                                    <span class="badge badge-category-{{ cat.slug }}">{{ cat.short_label }}</span>
-                                </label>
-                            </div>
-                            {% endfor %}
-                            <span class="garden-pinned-indicator"><i class="bi bi-star-fill" aria-hidden="true"></i> Pinned</span>
+                <div class="garden-filterbar" role="group" aria-labelledby="gardenFilterLabel">
+                    <span class="garden-toolbar-label" id="gardenFilterLabel"><i class="bi bi-funnel" aria-hidden="true"></i>Categories</span>
+                    <div class="garden-chips">
+                        {% for cat in categories %}
+                        <div class="form-check garden-chip">
+                            <input class="form-check-input garden-category-filter" type="checkbox" id="filter-{{ cat.slug }}" value="{{ cat.value }}">
+                            <label class="form-check-label" for="filter-{{ cat.slug }}">
+                                <span class="badge badge-category-{{ cat.slug }}">{{ cat.short_label }}<i class="bi bi-check-lg garden-chip-check" aria-hidden="true"></i></span>
+                            </label>
                         </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link garden-clear-filters" id="clearCategoryFilters">
+                        <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Clear
+                    </button>
+                </div>
+            </header>
 
-                        <div class="garden-toolbar-controls">
-                            <div class="input-group input-group-sm garden-search-group">
-                                <input type="search" class="form-control" id="searchNode" placeholder="Find a note..." aria-label="Find a note in the graph">
-                                <button class="btn btn-outline-secondary" type="button" id="searchNodeButton" aria-label="Find note">
-                                    <i class="bi bi-search" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                            <div class="form-check form-switch garden-physics-toggle">
-                                <input class="form-check-input" type="checkbox" id="physicsToggle" checked>
-                                <label class="form-check-label small" for="physicsToggle">Physics</label>
-                            </div>
-                            <div class="garden-view-btns">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="fitGraphButton" title="Fit to view" aria-label="Fit to view">
-                                    <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="resetViewButton" title="Reset view" aria-label="Reset view">
-                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                                </button>
-                                <a href="{{ url_for('garden.list_view') }}" class="btn btn-sm btn-outline-secondary" id="gardenListLink">
-                                    <i class="bi bi-list-ul me-1" aria-hidden="true"></i>List view
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="searchFeedback" class="small text-muted garden-search-feedback"></div>
-                    <div class="garden-growth-legend">
+            <p class="visually-hidden">The graph is a visual canvas. The <a href="{{ url_for('garden.list_view') }}">list view</a> shows the same notes and connections as text.</p>
+            <div class="garden-stage">
+                <div id="gardenGraph" class="garden-graph" data-user-id="{{ current_user.id }}" role="img" aria-label="Knowledge graph of your notes. Use the list view for a text alternative."></div>
+                <div class="garden-fireflies" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+                <!-- view controls: a floating dock on the clearing's edge -->
+                <div class="garden-dock" role="group" aria-label="Garden view">
+                    <button type="button" class="garden-dock-btn" id="zoomInButton" aria-label="Zoom in" data-tip="Zoom in">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="garden-dock-btn" id="zoomOutButton" aria-label="Zoom out" data-tip="Zoom out">
+                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="garden-dock-sep" aria-hidden="true"></span>
+                    <button type="button" class="garden-dock-btn" id="fitGraphButton" aria-label="Fit to view" data-tip="Fit every plant in view">
+                        <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="garden-dock-btn" id="resetViewButton" aria-label="Reset view" data-tip="Reset view">
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    </button>
+                    <label class="garden-dock-btn garden-dock-toggle" data-tip="Physics: let the plants drift">
+                        <input type="checkbox" id="physicsToggle" checked>
+                        <i class="bi bi-wind" aria-hidden="true"></i>
+                        <span class="visually-hidden">Physics</span>
+                    </label>
+                    <span class="garden-dock-sep" aria-hidden="true"></span>
+                    <a href="{{ url_for('garden.list_view') }}" class="garden-dock-btn" id="gardenListLink" data-tip="List view">
+                        <i class="bi bi-list-ul" aria-hidden="true"></i>
+                        <span class="visually-hidden">List view</span>
+                    </a>
+                </div>
+
+                <details class="garden-legend" id="gardenLegend">
+                    <summary><i class="bi bi-info-circle" aria-hidden="true"></i>Reading the garden</summary>
+                    <div class="garden-legend-body">
                         <span class="garden-toolbar-label">Growth</span>
-                        <span class="garden-growth-legend-item">
-                            <img src="{{ url_for('static', filename='img/garden/seed.svg') }}" alt="Seed" width="18" height="18">Seed
-                        </span>
-                        <span class="garden-growth-legend-item">
-                            <img src="{{ url_for('static', filename='img/garden/sprout.svg') }}" alt="Sprout" width="18" height="18">Sprout
-                        </span>
-                        <span class="garden-growth-legend-item">
-                            <img src="{{ url_for('static', filename='img/garden/sapling.svg') }}" alt="Sapling" width="18" height="18">Sapling
-                        </span>
-                        <span class="garden-growth-legend-item">
-                            <img src="{{ url_for('static', filename='img/garden/tree.svg') }}" alt="Tree" width="18" height="18">Tree
-                        </span>
-                        <span class="garden-growth-legend-hint">grows with a note's age &amp; connections</span>
+                        <ul class="garden-growth-legend">
+                            {% for stage in ['seed', 'sprout', 'sapling', 'tree'] %}
+                            <li class="garden-growth-legend-item">
+                                <img src="{{ url_for('static', filename='img/garden/' ~ stage ~ '.svg') }}" alt="" width="22" height="22">{{ stage|capitalize }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <p class="garden-growth-legend-hint">Plants grow with a note's age &amp; connections.</p>
+                        <ul class="garden-key">
+                            <li><span class="garden-key-ring" aria-hidden="true"></span>Pinned note</li>
+                            <li><span class="garden-key-line" aria-hidden="true"></span>Connection &mdash; thicker is stronger</li>
+                        </ul>
                     </div>
+                </details>
+
+                <p class="garden-hint" id="gardenHint" aria-hidden="true">
+                    <i class="bi bi-hand-index" aria-hidden="true"></i>Click a plant &middot; drag to pan &middot; scroll to zoom
+                </p>
+
+                <div class="garden-empty d-none" id="gardenEmpty">
+                    <div class="empty-state-art" aria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/garden/seed.svg') }}" alt="" width="64" height="64">
+                    </div>
+                    <h2>Your garden is waiting</h2>
+                    <p>Every note you write becomes a plant here, and related ideas grow connections between them.</p>
+                    <a href="{{ url_for('notes.create') }}" class="btn btn-light"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Plant a first note</a>
                 </div>
             </div>
-            <p class="visually-hidden">The graph is a visual canvas. The <a href="{{ url_for('garden.list_view') }}">list view</a> shows the same notes and connections as text.</p>
-            <div id="gardenGraph" class="garden-graph" data-user-id="{{ current_user.id }}" role="img" aria-label="Knowledge graph of your notes. Use the list view for a text alternative."></div>
         </div>
-        
+
         <div class="col-lg-3">
-            <div class="note-panel h-100" id="notePanel">
+            <aside class="note-panel h-100" id="notePanel" aria-label="Note details">
                 <div class="panel-placeholder text-center">
                     <div class="empty-state-art" aria-hidden="true">
                         <img src="{{ url_for('static', filename='img/garden/sprout.svg') }}" alt="" width="64" height="64">
                     </div>
-                    <h5>Click a node to explore</h5>
-                    <p class="text-muted">Select any note in the graph to see its details and connections.</p>
-                    <p class="panel-placeholder-hint text-muted small">Notes cluster by category — click any node to see its connections.</p>
+                    <h2 class="panel-placeholder-title">Choose a plant</h2>
+                    <p class="text-muted">Select any note in the garden to read a preview, its tags and the ideas it is connected to.</p>
+                    <p class="panel-placeholder-hint text-muted small">Notes cluster by category; lines show discovered connections.</p>
                 </div>
 
                 <div class="panel-content d-none" id="panelContent">
-                    <div class="panel-header p-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <h5 class="mb-0" id="panelTitle"></h5>
-                            <button type="button" class="btn btn-sm btn-link" id="closePanelButton" aria-label="Close note details">
+                    <div class="panel-header">
+                        <div class="panel-meta">
+                            <span class="badge" id="panelCategory"></span>
+                            <span class="panel-date"><i class="bi bi-calendar3 me-1" aria-hidden="true"></i><span id="panelDate"></span></span>
+                            <button type="button" class="btn btn-sm btn-link panel-close" id="closePanelButton" aria-label="Close note details">
                                 <i class="bi bi-x-lg" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div class="panel-meta">
-                            <span class="badge" id="panelCategory"></span>
-                            <span class="badge bg-secondary" id="panelDate"></span>
-                        </div>
+                        <h2 class="panel-title" id="panelTitle"></h2>
                     </div>
-                    <div class="panel-body p-3">
+                    <div class="panel-body">
                         <div class="panel-section">
-                            <h6 class="panel-section-label">Preview</h6>
-                            <p class="text-muted small" id="panelPreview"></p>
+                            <h3 class="panel-section-label">Preview</h3>
+                            <p class="panel-preview" id="panelPreview"></p>
                         </div>
                         <div class="panel-section">
-                            <h6 class="panel-section-label">Tags</h6>
-                            <div id="panelTags"></div>
+                            <h3 class="panel-section-label">Tags</h3>
+                            <div class="tag-list" id="panelTags"></div>
                         </div>
                         <div class="panel-section">
-                            <h6 class="panel-section-label">Connections</h6>
+                            <h3 class="panel-section-label">Connections</h3>
                             <div id="panelConnections"></div>
                         </div>
                     </div>
-                    <div class="panel-footer p-3 border-top">
-                        <a href="#" class="btn btn-primary w-100" id="panelViewBtn">
-                            <i class="bi bi-eye me-1" aria-hidden="true"></i>Open Note
+                    <div class="panel-footer">
+                        <a href="#" class="btn btn-light flex-grow-1" id="panelViewBtn">
+                            <i class="bi bi-book me-1" aria-hidden="true"></i>Open Note
+                        </a>
+                        <a href="#" class="btn btn-glass btn-icon" id="panelFocusBtn" aria-label="Focus this note in the graph" title="Focus in graph">
+                            <i class="bi bi-bullseye" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>
-            </div>
+            </aside>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block vendor_js %}

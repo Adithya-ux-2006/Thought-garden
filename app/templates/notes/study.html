@@ -3,17 +3,29 @@
 
 {% block title %}Study {{ note.title }} - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container page-shell py-4 py-lg-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary mb-4">
-                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to note
-            </a>
-            <div class="page-header">
+{% block hero %}
+<section class="page-hero">
+    <div class="container page-shell">
+        <div class="hero-inner">
+            <div class="hero-reveal">
                 <span class="page-eyebrow"><i class="bi bi-mortarboard" aria-hidden="true"></i>Study</span>
                 <h1>{{ note.title }}</h1>
             </div>
+            <div class="hero-actions">
+                <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-glass">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to note
+            </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="container page-shell">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
 
             <div class="card study-summary mb-5">
                 <div class="card-body">

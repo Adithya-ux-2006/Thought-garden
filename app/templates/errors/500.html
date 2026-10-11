@@ -2,10 +2,12 @@
 
 {% block title %}Server Error - Thought Garden{% endblock %}
 
+{% block body_class %}page-immersive{% endblock %}
+{% block main_class %}container immersive-main{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 text-center">
+<div class="glass-panel auth-panel text-center">
+    <div class="auth-stagger">
             <div class="empty-state-art mx-auto" aria-hidden="true">
                 <img src="{{ url_for('static', filename='img/garden/sprout.svg') }}" alt="" width="64" height="64">
             </div>
@@ -15,10 +17,9 @@
                 An unexpected error occurred. Our team has been notified.
                 Please try again in a moment.
             </p>
-            <a href="/" class="btn btn-primary">
+            <a href="/" class="btn btn-light">
                 <i class="bi bi-house me-1" aria-hidden="true"></i>Go Home
             </a>
         </div>
-    </div>
 </div>
 {% endblock %}

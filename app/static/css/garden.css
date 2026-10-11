@@ -1,15 +1,30 @@
 /* ============================================================
-   Knowledge Garden page — scoped styling.
-   Builds entirely on the app's existing design tokens
-   (style.css: --primary-color, --sage, --sand, --bg-*, --shadow-*,
-   --radius-*, --dur-*/--ease-*) rather than inventing a parallel
-   palette, so this page always matches the rest of the app.
+   Knowledge Garden — the signature environment.
+   A clearing in the jungle: the graph sits in a pool of soft light
+   ringed by real foliage, with slow light shafts and a few fireflies.
+   The whole page carries data-bs-theme="dark", so every token from
+   style.css resolves to its immersive value in here.
+   Canvas nodes themselves never animate continuously - ambient life
+   lives in DOM layers above/below the canvas (pointer-events: none),
+   so dragging, zooming and selection are never disturbed.
    ============================================================ */
 
+main.garden-main {
+    padding: 0;
+    background: var(--forest-950);
+}
+
 .garden-container {
+    /* canvas colours, read by main.js (gardenEdgeColors / gardenLabelFont) */
+    --garden-edge: #4f8f76;
+    --garden-edge-highlight: #b8e8ce;
+    --garden-edge-hover: #8fddb8;
+    --garden-label: #eaf7f0;
     height: calc(100dvh - var(--nav-h));
     overflow: hidden;
     padding-inline: 0;
+    background: var(--forest-950);
+    color: var(--text-primary);
 }
 
 .garden-container > .row,
@@ -21,251 +36,749 @@
 .garden-container .col-lg-9 {
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 /* focus.html has no row/col-lg-9 split (single column: header + graph),
-   so it needs the flex-column behavior applied directly to the container
-   itself instead of a descendant - everything else about sizing the graph
-   (.garden-graph's flex/height rules below, the responsive breakpoint)
-   is already unscoped and applies to both layouts as-is. */
+   so the flex-column behavior applies to the container itself. */
 .garden-container-single {
     display: flex;
     flex-direction: column;
 }
 
-/* ---------- ground the graph sits on ---------- */
+/* ---------- the clearing the graph grows in ---------- */
+
+.garden-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    isolation: isolate;
+    overflow: hidden;
+    background: #071f18;
+    animation: tg-fade var(--dur-slow) var(--ease-out) backwards;
+}
+
+/* foliage ring + clearing light, beneath everything */
+.garden-stage::before {
+    content: "";
+    position: absolute;
+    inset: -4%;
+    z-index: -2;
+    background:
+        radial-gradient(ellipse 58% 52% at 50% 48%, rgba(18, 107, 79, 0.42) 0%, rgba(9, 46, 35, 0.86) 58%, rgba(5, 24, 18, 0.97) 100%),
+        url('../img/botanical/foliage-palms.webp') center / cover no-repeat;
+    filter: saturate(1.1);
+}
+
+/* slow light shafts falling through the canopy */
+.garden-stage::after {
+    content: "";
+    position: absolute;
+    inset: -30% -10%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        linear-gradient(105deg, transparent 30%, rgba(184, 232, 206, 0.07) 38%, transparent 46%),
+        linear-gradient(98deg, transparent 52%, rgba(184, 232, 206, 0.05) 58%, transparent 64%),
+        radial-gradient(ellipse 40% 34% at 50% 46%, rgba(184, 232, 206, 0.10), transparent 70%);
+    mix-blend-mode: screen;
+    animation: tg-light 32s var(--ease-in-out) infinite alternate;
+}
 
 .garden-graph {
     position: relative;
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-    /* faint dotted "soil" grid, lit from the center like a bed of earth */
-    background:
-        radial-gradient(circle, rgba(38, 51, 46, 0.07) 1px, transparent 1.4px) 0 0 / 26px 26px,
-        radial-gradient(ellipse 80% 65% at 50% 38%, var(--bg-card), var(--bg-secondary) 80%);
-    /* Reads as a contained, sunken tray rather than bare page background -
-       a seam at the toolbar edge without adding a second full border. */
-    box-shadow: inset 0 10px 16px -14px rgba(38, 51, 46, 0.2);
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background: transparent;
 }
 
-[data-bs-theme="dark"] .garden-graph {
-    background:
-        radial-gradient(circle, rgba(236, 231, 220, 0.06) 1px, transparent 1.4px) 0 0 / 26px 26px,
-        radial-gradient(ellipse 80% 65% at 50% 38%, var(--bg-card), var(--bg-secondary) 80%);
-    box-shadow: inset 0 10px 16px -14px rgba(0, 0, 0, 0.5);
+/* fireflies drifting over the clearing - above the canvas, never in the way */
+.garden-fireflies {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
 }
 
-/* ---------- header ---------- */
+.garden-fireflies span {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #E9FFD0;
+    box-shadow: 0 0 6px 2px rgba(205, 255, 170, 0.55), 0 0 18px 6px rgba(184, 232, 206, 0.18);
+    opacity: 0;
+    animation: tg-firefly 14s var(--ease-in-out) infinite;
+}
+
+.garden-fireflies span:nth-child(1) { left: 12%; top: 22%; animation-duration: 15s; animation-delay: -2s; }
+.garden-fireflies span:nth-child(2) { left: 82%; top: 18%; animation-duration: 18s; animation-delay: -7s; }
+.garden-fireflies span:nth-child(3) { left: 66%; top: 74%; animation-duration: 13s; animation-delay: -4s; }
+.garden-fireflies span:nth-child(4) { left: 24%; top: 68%; animation-duration: 17s; animation-delay: -10s; }
+.garden-fireflies span:nth-child(5) { left: 45%; top: 12%; animation-duration: 20s; animation-delay: -13s; }
+.garden-fireflies span:nth-child(6) { left: 92%; top: 56%; animation-duration: 16s; animation-delay: -5s; }
+.garden-fireflies span:nth-child(7) { left: 6%;  top: 48%; animation-duration: 19s; animation-delay: -15s; }
+.garden-fireflies span:nth-child(8) { left: 54%; top: 88%; animation-duration: 14s; animation-delay: -9s; }
+.garden-fireflies span:nth-child(9) { left: 36%; top: 38%; animation-duration: 22s; animation-delay: -18s; }
+
+@keyframes tg-firefly {
+    0%   { opacity: 0;   transform: translate3d(0, 0, 0) scale(0.6); }
+    15%  { opacity: 0.9; }
+    35%  { opacity: 0.25; transform: translate3d(26px, -18px, 0) scale(1); }
+    55%  { opacity: 0.85; transform: translate3d(-14px, -40px, 0) scale(0.8); }
+    80%  { opacity: 0.3; transform: translate3d(18px, -58px, 0) scale(1); }
+    100% { opacity: 0;   transform: translate3d(4px, -72px, 0) scale(0.6); }
+}
+
+/* ---------- header: title + find on one line, category filters below ---------- */
 
 .garden-header {
     position: relative;
-    z-index: 2;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    z-index: 3;
+    background: linear-gradient(180deg, rgba(6, 30, 22, 0.94), rgba(7, 34, 26, 0.8));
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(184, 232, 206, 0.12);
+    box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.9);
     padding: var(--space-4) var(--space-5) var(--space-3);
+    animation: tg-rise var(--dur-enter) var(--ease-out) backwards;
 }
 
-/* Title block - its own zone, deliberately quiet on the eyebrow so the
-   title carries the hierarchy. */
+.garden-header-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+}
+
 .garden-title-block {
-    margin-bottom: var(--space-3);
+    min-width: 0;
 }
 
 .garden-header .garden-eyebrow {
-    margin-bottom: 0.15rem;
+    color: var(--mint-200);
+    margin-bottom: 0.1rem;
 }
 
 .garden-title {
-    font-family: var(--font-serif);
-    font-size: clamp(1.7rem, 1.45rem + 1vw, 2.2rem);
-    font-weight: var(--fw-display);
-    line-height: 1.15;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 1.5rem + 1.2vw, 2.5rem);
+    font-weight: 400;
+    line-height: 1.08;
     letter-spacing: -0.01em;
-    color: var(--text-primary);
+    color: #fff;
     margin: 0;
 }
 
-/* ---------- toolbar: category filters + view controls, one unit ---------- */
-
-.garden-toolbar {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: var(--space-3) var(--space-4);
-}
-
-.garden-toolbar-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-}
-
-.garden-toolbar-filters {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-}
-
-.garden-toolbar-label {
+/* "17 plants · 24 connections", filled in by main.js */
+.garden-stats {
+    min-height: 1.5em;
+    margin: 0.2rem 0 0;
     color: var(--text-muted);
-    font-size: var(--fs-xs);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-right: var(--space-1);
-}
-
-.garden-chip {
-    margin-bottom: 0;
-}
-
-.garden-chip .badge {
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    transition:
-        box-shadow var(--dur-fast) var(--ease-out),
-        scale var(--dur-base) var(--ease-out),
-        opacity var(--dur-fast) var(--ease-out);
-}
-
-.garden-chip .form-check-label:hover .badge {
-    box-shadow: 0 0 0 1px var(--border-strong);
-}
-
-/* While any category is checked, unchecked chips recede so the active
-   filter set reads at a glance. */
-.garden-toolbar-filters:has(.garden-category-filter:checked) .garden-category-filter:not(:checked) ~ .form-check-label .badge {
-    opacity: 0.55;
-}
-
-.garden-category-filter:checked ~ .form-check-label .badge {
-    scale: 1.06;
-}
-
-.garden-category-filter:focus-visible ~ .form-check-label .badge {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
-
-.garden-pinned-indicator {
-    color: var(--text-muted);
-    font-size: var(--fs-xs);
-    margin-left: var(--space-2);
-    padding-left: var(--space-3);
-    border-left: 1px solid var(--border-color);
-}
-
-/* Same --pinned-color the ring itself renders (routes.py's
-   PINNED_BORDER_COLOR mirrors this token by hand) - was hardcoded to
-   --warning-color before, a close-but-different gold that didn't actually
-   match what a pinned node looks like. */
-.garden-pinned-indicator .bi-star-fill {
-    color: var(--pinned-color);
-}
-
-.garden-toolbar-controls {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-}
-
-.garden-search-group {
-    width: 200px;
-}
-
-.garden-physics-toggle {
-    margin-bottom: 0;
-    white-space: nowrap;
-}
-
-.garden-view-btns {
-    display: flex;
-    gap: var(--space-1);
-}
-
-.garden-search-feedback {
-    min-height: 1.25rem;
-    margin-top: var(--space-1);
-}
-
-.garden-search-feedback:not(:empty) {
-    animation: tg-fade var(--dur-base) var(--ease-out);
-}
-
-/* Growth-stage legend - the category chips and the pinned indicator each
-   explain themselves, but nothing told a first-time user what the four
-   plant icons on the nodes actually mean (age + connectedness). Kept as
-   a quiet read-only row, not another interactive control, since there's
-   nothing to filter by growth stage today. */
-.garden-growth-legend {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-1);
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--border-color);
-}
-
-.garden-growth-legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    color: var(--text-secondary);
-    font-size: var(--fs-xs);
-    font-weight: 500;
-}
-
-/* The legend's plants sway gently, each on its own phase - the only
-   ambient motion on this page; the canvas nodes themselves stay still so
-   dragging, zooming and reading are never disturbed. */
-.garden-growth-legend-item img {
-    display: block;
-    transform-origin: 50% 88%;
-    animation: tg-sway var(--dur-ambient) var(--ease-organic) infinite;
-}
-
-.garden-growth-legend-item:nth-of-type(2) img { animation-delay: -1.5s; }
-.garden-growth-legend-item:nth-of-type(3) img { animation-delay: -3s; }
-.garden-growth-legend-item:nth-of-type(4) img { animation-delay: -4.5s; }
-
-.garden-growth-legend-hint {
-    color: var(--text-muted);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     font-style: italic;
 }
 
-.garden-header .btn-outline-secondary {
-    background: var(--bg-card);
+.garden-stats strong {
+    color: var(--mint-200);
+    font-style: normal;
+    font-weight: var(--font-ui-strong);
 }
 
-.garden-header .btn-outline-secondary:hover {
-    background: var(--primary-soft-bg);
-    border-color: var(--primary-color);
-    color: var(--primary-soft-text);
+/* ---- find: one frosted pill; the pill itself carries the focus ring ---- */
+
+.garden-find {
+    flex: 0 1 22rem;
+    min-width: 15rem;
 }
 
-.garden-category-filter:checked ~ .form-check-label .badge-category-ai       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-ai) 45%, transparent); }
-.garden-category-filter:checked ~ .form-check-label .badge-category-cyber    { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-cyber) 45%, transparent); }
-.garden-category-filter:checked ~ .form-check-label .badge-category-se      { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-se) 45%, transparent); }
-.garden-category-filter:checked ~ .form-check-label .badge-category-os      { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-os) 45%, transparent); }
-.garden-category-filter:checked ~ .form-check-label .badge-category-research{ box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-research) 45%, transparent); }
+.garden-search-group {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.25rem 0.25rem 0.95rem;
+    border-radius: var(--radius-pill);
+    background: rgba(240, 251, 244, 0.07);
+    border: 1px solid rgba(184, 232, 206, 0.2);
+    transition:
+        background-color var(--dur-base) var(--ease-out),
+        border-color var(--dur-base) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out);
+}
 
-/* ---------- note panel ---------- */
+.garden-search-group:hover {
+    border-color: rgba(184, 232, 206, 0.34);
+}
+
+.garden-search-group:focus-within {
+    background: rgba(240, 251, 244, 0.1);
+    border-color: rgba(184, 232, 206, 0.6);
+    box-shadow: 0 0 0 4px rgba(92, 196, 153, 0.2), 0 14px 32px -20px rgba(0, 0, 0, 0.9);
+}
+
+.garden-search-icon {
+    color: var(--mint-200);
+    opacity: 0.8;
+}
+
+.garden-search-group .form-control {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.3rem 0.6rem;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+}
+
+.garden-search-group .form-control:focus {
+    box-shadow: none;
+    background: transparent;
+}
+
+.garden-search-group .form-control::placeholder {
+    color: rgba(240, 251, 244, 0.55);
+    font-style: italic;
+}
+
+.garden-search-group .btn {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.garden-search-group .btn i {
+    transition: translate var(--dur-base) var(--ease-spring);
+}
+
+.garden-search-group .btn:hover i {
+    translate: 2px 0;
+}
+
+.garden-search-feedback {
+    min-height: 1.35rem;
+    margin-top: var(--space-1);
+    padding-left: 1rem;
+    color: var(--mint-200);
+    font-size: var(--fs-sm);
+}
+
+.garden-search-feedback:not(:empty) {
+    animation: tg-rise var(--dur-base) var(--ease-out);
+}
+
+/* ---- category filters: quiet glass chips that light up in their hue ---- */
+
+.garden-filterbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid rgba(184, 232, 206, 0.1);
+}
+
+.garden-toolbar-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    flex: none;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: var(--font-ui-strong);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.garden-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.garden-chip {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+}
+
+/* the checkbox stays in the tab order; the chip is its visible face */
+.garden-chip .form-check-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.garden-chip .badge-category-ai       { --chip-hue: var(--category-ai); }
+.garden-chip .badge-category-cyber    { --chip-hue: var(--category-cyber); }
+.garden-chip .badge-category-se       { --chip-hue: var(--category-se); }
+.garden-chip .badge-category-os       { --chip-hue: var(--category-os); }
+.garden-chip .badge-category-research { --chip-hue: var(--category-research); }
+
+.garden-chip .badge[class*="badge-category-"] {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.42em 0.95em;
+    font-size: var(--fs-sm);
+    font-weight: var(--font-ui-weight);
+    letter-spacing: 0.01em;
+    background-color: rgba(240, 251, 244, 0.05) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid rgba(184, 232, 206, 0.18);
+    cursor: pointer;
+    transition:
+        background-color var(--dur-base) var(--ease-out),
+        border-color var(--dur-base) var(--ease-out),
+        color var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out),
+        opacity var(--dur-base) var(--ease-out),
+        scale var(--dur-base) var(--ease-spring);
+}
+
+.garden-chip .badge[class*="badge-category-"]::before {
+    transition: scale var(--dur-base) var(--ease-spring);
+}
+
+/* the dot turns into a check when the chip is on - no layout shift */
+.garden-chip-check {
+    position: absolute;
+    left: 0.62em;
+    top: 50%;
+    translate: 0 -50%;
+    scale: 0;
+    font-size: 0.95em;
+    color: #fff;
+    transition: scale var(--dur-base) var(--ease-spring);
+}
+
+.garden-chip:hover .badge[class*="badge-category-"] {
+    color: #fff !important;
+    border-color: color-mix(in srgb, var(--chip-hue) 70%, transparent);
+}
+
+.garden-category-filter:checked ~ .form-check-label .badge[class*="badge-category-"] {
+    color: #fff !important;
+    background-color: color-mix(in srgb, var(--chip-hue) 30%, transparent) !important;
+    border-color: var(--chip-hue);
+    box-shadow: 0 0 18px -4px var(--chip-hue);
+}
+
+.garden-category-filter:checked ~ .form-check-label .badge::before {
+    scale: 0;
+}
+
+.garden-category-filter:checked ~ .form-check-label .garden-chip-check {
+    scale: 1;
+}
+
+.garden-category-filter:active ~ .form-check-label .badge {
+    scale: 0.95;
+}
+
+/* While any category is on, the others recede so the filter reads at a glance. */
+.garden-chips:has(.garden-category-filter:checked) .garden-category-filter:not(:checked) ~ .form-check-label .badge {
+    opacity: 0.55;
+}
+
+.garden-category-filter:focus-visible ~ .form-check-label .badge {
+    outline: 2px solid var(--mint-200);
+    outline-offset: 2px;
+}
+
+/* visibility (not display) so it fades - and leaves the tab order while hidden */
+.garden-clear-filters {
+    flex: none;
+    margin-left: auto;
+    padding-inline: 0.5rem;
+    color: var(--mint-200) !important;
+    font-size: var(--fs-sm);
+    opacity: 0;
+    visibility: hidden;
+    translate: -6px 0;
+    transition:
+        opacity var(--dur-base) var(--ease-out),
+        translate var(--dur-base) var(--ease-out),
+        visibility 0s linear var(--dur-base);
+}
+
+.garden-filterbar:has(.garden-category-filter:checked) .garden-clear-filters {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+    transition:
+        opacity var(--dur-base) var(--ease-out),
+        translate var(--dur-base) var(--ease-out),
+        visibility 0s;
+}
+
+/* ---------- floating surfaces on the clearing ---------- */
+
+.garden-dock,
+.garden-legend,
+.garden-hint {
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+}
+
+/* view controls: a slim vertical dock on the clearing's right edge */
+.garden-dock {
+    position: absolute;
+    z-index: 4;
+    right: var(--space-4);
+    top: 50%;
+    translate: 0 -50%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.4rem;
+    border-radius: 1.15rem;
+    background: rgba(6, 28, 21, 0.66);
+    border: 1px solid rgba(184, 232, 206, 0.16);
+    box-shadow: 0 22px 44px -22px rgba(0, 0, 0, 0.9);
+    animation: tg-dock-in var(--dur-enter) var(--ease-out) 250ms backwards;
+}
+
+@keyframes tg-dock-in {
+    from { opacity: 0; translate: 16px -50%; }
+    to { opacity: 1; translate: 0 -50%; }
+}
+
+.garden-dock-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0.8rem;
+    background: transparent;
+    color: rgba(240, 251, 244, 0.82);
+    font-size: 1.05rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background-color var(--dur-fast) var(--ease-out),
+        color var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out),
+        scale var(--dur-fast) var(--ease-out);
+}
+
+.garden-dock-btn:hover {
+    background: rgba(184, 232, 206, 0.13);
+    color: #fff;
+}
+
+.garden-dock-btn:active {
+    scale: 0.92;
+}
+
+.garden-dock-btn:focus-visible,
+.garden-dock-toggle:has(input:focus-visible) {
+    outline: 2px solid var(--mint-200);
+    outline-offset: 2px;
+}
+
+.garden-dock-sep {
+    height: 1px;
+    margin: 0.2rem 0.5rem;
+    background: rgba(184, 232, 206, 0.16);
+}
+
+/* Physics: the checkbox fills the button, so it stays keyboard/AT operable. */
+.garden-dock-toggle input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.garden-dock-toggle:has(input:checked) {
+    background: rgba(92, 196, 153, 0.24);
+    color: var(--mint-200);
+    box-shadow: inset 0 0 0 1px rgba(184, 232, 206, 0.38), 0 0 16px -4px rgba(92, 196, 153, 0.7);
+}
+
+.garden-dock-toggle:has(input:checked) i {
+    animation: tg-sway 2.6s var(--ease-organic) infinite;
+}
+
+/* Tooltips: hover/focus only, so they never cover the graph by default. */
+.garden-dock-btn[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    right: calc(100% + 0.75rem);
+    top: 50%;
+    translate: 6px -50%;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.6rem;
+    background: rgba(4, 22, 16, 0.95);
+    border: 1px solid rgba(184, 232, 206, 0.16);
+    box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.9);
+    color: var(--mist-50);
+    font-family: var(--font-body);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity var(--dur-fast) var(--ease-out),
+        translate var(--dur-base) var(--ease-out);
+}
+
+.garden-dock-btn[data-tip]:hover::after,
+.garden-dock-btn[data-tip]:focus-visible::after,
+.garden-dock-toggle:has(input:focus-visible)::after {
+    opacity: 1;
+    translate: 0 -50%;
+    transition-delay: 120ms;
+}
+
+/* legend: a collapsible card in the clearing's lower-left corner */
+.garden-legend {
+    position: absolute;
+    z-index: 4;
+    left: var(--space-4);
+    bottom: var(--space-4);
+    width: min(19rem, calc(100% - 6.5rem));
+    border-radius: var(--radius-lg);
+    background: rgba(6, 28, 21, 0.66);
+    border: 1px solid rgba(184, 232, 206, 0.16);
+    box-shadow: 0 22px 44px -22px rgba(0, 0, 0, 0.9);
+    color: var(--text-secondary);
+    animation: tg-rise var(--dur-enter) var(--ease-out) 350ms backwards;
+}
+
+.garden-legend summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.95rem;
+    border-radius: inherit;
+    list-style: none;
+    color: var(--mist-50);
+    font-size: var(--fs-sm);
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    user-select: none;
+}
+
+.garden-legend summary::-webkit-details-marker {
+    display: none;
+}
+
+.garden-legend summary i {
+    color: var(--mint-200);
+}
+
+/* bootstrap-icons chevron-down */
+.garden-legend summary::after {
+    content: "\f282";
+    margin-left: auto;
+    font-family: bootstrap-icons;
+    font-size: 0.8em;
+    color: var(--text-muted);
+    transition: rotate var(--dur-base) var(--ease-out);
+}
+
+.garden-legend[open] summary::after {
+    rotate: 180deg;
+}
+
+.garden-legend summary:hover {
+    background: rgba(184, 232, 206, 0.06);
+}
+
+.garden-legend summary:focus-visible {
+    outline: 2px solid var(--mint-200);
+    outline-offset: 2px;
+}
+
+.garden-legend-body {
+    padding: 0.15rem 0.95rem 0.9rem;
+}
+
+.garden-legend[open] .garden-legend-body {
+    animation: tg-rise var(--dur-base) var(--ease-out);
+}
+
+.garden-growth-legend {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.garden-growth-legend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+}
+
+/* the legend's plants sway gently, each on its own phase */
+.garden-growth-legend-item img {
+    display: block;
+    transform-origin: 50% 88%;
+    filter: drop-shadow(0 0 6px rgba(184, 232, 206, 0.35));
+    animation: tg-sway var(--dur-ambient) var(--ease-organic) infinite;
+}
+
+.garden-growth-legend-item:nth-child(2) img { animation-delay: -1.5s; }
+.garden-growth-legend-item:nth-child(3) img { animation-delay: -3s; }
+.garden-growth-legend-item:nth-child(4) img { animation-delay: -4.5s; }
+
+.garden-growth-legend-hint {
+    margin: var(--space-2) 0 var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-style: italic;
+    text-align: center;
+}
+
+.garden-key {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding: var(--space-3) 0 0;
+    border-top: 1px solid rgba(184, 232, 206, 0.12);
+    list-style: none;
+    font-size: var(--fs-xs);
+}
+
+.garden-key li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* Same --pinned-color the ring itself renders (routes.py's
+   PINNED_BORDER_COLOR mirrors this token by hand). */
+.garden-key-ring {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 3px solid var(--pinned-color);
+    background: rgba(240, 251, 244, 0.12);
+    box-shadow: 0 0 8px rgba(165, 120, 52, 0.75);
+}
+
+.garden-key-line {
+    flex: none;
+    width: 1.6rem;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--garden-edge), var(--garden-edge-highlight));
+}
+
+/* first-visit hint; main.js fades it after the first interaction */
+.garden-hint {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    top: var(--space-4);
+    translate: -50% 0;
+    margin: 0;
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-pill);
+    background: rgba(4, 22, 16, 0.55);
+    border: 1px solid rgba(184, 232, 206, 0.14);
+    color: rgba(240, 251, 244, 0.84);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: tg-hint-in var(--dur-enter) var(--ease-out) 1.2s backwards;
+    transition:
+        opacity var(--dur-slow) var(--ease-out),
+        translate var(--dur-slow) var(--ease-out);
+}
+
+@keyframes tg-hint-in {
+    from { opacity: 0; translate: -50% -8px; }
+    to { opacity: 1; translate: -50% 0; }
+}
+
+.garden-hint i {
+    margin-right: 0.45em;
+    color: var(--mint-200);
+}
+
+.garden-hint.is-dismissed {
+    opacity: 0;
+    translate: -50% -8px;
+}
+
+/* empty garden: an invitation in the middle of the clearing */
+.garden-empty {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-6);
+    text-align: center;
+    animation: tg-settle var(--dur-slow) var(--ease-out) backwards;
+}
+
+.garden-empty h2 {
+    margin: var(--space-2) 0 0;
+    color: #fff;
+    font-size: var(--fs-h3);
+}
+
+.garden-empty p {
+    max-width: 34ch;
+    margin-bottom: var(--space-3);
+    color: var(--text-secondary);
+}
+
+/* nothing to steer while the garden is empty */
+.garden-stage:has(.garden-empty:not(.d-none)) :is(.garden-dock, .garden-legend, .garden-hint) {
+    display: none;
+}
+
+/* ---------- note panel: frosted glass at the edge of the clearing ---------- */
 
 .note-panel {
-    background: var(--bg-card);
-    border-left: 1px solid var(--border-color);
-    box-shadow: -8px 0 24px -20px rgba(38, 51, 46, 0.35);
+    position: relative;
+    z-index: 3;
+    background: linear-gradient(180deg, rgba(10, 44, 33, 0.94), rgba(7, 31, 24, 0.96));
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    border-left: 1px solid rgba(184, 232, 206, 0.14);
+    box-shadow: -24px 0 48px -32px rgba(0, 0, 0, 0.9);
     height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
+    color: var(--text-primary);
 }
 
 .panel-placeholder, .panel-content {
@@ -284,17 +797,98 @@
     animation: tg-fade var(--dur-base) var(--ease-out);
 }
 
-.panel-content .panel-body {
-    flex: 1 1 auto;
+.panel-header {
+    padding: var(--space-5) var(--space-5) var(--space-4);
+    border-bottom: 1px solid rgba(184, 232, 206, 0.12);
 }
 
-.panel-content .panel-footer {
+.panel-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.panel-date {
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.02em;
+}
+
+.panel-close {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin: -0.25rem -0.5rem -0.25rem auto;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--text-muted) !important;
+}
+
+.panel-close:hover {
+    background: rgba(184, 232, 206, 0.12);
+    color: #fff !important;
+}
+
+.panel-close i {
+    transition: rotate var(--dur-base) var(--ease-spring);
+}
+
+.panel-close:hover i {
+    rotate: 90deg;
+}
+
+.panel-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    font-weight: 400;
+    line-height: 1.12;
+    color: #fff;
+    text-wrap: balance;
+}
+
+.panel-body {
+    flex: 1 1 auto;
+    padding: var(--space-5);
+}
+
+.panel-section + .panel-section {
+    margin-top: var(--space-5);
+}
+
+.panel-section-label {
+    margin-bottom: var(--space-2);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--fs-xs);
+    font-weight: var(--font-ui-strong);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.panel-preview {
+    margin: 0;
+    padding-left: var(--space-4);
+    border-left: 2px solid rgba(184, 232, 206, 0.28);
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.7;
+}
+
+.panel-footer {
     position: sticky;
     bottom: 0;
-    background: var(--bg-card);
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid rgba(184, 232, 206, 0.12);
+    background: rgba(7, 31, 24, 0.96);
 }
 
-/* ---------- empty state ---------- */
+/* ---------- placeholder ---------- */
 
 .panel-placeholder {
     display: flex;
@@ -308,70 +902,56 @@
     margin-inline: auto;
 }
 
-.panel-placeholder h5 {
-    font-family: var(--font-serif);
-    font-weight: var(--fw-heading);
-    font-size: 1.3rem;
+.panel-placeholder-title {
     margin-bottom: var(--space-2);
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: #fff;
 }
 
 .panel-placeholder p {
-    max-width: 26ch;
+    max-width: 28ch;
     margin-inline: auto;
 }
 
 .panel-placeholder-hint {
     margin-top: var(--space-4);
     padding-top: var(--space-4);
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(184, 232, 206, 0.12);
     font-style: italic;
 }
 
-/* ---------- populated state ---------- */
-
-.note-panel #panelTitle {
-    font-family: var(--font-serif);
-    font-weight: var(--fw-heading);
-    font-size: 1.45rem;
-    line-height: 1.2;
-}
-
-.panel-meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    margin-top: var(--space-2);
-}
-
-.panel-section + .panel-section {
-    margin-top: var(--space-5);
-}
-
-.panel-section-label {
-    color: var(--text-muted);
-    font-family: var(--font-sans);
-    font-size: var(--fs-xs);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: var(--space-2);
-}
-
-#panelTags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-}
+/* ---------- connections ---------- */
 
 #panelConnections .connection-item {
-    padding: 0.7rem 0.9rem;
+    position: relative;
+    padding: 0.75rem 0.95rem 0.75rem 1.2rem;
     border-radius: var(--radius-md);
-    background: var(--bg-secondary);
-    border-left: 2px solid var(--sage);
-    margin-bottom: 0.5rem;
+    background: rgba(240, 251, 244, 0.04);
+    border: 1px solid rgba(184, 232, 206, 0.08);
+    margin-bottom: 0.55rem;
     cursor: pointer;
     transition: var(--transition);
+    animation: tg-rise var(--dur-base) var(--ease-out) backwards;
 }
+
+/* a stem down the left edge that brightens on hover */
+#panelConnections .connection-item::before {
+    content: "";
+    position: absolute;
+    left: 0.5rem;
+    top: 0.8rem;
+    bottom: 0.8rem;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--leaf-500);
+    transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+#panelConnections .connection-item:nth-child(2) { animation-delay: 50ms; }
+#panelConnections .connection-item:nth-child(3) { animation-delay: 100ms; }
+#panelConnections .connection-item:nth-child(n+4) { animation-delay: 150ms; }
 
 #panelConnections .connection-item:last-child {
     margin-bottom: 0;
@@ -379,20 +959,29 @@
 
 #panelConnections .connection-item:hover {
     translate: 0 -2px;
-    box-shadow: var(--shadow-md);
-    background: var(--primary-soft-bg);
-    border-left-color: var(--primary-color);
+    background: rgba(57, 167, 122, 0.14);
+    border-color: rgba(184, 232, 206, 0.2);
+    box-shadow: 0 12px 26px -16px rgba(0, 0, 0, 0.9);
+}
+
+#panelConnections .connection-item:hover::before {
+    background: var(--mint-200);
 }
 
 #panelConnections .connection-item strong {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-weight: 500;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
+}
+
+#panelConnections .connection-reason {
+    margin-block: 0.2rem 0.15rem;
+    color: var(--text-secondary);
 }
 
 /* ---------- responsive ---------- */
 
-@media (max-width: 768px) {
+@media (max-width: 991.98px) {
     .garden-container {
         height: auto;
         overflow: visible;
@@ -404,57 +993,134 @@
         height: auto;
     }
 
-    .garden-graph {
+    .garden-stage {
         flex: none;
-        height: 60vh;
-        min-height: 400px;
+        height: 66vh;
+        min-height: 440px;
     }
 
     .note-panel {
         height: auto;
         min-height: 300px;
         border-left: 0;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid rgba(184, 232, 206, 0.14);
     }
 
+    .garden-container-single .garden-stage {
+        height: calc(100dvh - var(--nav-h) - 8rem);
+    }
+
+    /* the dock lies down along the bottom edge */
+    .garden-dock {
+        top: auto;
+        bottom: var(--space-3);
+        right: var(--space-3);
+        translate: none;
+        flex-direction: row;
+        animation-name: tg-rise;
+    }
+
+    .garden-dock-sep {
+        width: 1px;
+        height: auto;
+        margin: 0.5rem 0.2rem;
+    }
+
+    .garden-dock-btn[data-tip]::after {
+        right: auto;
+        left: 50%;
+        top: auto;
+        bottom: calc(100% + 0.6rem);
+        translate: -50% 4px;
+    }
+
+    .garden-dock-btn[data-tip]:hover::after,
+    .garden-dock-btn[data-tip]:focus-visible::after,
+    .garden-dock-toggle:has(input:focus-visible)::after {
+        translate: -50% 0;
+    }
+
+    .garden-legend {
+        left: var(--space-3);
+        top: var(--space-3);
+        bottom: auto;
+        width: min(18rem, calc(100% - 1.5rem));
+    }
+
+    .garden-hint {
+        display: none;
+    }
+}
+
+@media (max-width: 767.98px) {
     .garden-header {
-        padding: var(--space-3);
+        padding: var(--space-3) var(--space-4);
     }
 
-    .garden-toolbar {
-        padding: var(--space-3);
+    .garden-find {
+        flex: 1 1 100%;
+        min-width: 0;
     }
 
-    .garden-toolbar-row {
-        flex-direction: column;
-        align-items: stretch;
+    .garden-filterbar {
+        gap: var(--space-2);
     }
 
-    .garden-toolbar-filters {
-        justify-content: flex-start;
+    .garden-toolbar-label {
+        display: none;
     }
 
-    .garden-pinned-indicator {
-        margin-left: 0;
-        padding-left: 0;
-        border-left: none;
-        width: 100%;
+    /* chips scroll sideways instead of stacking into a wall */
+    .garden-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0.2rem 0.75rem 0.3rem 0.1rem;
+        scrollbar-width: none;
+        -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+        mask-image: linear-gradient(90deg, #000 85%, transparent);
     }
 
-    .garden-toolbar-controls {
-        justify-content: space-between;
+    .garden-chips::-webkit-scrollbar {
+        display: none;
     }
 
-    .garden-search-group {
-        width: 100%;
-        flex: 1 1 auto;
+    .garden-chip .badge[class*="badge-category-"] {
+        white-space: nowrap;
+    }
+
+    .garden-dock-btn {
+        width: 2.35rem;
+        height: 2.35rem;
+    }
+
+    .garden-fireflies span:nth-child(n+5) {
+        display: none;
+    }
+}
+
+/* touch screens: no hover, so no tooltips stuck open after a tap */
+@media (hover: none) {
+    .garden-dock-btn[data-tip]::after {
+        display: none;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .garden-growth-legend-item img,
     .panel-content:not(.d-none),
-    .panel-placeholder:not(.d-none) {
+    .panel-placeholder:not(.d-none),
+    .garden-stage::after,
+    .garden-dock,
+    .garden-legend,
+    .garden-legend[open] .garden-legend-body,
+    .garden-hint,
+    .garden-empty,
+    .garden-dock-toggle:has(input:checked) i,
+    #panelConnections .connection-item {
         animation: none;
+    }
+
+    .garden-fireflies {
+        display: none;
     }
 }

@@ -3,164 +3,167 @@
 
 {% block title %}Dashboard - Thought Garden{% endblock %}
 
-{% block content %}
-<div class="container-fluid page-shell py-4 py-lg-5">
-    <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
-        <div>
-            <span class="page-eyebrow"><i class="bi bi-flower1" aria-hidden="true"></i>Dashboard</span>
-            <h1>Welcome back, {{ current_user.name.split(' ')[0] }}</h1>
-            <p class="text-muted mb-0">Your knowledge garden is growing.</p>
-        </div>
-        <a href="{{ url_for('notes.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Note
-        </a>
-    </div>
-
-    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 mb-4 stagger">
-        {% for icon, value, label in [
-            ('bi-journal-text', stats.total_notes, 'Notes'),
-            ('bi-file-earmark', stats.documents, 'Documents'),
-            ('bi-diagram-3', stats.connections, 'Connections'),
-            ('bi-tag', stats.tags, 'Tags'),
-            ('bi-pin', stats.pinned, 'Pinned'),
-        ] %}
-        <div class="col">
-            <div class="card stat-card h-100">
-                <div class="card-body">
-                    <div class="stat-figure">
-                        <div class="stat-icon" aria-hidden="true"><i class="bi {{ icon }}"></i></div>
-                        <div>
-                            <p class="stat-number">{{ value }}</p>
-                            <p class="stat-label mb-0">{{ label }}</p>
-                        </div>
-                    </div>
+{% block hero %}
+<section class="garden-hero">
+    <div class="container-fluid page-shell position-relative">
+        <div class="glass-panel">
+            <div class="hero-reveal">
+                <span class="page-eyebrow"><i class="bi bi-flower1" aria-hidden="true"></i>Welcome back, {{ current_user.name.split(' ')[0] }}</span>
+                <h1>Where your thoughts take root.</h1>
+                <p class="lead">Your knowledge garden is growing. Plant a new idea, wander the garden, or revisit something that has been waiting for you.</p>
+                <div class="hero-quick-actions">
+                    <a href="{{ url_for('notes.create') }}" class="btn btn-light btn-lg">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Note
+                    </a>
+                    <a href="{{ url_for('garden.index') }}" class="btn btn-glass btn-lg">
+                        <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Open the Garden
+                    </a>
+                    <a href="{{ url_for('search.search') }}" class="btn btn-glass btn-lg">
+                        <i class="bi bi-search me-1" aria-hidden="true"></i>Search
+                    </a>
                 </div>
             </div>
+            <dl class="hero-stats">
+                {% for value, label in [
+                    (stats.total_notes, 'Notes'),
+                    (stats.documents, 'Documents'),
+                    (stats.connections, 'Connections'),
+                    (stats.tags, 'Tags'),
+                    (stats.pinned, 'Pinned'),
+                ] %}
+                <div class="hero-stat"><dt>{{ label }}</dt><dd class="stat-number">{{ value }}</dd></div>
+                {% endfor %}
+            </dl>
         </div>
-        {% endfor %}
+        <div class="hero-leaf" aria-hidden="true" data-parallax-leaf>
+            <img src="{{ url_for('static', filename='img/botanical/leaf-monstera.webp') }}" alt="" width="1100" height="956">
+        </div>
     </div>
+</section>
+{% endblock %}
 
+{% block content %}
+<div class="page-shell">
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h2 class="h5 mb-0"><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Recently Added</h2>
-                    <a href="{{ url_for('notes.list_notes') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+            <section aria-labelledby="recentHeading">
+                <div class="section-head">
+                    <h2 id="recentHeading">Recently planted</h2>
+                    <a href="{{ url_for('notes.list_notes') }}" class="btn btn-sm btn-outline-secondary">View all notes</a>
                 </div>
-                <div class="card-body">
-                    {% if recent_notes %}
-                    <div class="list-group list-group-flush">
-                        {% for note in recent_notes %}
-                        <a href="{{ url_for('notes.view', note_id=note.id) }}" class="list-group-item list-group-item-action border-0 px-0 py-3">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                    <h3 class="h6 mb-1">{{ note.title }}</h3>
-                                    <small class="text-muted">{{ note.content[:100] }}{% if note.content|length > 100 %}...{% endif %}</small>
+                {% if recent_notes %}
+                <div class="row row-cols-1 row-cols-md-2 g-3 stagger-bloom">
+                    {% for note in recent_notes %}
+                    <div class="col">
+                        <div class="card card-interactive h-100">
+                            <a href="{{ url_for('notes.view', note_id=note.id) }}" class="note-tile">
+                                <span><span class="badge {{ note.category|category_badge_class }}">{{ note.category or 'Uncategorized' }}</span></span>
+                                <h3>{{ note.title }}</h3>
+                                <p class="text-muted">{{ note.content[:110] }}{% if note.content|length > 110 %}...{% endif %}</p>
+                                <div class="note-tile-meta">
+                                    <span class="d-flex flex-wrap gap-1">
+                                        {% for tag in (note.tags|display_tags(note.category))[:2] %}
+                                        <span class="tag">{{ tag.name }}</span>
+                                        {% endfor %}
+                                    </span>
+                                    <span><i class="bi bi-clock me-1" aria-hidden="true"></i>{{ note.created_at.strftime('%b %d') }}</span>
                                 </div>
-                                <div class="text-end flex-shrink-0">
-                                    <span class="badge {{ note.category|category_badge_class }}">{{ note.category or 'Uncategorized' }}</span>
-                                    <br><small class="text-muted">{{ note.created_at.strftime('%b %d') }}</small>
-                                </div>
-                            </div>
-                            {% set tags_shown = note.tags|display_tags(note.category) %}
-                            {% if tags_shown %}
-                            <div class="mt-2 d-flex flex-wrap gap-1">
-                                {% for tag in tags_shown[:3] %}
-                                <span class="badge bg-light text-dark">{{ tag.name }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </a>
-                        {% endfor %}
+                            </a>
+                        </div>
                     </div>
-                    {% else %}
-                    {{ empty_state('seed', 'Nothing planted yet', 'Capture a first idea and Thought Garden will start finding its neighbours.', url_for('notes.create'), 'Create First Note') }}
-                    {% endif %}
+                    {% endfor %}
                 </div>
-            </div>
+                {% else %}
+                <div class="card">
+                    {{ empty_state('seed', 'Nothing planted yet', 'Capture a first idea and Thought Garden will start finding its neighbours.', url_for('notes.create'), 'Create First Note') }}
+                </div>
+                {% endif %}
+            </section>
         </div>
 
         <div class="col-lg-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h2 class="h5 mb-0"><i class="bi bi-link-45deg me-2" aria-hidden="true"></i>Recent Connections</h2>
-                </div>
-                <div class="card-body py-2">
-                    {% if recent_connections %}
-                    {% for rel in recent_connections %}
-                    <div class="link-row">
-                        <span class="badge bg-{{ 'success' if rel|relationship_label == 'Strong match' else 'secondary' }}">
-                            {{ rel|relationship_label }} ({{ (rel.similarity_score * 100)|round }}%)
-                        </span>
-                        <div class="mt-2">
-                            <a href="{{ url_for('notes.view', note_id=rel.source_note_id) }}">
-                                {{ rel.source_note.title[:30] }}{% if rel.source_note.title|length > 30 %}...{% endif %}
-                            </a>
-                            <i class="bi bi-arrow-right mx-2" aria-hidden="true"></i>
-                            <a href="{{ url_for('notes.view', note_id=rel.target_note_id) }}">
-                                {{ rel.target_note.title[:30] }}{% if rel.target_note.title|length > 30 %}...{% endif %}
-                            </a>
+            <div class="stagger-slide">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0"><i class="bi bi-link-45deg me-2" aria-hidden="true"></i>Recent Connections</h2>
+                    </div>
+                    <div class="card-body py-2">
+                        {% if recent_connections %}
+                        {% for rel in recent_connections %}
+                        <div class="link-row">
+                            <span class="badge bg-{{ 'success' if rel|relationship_label == 'Strong match' else 'secondary' }}">
+                                {{ rel|relationship_label }} ({{ (rel.similarity_score * 100)|round }}%)
+                            </span>
+                            <div class="mt-2">
+                                <a href="{{ url_for('notes.view', note_id=rel.source_note_id) }}">
+                                    {{ rel.source_note.title[:30] }}{% if rel.source_note.title|length > 30 %}...{% endif %}
+                                </a>
+                                <i class="bi bi-arrow-right mx-2" aria-hidden="true"></i>
+                                <a href="{{ url_for('notes.view', note_id=rel.target_note_id) }}">
+                                    {{ rel.target_note.title[:30] }}{% if rel.target_note.title|length > 30 %}...{% endif %}
+                                </a>
+                            </div>
                         </div>
+                        {% endfor %}
+                        {% else %}
+                        {{ empty_state('sprout', 'No connections yet', 'Create more notes to discover relationships.', small=True) }}
+                        {% endif %}
                     </div>
-                    {% endfor %}
-                    {% else %}
-                    {{ empty_state('sprout', 'No connections yet', 'Create more notes to discover relationships.', small=True) }}
-                    {% endif %}
                 </div>
-            </div>
 
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h2 class="h5 mb-0"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Most Connected</h2>
-                </div>
-                <div class="card-body py-2">
-                    {% if most_connected %}
-                    {% for note, conn_count in most_connected %}
-                    <div class="link-row d-flex justify-content-between align-items-center gap-2">
-                        <a href="{{ url_for('notes.view', note_id=note.id) }}">
-                            {{ note.title[:30] }}{% if note.title|length > 30 %}...{% endif %}
-                        </a>
-                        <span class="badge bg-light text-dark flex-shrink-0">{{ conn_count }} link{{ 's' if conn_count != 1 }}</span>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Most Connected</h2>
                     </div>
-                    {% endfor %}
-                    {% else %}
-                    <p class="text-muted small my-2">No connections yet.</p>
-                    {% endif %}
+                    <div class="card-body py-2">
+                        {% if most_connected %}
+                        {% for note, conn_count in most_connected %}
+                        <div class="link-row d-flex justify-content-between align-items-center gap-2">
+                            <a href="{{ url_for('notes.view', note_id=note.id) }}">
+                                {{ note.title[:30] }}{% if note.title|length > 30 %}...{% endif %}
+                            </a>
+                            <span class="badge bg-secondary flex-shrink-0">{{ conn_count }} link{{ 's' if conn_count != 1 }}</span>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-muted small my-2">No connections yet.</p>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
 
-            {% if categories %}
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="h5 mb-0"><i class="bi bi-grid me-2" aria-hidden="true"></i>Categories</h2>
-                </div>
-                <div class="card-body py-2">
-                    {% for category, count in categories %}
-                    <div class="link-row d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('notes.list_notes', category=category) }}">
-                            <span class="badge {{ category|category_badge_class }}">{{ category }}</span>
-                        </a>
-                        <span class="text-muted small">{{ count }} note{{ 's' if count != 1 }}</span>
+                {% if categories %}
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0"><i class="bi bi-grid me-2" aria-hidden="true"></i>Categories</h2>
                     </div>
-                    {% endfor %}
+                    <div class="card-body py-2">
+                        {% for category, count in categories %}
+                        <div class="link-row d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('notes.list_notes', category=category) }}">
+                                <span class="badge {{ category|category_badge_class }}">{{ category }}</span>
+                            </a>
+                            <span class="text-muted small">{{ count }} note{{ 's' if count != 1 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 
     {% if orphan_notes %}
     <section class="mt-5" aria-labelledby="orphanHeading">
-        <div class="d-flex align-items-baseline gap-3 mb-3 flex-wrap">
-            <h2 class="h4 mb-0" id="orphanHeading"><i class="bi bi-flower2 me-2 text-muted" aria-hidden="true"></i>Unconnected Ideas</h2>
-            <p class="text-muted small mb-0">These notes don't have connections yet. Add more content or tags to help discover relationships.</p>
+        <div class="section-head">
+            <h2 id="orphanHeading"><i class="bi bi-flower2 me-2 text-muted" aria-hidden="true"></i>Unconnected Ideas</h2>
+            <p class="text-muted">These notes don't have connections yet. Add more content or tags to help discover relationships.</p>
         </div>
-        <div class="row g-3 stagger">
+        <div class="row g-3 stagger-bloom">
             {% for note in orphan_notes %}
             <div class="col-md-4">
                 <div class="card card-interactive h-100">
                     <div class="card-body">
-                        <h3 class="card-title h6">{{ note.title }}</h3>
+                        <h3 class="card-title h5">{{ note.title }}</h3>
                         <p class="card-text small text-muted">{{ note.content[:80] }}...</p>
                         <a href="{{ url_for('notes.edit', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-tag me-1" aria-hidden="true"></i>Add Tags
@@ -175,18 +178,18 @@
 
     {% if rediscover %}
     <section class="mt-5" aria-labelledby="rediscoverHeading">
-        <div class="d-flex align-items-baseline gap-3 mb-3 flex-wrap">
-            <h2 class="h4 mb-0" id="rediscoverHeading"><i class="bi bi-clock me-2 text-muted" aria-hidden="true"></i>Rediscover</h2>
-            <p class="text-muted small mb-0">Older notes you haven't viewed recently.</p>
+        <div class="section-head">
+            <h2 id="rediscoverHeading"><i class="bi bi-clock me-2 text-muted" aria-hidden="true"></i>Rediscover</h2>
+            <p class="text-muted">Older notes you haven't viewed recently.</p>
         </div>
-        <div class="row g-3 stagger">
+        <div class="row g-3 stagger-bloom">
             {% for note in rediscover %}
             <div class="col-md-4">
                 <div class="card card-interactive h-100">
                     <div class="card-body d-flex flex-column">
-                        <h3 class="card-title h6">{{ note.title }}</h3>
+                        <h3 class="card-title h5">{{ note.title }}</h3>
                         <p class="card-text small text-muted">{{ note.content[:80] }}...</p>
-                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mt-auto gap-2">
                             <small class="text-muted">Created {{ note.created_at.strftime('%b %d, %Y') }}</small>
                             <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-sm btn-outline-primary">View</a>
                         </div>
