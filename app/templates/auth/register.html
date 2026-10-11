@@ -3,14 +3,13 @@
 {% block title %}Register - Thought Garden{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card">
-                <div class="card-body p-4">
+<div class="container py-4 py-lg-5">
+    <div class="auth-shell">
+            <div class="card auth-card">
+                <div class="card-body">
                     <div class="text-center mb-4">
-                        <i class="bi bi-flower1 display-4 text-primary"></i>
-                        <h2 class="mt-2">Create Account</h2>
+                        <span class="auth-mark" aria-hidden="true"><img src="{{ url_for('static', filename='img/garden/seed.svg') }}" alt="" width="64" height="64"></span>
+                        <h1 class="h2 mb-1">Create Account</h1>
                         <p class="text-muted mb-2">Create your account. We handle the rest.</p>
                         <small class="text-muted">
                             Starter notes → automatic connections → your visual Garden
@@ -60,7 +59,6 @@
                     </form>
                 </div>
             </div>
-        </div>
     </div>
 </div>
 {% endblock %}

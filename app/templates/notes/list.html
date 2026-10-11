@@ -1,18 +1,19 @@
 {% extends "base.html" %}
+{% from "macros/ui.html" import empty_state %}
 
 {% block title %}Notes - Thought Garden{% endblock %}
 
 {% block content %}
-<div class="container-fluid page-shell py-4">
+<div class="container-fluid page-shell py-4 py-lg-5">
     <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
         <div>
-            <span class="page-eyebrow"><i class="bi bi-journal"></i>Notes</span>
-            <h2 class="mb-0">Your notes</h2>
+            <span class="page-eyebrow"><i class="bi bi-journal" aria-hidden="true"></i>Notes</span>
+            <h1>Your notes</h1>
             <p class="text-muted mb-0">{{ notes.total }} note{{ 's' if notes.total != 1 }} in your garden</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ url_for('notes.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>New Note
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Note
             </a>
             <a href="{{ url_for('search.search') }}" class="btn btn-outline-secondary" aria-label="Search notes" title="Search notes">
                 <i class="bi bi-search" aria-hidden="true"></i>
@@ -26,7 +27,7 @@
                 <div class="card-body py-2">
                     <form method="GET" class="row g-2 align-items-center">
                         <div class="col-auto">
-                            <span class="text-muted small"><i class="bi bi-funnel me-1"></i>Filter:</span>
+                            <span class="section-label"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filter</span>
                         </div>
                         <div class="col-auto">
                             <select name="category" class="form-select form-select-sm" aria-label="Filter by category" data-autosubmit>
@@ -54,7 +55,7 @@
     </div>
 
     {% if notes.items %}
-    <div class="row g-4">
+    <div class="row g-4 stagger">
         {% for note in notes.items %}
         <div class="col-md-6 col-lg-4">
             <div class="card note-card h-100 {{ 'is-pinned' if note.is_pinned }}">
@@ -62,7 +63,7 @@
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="card-title mb-0">
                             {% if note.is_pinned %}
-                            <i class="bi bi-pin-fill text-warning me-1"></i>
+                            <i class="bi bi-pin-fill pin-mark me-1" aria-hidden="true"></i><span class="visually-hidden">Pinned: </span>
                             {% endif %}
                             <a href="{{ url_for('notes.view', note_id=note.id) }}" class="text-decoration-none stretched-link">
                                 {{ note.title }}
@@ -74,7 +75,7 @@
                     </p>
                     <div class="d-flex flex-wrap gap-1 mb-2">
                         {% if note.category %}
-                        <span class="badge bg-primary">{{ note.category }}</span>
+                        <span class="badge {{ note.category|category_badge_class }}">{{ note.category }}</span>
                         {% endif %}
                         {% set tags_shown = note.tags|display_tags(note.category) %}
                         {% for tag in tags_shown[:3] %}
@@ -86,7 +87,7 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted">
-                            <i class="bi bi-clock me-1"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
+                            <i class="bi bi-clock me-1" aria-hidden="true"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
                         </small>
                         <div class="dropdown">
                             <button type="button" class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown"
@@ -146,12 +147,11 @@
     {% endif %}
 
     {% else %}
-    <div class="text-center py-5">
-        <i class="bi bi-journal-plus display-1 text-muted"></i>
-        <h3 class="mt-3">Your garden is empty</h3>
-        <p class="text-muted">Plant your first idea and Thought Garden will begin discovering connections.</p>
-        <a href="{{ url_for('notes.create') }}" class="btn btn-primary btn-lg">Create First Note</a>
-    </div>
+    {% if request.args.get('category') or request.args.get('tag') %}
+    {{ empty_state('sprout', 'Nothing matches these filters', 'Try another category or tag, or clear the filters to see every note.', url_for('notes.list_notes'), 'Clear filters') }}
+    {% else %}
+    {{ empty_state('seed', 'Your garden is empty', 'Plant your first idea and Thought Garden will begin discovering connections.', url_for('notes.create'), 'Create First Note') }}
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}

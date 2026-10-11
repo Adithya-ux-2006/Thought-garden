@@ -12,7 +12,7 @@
         <div class="col-lg-9">
             <div class="garden-header">
                 <div class="garden-title-block">
-                    <span class="page-eyebrow garden-eyebrow"><i class="bi bi-diagram-3"></i>Explore</span>
+                    <span class="page-eyebrow garden-eyebrow"><i class="bi bi-diagram-3" aria-hidden="true"></i>Explore</span>
                     <h2 class="garden-title">Knowledge Garden</h2>
                 </div>
 
@@ -28,12 +28,12 @@
                                 </label>
                             </div>
                             {% endfor %}
-                            <span class="garden-pinned-indicator"><i class="bi bi-star-fill"></i> Pinned</span>
+                            <span class="garden-pinned-indicator"><i class="bi bi-star-fill" aria-hidden="true"></i> Pinned</span>
                         </div>
 
                         <div class="garden-toolbar-controls">
                             <div class="input-group input-group-sm garden-search-group">
-                                <input type="search" class="form-control" id="searchNode" placeholder="Find node..." aria-label="Find a note in the graph">
+                                <input type="search" class="form-control" id="searchNode" placeholder="Find a note..." aria-label="Find a note in the graph">
                                 <button class="btn btn-outline-secondary" type="button" id="searchNodeButton" aria-label="Find note">
                                     <i class="bi bi-search" aria-hidden="true"></i>
                                 </button>
@@ -75,14 +75,14 @@
                 </div>
             </div>
             <p class="visually-hidden">The graph is a visual canvas. The <a href="{{ url_for('garden.list_view') }}">list view</a> shows the same notes and connections as text.</p>
-            <div id="gardenGraph" class="garden-graph" role="img" aria-label="Knowledge graph of your notes. Use the list view for a text alternative."></div>
+            <div id="gardenGraph" class="garden-graph" data-user-id="{{ current_user.id }}" role="img" aria-label="Knowledge graph of your notes. Use the list view for a text alternative."></div>
         </div>
         
         <div class="col-lg-3">
             <div class="note-panel h-100" id="notePanel">
                 <div class="panel-placeholder text-center">
-                    <div class="panel-placeholder-icon">
-                        <i class="bi bi-diagram-3"></i>
+                    <div class="empty-state-art" aria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/garden/sprout.svg') }}" alt="" width="64" height="64">
                     </div>
                     <h5>Click a node to explore</h5>
                     <p class="text-muted">Select any note in the graph to see its details and connections.</p>
@@ -118,7 +118,7 @@
                     </div>
                     <div class="panel-footer p-3 border-top">
                         <a href="#" class="btn btn-primary w-100" id="panelViewBtn">
-                            <i class="bi bi-eye me-1"></i>Open Note
+                            <i class="bi bi-eye me-1" aria-hidden="true"></i>Open Note
                         </a>
                     </div>
                 </div>

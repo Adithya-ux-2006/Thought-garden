@@ -1,14 +1,19 @@
 {% extends "base.html" %}
+{% from "macros/ui.html" import empty_state %}
 
 {% block title %}Search - Thought Garden{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4 py-lg-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <h2 class="mb-4"><i class="bi bi-search me-2"></i>Search Your Knowledge</h2>
-            
-            <div class="card mb-4">
+            <div class="page-header">
+                <span class="page-eyebrow"><i class="bi bi-search" aria-hidden="true"></i>Search</span>
+                <h1>Search your knowledge</h1>
+                <p class="text-muted mb-0">Keywords and meaning together &mdash; ask a question or type a phrase.</p>
+            </div>
+
+            <div class="card search-card mb-4">
                 <div class="card-body">
                     <form method="GET" class="row g-3" data-ai-processing>
                         <div class="col-md-6 position-relative">
@@ -54,19 +59,19 @@
             </div>
             
             {% if results %}
-            <div class="list-group">
+            <div class="result-list stagger">
                 {% for note in results %}
-                <div class="list-group-item list-group-item-action">
+                <div class="card card-interactive result-item p-3 p-md-4">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <h5 class="mb-0">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <h2 class="h5 mb-0">
                                     <a href="{{ url_for('notes.view', note_id=note.id) }}" class="text-decoration-none">
                                         {{ note.title }}
                                     </a>
-                                </h5>
+                                </h2>
                                 {% if note.category %}
-                                <span class="badge bg-primary">{{ note.category }}</span>
+                                <span class="badge {{ note.category|category_badge_class }}">{{ note.category }}</span>
                                 {% endif %}
                                 {% if note.source_type != 'manual' %}
                                 <span class="badge bg-secondary">{{ note.source_type }}</span>
@@ -79,16 +84,16 @@
                                 {{ note.content[:200] }}{% if note.content|length > 200 %}...{% endif %}
                                 {% endif %}
                             </p>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
                                 <small class="text-muted">
-                                    <i class="bi bi-clock me-1"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
+                                    <i class="bi bi-clock me-1" aria-hidden="true"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
                                 </small>
                                 {% for tag in (note.tags|display_tags(note.category))[:3] %}
                                 <span class="badge bg-light text-dark">{{ tag.name }}</span>
                                 {% endfor %}
                             </div>
                         </div>
-                        <div class="ms-3">
+                        <div class="ms-3 d-none d-sm-block">
                             <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-sm btn-outline-primary">
                                 View
                             </a>
@@ -121,19 +126,11 @@
             {% endif %}
             
             {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-search display-1 text-muted"></i>
-                <h4 class="mt-3">No results found</h4>
-                <p class="text-muted">Try different keywords or filters.</p>
-            </div>
+            {{ empty_state('seed', 'No results found', 'Try different keywords, a looser phrase, or fewer filters.', heading='h2') }}
             {% endif %}
             
             {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-search display-1 text-muted"></i>
-                <h4 class="mt-3">Search your knowledge</h4>
-                <p class="text-muted">Enter keywords or ask a question to find relevant notes.</p>
-            </div>
+            {{ empty_state('sprout', 'Start with a question', 'Enter keywords or ask a question to find relevant notes.', heading='h2') }}
             {% endif %}
         </div>
     </div>

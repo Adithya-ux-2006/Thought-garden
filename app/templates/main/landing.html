@@ -6,16 +6,17 @@
 <div class="landing-page">
     <section class="hero-section py-5">
         <div class="container">
-            <div class="row align-items-center min-vh-50">
+            <div class="row align-items-center g-4 g-lg-5">
                 <div class="col-lg-6">
-                    <h1 class="display-4 fw-bold mb-4">
-                        Your ideas shouldn't live in isolation.
+                    <span class="page-eyebrow"><i class="bi bi-flower1" aria-hidden="true"></i>A living notebook</span>
+                    <h1 class="hero-title">
+                        Your ideas shouldn't live in <em>isolation.</em>
                     </h1>
                     <p class="lead mb-4 text-muted">
-                        Thought Garden understands your notes, discovers hidden connections, 
+                        Thought Garden understands your notes, discovers hidden connections,
                         and turns scattered knowledge into an explorable garden.
                     </p>
-                    <div class="d-flex gap-3">
+                    <div class="d-flex flex-wrap gap-3">
                         <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4">
                             Start Your Garden
                         </a>
@@ -24,32 +25,32 @@
                         </a>
                     </div>
                 </div>
-                <div class="col-lg-6 text-center">
-                    <div class="graph-preview mt-5 mt-lg-0">
+                <div class="col-lg-6">
+                    <div class="graph-preview">
                         <div id="heroGraph" aria-hidden="true">
                             <svg viewBox="0 0 400 300" width="100%" height="100%" focusable="false">
                                 <g class="hero-edges">
-                                    <line x1="130" y1="120" x2="225" y2="75" stroke-width="3"/>
-                                    <line x1="225" y1="75" x2="250" y2="170" stroke-width="4"/>
-                                    <line x1="250" y1="170" x2="335" y2="115" stroke-width="3"/>
-                                    <line x1="250" y1="170" x2="310" y2="235" stroke-width="2"/>
-                                    <line x1="130" y1="120" x2="90" y2="215" stroke-width="2"/>
+                                    <line x1="130" y1="120" x2="225" y2="75" stroke-width="2"/>
+                                    <line x1="225" y1="75" x2="250" y2="170" stroke-width="2.5"/>
+                                    <line x1="250" y1="170" x2="335" y2="115" stroke-width="2"/>
+                                    <line x1="250" y1="170" x2="310" y2="235" stroke-width="1.5"/>
+                                    <line x1="130" y1="120" x2="90" y2="215" stroke-width="1.5"/>
                                 </g>
                                 <g class="hero-nodes">
-                                    <circle cx="130" cy="120" r="25" fill="#6366f1"/>
-                                    <circle cx="225" cy="75" r="20" fill="#8b5cf6"/>
-                                    <circle cx="250" cy="170" r="22" fill="#a78bfa"/>
-                                    <circle cx="335" cy="115" r="18" fill="#c4b5fd"/>
-                                    <circle cx="310" cy="235" r="16" fill="#7c3aed"/>
-                                    <circle cx="90" cy="215" r="19" fill="#64748b"/>
+                                    <circle class="hero-node-ai" cx="130" cy="120" r="22"/>
+                                    <circle class="hero-node-se" cx="225" cy="75" r="17"/>
+                                    <circle class="hero-node-forest" cx="250" cy="170" r="20"/>
+                                    <circle class="hero-node-research" cx="335" cy="115" r="15"/>
+                                    <circle class="hero-node-cyber" cx="310" cy="235" r="13"/>
+                                    <circle class="hero-node-os" cx="90" cy="215" r="16"/>
                                 </g>
                                 <g class="hero-labels" text-anchor="middle">
-                                    <text x="130" y="162">Machine Learning</text>
-                                    <text x="225" y="112">Neural Networks</text>
-                                    <text x="250" y="209">Deep Learning</text>
-                                    <text x="335" y="150">NLP</text>
-                                    <text x="310" y="268">Computer Vision</text>
-                                    <text x="90" y="251">Data Science</text>
+                                    <text x="130" y="159">Machine Learning</text>
+                                    <text x="225" y="108">Neural Networks</text>
+                                    <text x="250" y="206">Deep Learning</text>
+                                    <text x="335" y="146">NLP</text>
+                                    <text x="310" y="264">Computer Vision</text>
+                                    <text x="90" y="248">Data Science</text>
                                 </g>
                             </svg>
                         </div>
@@ -59,36 +60,32 @@
         </div>
     </section>
 
-    <section id="how-it-works" class="py-5 bg-light">
-        <div class="container">
-            <h2 class="text-center mb-5">How It Works</h2>
-            <div class="row g-4">
-                <div class="col-md-3 text-center">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-pencil-square display-4 text-primary"></i>
-                    </div>
-                    <h4>Capture</h4>
+    <section id="how-it-works" class="py-5 landing-band">
+        <div class="container py-lg-4">
+            <h2 class="section-title text-center mb-5">How It Works</h2>
+            <div class="row g-4 stagger">
+                <div class="col-sm-6 col-md-3 text-center feature-step">
+                    <div class="feature-icon mb-3" aria-hidden="true"><i class="bi bi-pencil-square"></i></div>
+                    <span class="feature-step-index">i.</span>
+                    <h3 class="h4">Capture</h3>
                     <p class="text-muted">Store your notes, ideas, research, and study materials in one place.</p>
                 </div>
-                <div class="col-md-3 text-center">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-cpu display-4 text-primary"></i>
-                    </div>
-                    <h4>Understand</h4>
+                <div class="col-sm-6 col-md-3 text-center feature-step">
+                    <div class="feature-icon mb-3" aria-hidden="true"><i class="bi bi-cpu"></i></div>
+                    <span class="feature-step-index">ii.</span>
+                    <h3 class="h4">Understand</h3>
                     <p class="text-muted">AI analyzes your content and extracts meaningful keywords and concepts.</p>
                 </div>
-                <div class="col-md-3 text-center">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-link-45deg display-4 text-primary"></i>
-                    </div>
-                    <h4>Connect</h4>
+                <div class="col-sm-6 col-md-3 text-center feature-step">
+                    <div class="feature-icon mb-3" aria-hidden="true"><i class="bi bi-link-45deg"></i></div>
+                    <span class="feature-step-index">iii.</span>
+                    <h3 class="h4">Connect</h3>
                     <p class="text-muted">Automatic semantic relationships link related knowledge together.</p>
                 </div>
-                <div class="col-md-3 text-center">
-                    <div class="feature-icon mb-3">
-                        <i class="bi bi-search display-4 text-primary"></i>
-                    </div>
-                    <h4>Discover</h4>
+                <div class="col-sm-6 col-md-3 text-center feature-step">
+                    <div class="feature-icon mb-3" aria-hidden="true"><i class="bi bi-search"></i></div>
+                    <span class="feature-step-index">iv.</span>
+                    <h3 class="h4">Discover</h3>
                     <p class="text-muted">Explore your knowledge graph and find unexpected connections.</p>
                 </div>
             </div>
@@ -96,47 +93,64 @@
     </section>
 
     <section class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-5">Your Knowledge as a Living Graph</h2>
-            <div class="row align-items-center">
+        <div class="container py-lg-4">
+            <h2 class="section-title text-center mb-5">Your Knowledge as a Living Graph</h2>
+            <div class="row align-items-center g-4 g-lg-5">
                 <div class="col-lg-6">
-                    <div id="featureGraph"></div>
+                    <div class="growth-path" role="img" aria-label="Notes grow from seed to sprout, sapling and tree as they age and gain connections.">
+                        <div class="growth-step">
+                            <img src="{{ url_for('static', filename='img/garden/seed.svg') }}" alt="" width="64" height="64">
+                            <strong>Seed</strong><span>a new note</span>
+                        </div>
+                        <div class="growth-step">
+                            <img src="{{ url_for('static', filename='img/garden/sprout.svg') }}" alt="" width="64" height="64">
+                            <strong>Sprout</strong><span>first links</span>
+                        </div>
+                        <div class="growth-step">
+                            <img src="{{ url_for('static', filename='img/garden/sapling.svg') }}" alt="" width="64" height="64">
+                            <strong>Sapling</strong><span>taking root</span>
+                        </div>
+                        <div class="growth-step">
+                            <img src="{{ url_for('static', filename='img/garden/tree.svg') }}" alt="" width="64" height="64">
+                            <strong>Tree</strong><span>well connected</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="feature-list">
                         <div class="feature-item mb-4">
                             <div class="d-flex align-items-start">
-                                <i class="bi bi-diagram-3 text-primary me-3 fs-4"></i>
+                                <i class="bi bi-diagram-3 me-3 fs-4" aria-hidden="true"></i>
                                 <div>
-                                    <h5>Interactive Knowledge Graph</h5>
-                                    <p class="text-muted">Visualize your knowledge as an explorable network of connected ideas.</p>
+                                    <h3 class="h5">Interactive Knowledge Graph</h3>
+                                    <p class="text-muted mb-0">Visualize your knowledge as an explorable network of connected ideas.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="feature-item mb-4">
                             <div class="d-flex align-items-start">
-                                <i class="bi bi-lightning text-primary me-3 fs-4"></i>
+                                <i class="bi bi-lightning me-3 fs-4" aria-hidden="true"></i>
                                 <div>
-                                    <h5>Semantic Search</h5>
-                                    <p class="text-muted">Find notes by meaning, not just keywords. Ask questions naturally.</p>
+                                    <h3 class="h5">Semantic Search</h3>
+                                    <p class="text-muted mb-0">Find notes by meaning, not just keywords. Ask questions naturally.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="feature-item mb-4">
                             <div class="d-flex align-items-start">
-                                <i class="bi bi-file-earmark text-primary me-3 fs-4"></i>
+                                <i class="bi bi-file-earmark me-3 fs-4" aria-hidden="true"></i>
                                 <div>
-                                    <h5>Document Import</h5>
-                                    <p class="text-muted">Import PDFs, Markdown, and text files. AI automatically connects them to existing knowledge.</p>
+                                    <h3 class="h5">Document Import</h3>
+                                    <p class="text-muted mb-0">Import PDFs, Markdown, and text files. AI automatically connects them to existing knowledge.</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="feature-item mb-4">
+                        <div class="feature-item">
                             <div class="d-flex align-items-start">
-                                <i class="bi bi-shield-lock text-primary me-3 fs-4"></i>
+                                <i class="bi bi-shield-lock me-3 fs-4" aria-hidden="true"></i>
                                 <div>
-                                    <h5>Local-First Privacy</h5>
-                                    <p class="text-muted">Your knowledge stays on your device. No cloud sync required.</p>
+                                    <h3 class="h5">Local-First Privacy</h3>
+                                    <p class="text-muted mb-0">Your knowledge stays on your device. No cloud sync required.</p>
                                 </div>
                             </div>
                         </div>
@@ -146,23 +160,14 @@
         </div>
     </section>
 
-    <section class="py-5 bg-primary text-white">
-        <div class="container text-center">
-            <h2 class="mb-4">Ready to Grow Your Knowledge Garden?</h2>
-            <p class="lead mb-4">Start connecting your ideas today. No account required to explore.</p>
+    <section class="py-5 landing-cta">
+        <div class="container text-center py-lg-4">
+            <h2 class="mb-3">Ready to Grow Your Knowledge Garden?</h2>
+            <p class="lead mb-4">Start connecting your ideas today.</p>
             <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5">
                 Get Started Free
             </a>
         </div>
     </section>
-
-    <footer class="py-4 bg-dark text-white">
-        <div class="container text-center">
-            <p class="mb-0">
-                <i class="bi bi-flower1 me-2"></i>
-                Thought Garden &mdash; Your ideas shouldn't live in isolation.
-            </p>
-        </div>
-    </footer>
 </div>
 {% endblock %}

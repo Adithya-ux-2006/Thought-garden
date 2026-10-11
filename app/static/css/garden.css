@@ -1,14 +1,15 @@
 /* ============================================================
    Knowledge Garden page — scoped styling.
-   Builds entirely on the app's existing earthy design tokens
-   (style.css: --primary-color, --accent-color, --bg-*, --shadow-*,
-   --radius-*) rather than inventing a parallel palette, so this
-   page always matches whatever the rest of the app looks like.
+   Builds entirely on the app's existing design tokens
+   (style.css: --primary-color, --sage, --sand, --bg-*, --shadow-*,
+   --radius-*, --dur-*/--ease-*) rather than inventing a parallel
+   palette, so this page always matches the rest of the app.
    ============================================================ */
 
 .garden-container {
-    height: calc(100vh - 56px);
+    height: calc(100dvh - var(--nav-h));
     overflow: hidden;
+    padding-inline: 0;
 }
 
 .garden-container > .row,
@@ -39,18 +40,19 @@
     flex: 1 1 auto;
     height: auto;
     min-height: 0;
+    /* faint dotted "soil" grid, lit from the center like a bed of earth */
     background:
-        repeating-radial-gradient(circle at 40% 36%, rgba(35, 40, 31, 0.045) 0px, rgba(35, 40, 31, 0.045) 1px, transparent 1px, transparent 26px),
-        radial-gradient(ellipse 80% 65% at 50% 34%, var(--bg-card), var(--bg-secondary) 78%);
+        radial-gradient(circle, rgba(38, 51, 46, 0.07) 1px, transparent 1.4px) 0 0 / 26px 26px,
+        radial-gradient(ellipse 80% 65% at 50% 38%, var(--bg-card), var(--bg-secondary) 80%);
     /* Reads as a contained, sunken tray rather than bare page background -
        a seam at the toolbar edge without adding a second full border. */
-    box-shadow: inset 0 10px 16px -14px rgba(0, 0, 0, 0.22);
+    box-shadow: inset 0 10px 16px -14px rgba(38, 51, 46, 0.2);
 }
 
 [data-bs-theme="dark"] .garden-graph {
     background:
-        repeating-radial-gradient(circle at 40% 36%, rgba(234, 230, 217, 0.05) 0px, rgba(234, 230, 217, 0.05) 1px, transparent 1px, transparent 26px),
-        radial-gradient(ellipse 80% 65% at 50% 34%, var(--bg-card), var(--bg-secondary) 78%);
+        radial-gradient(circle, rgba(236, 231, 220, 0.06) 1px, transparent 1.4px) 0 0 / 26px 26px,
+        radial-gradient(ellipse 80% 65% at 50% 38%, var(--bg-card), var(--bg-secondary) 80%);
     box-shadow: inset 0 10px 16px -14px rgba(0, 0, 0, 0.5);
 }
 
@@ -60,33 +62,25 @@
     position: relative;
     z-index: 2;
     background: var(--bg-card);
-    border-bottom: 2px solid var(--primary-color) !important;
+    border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
-    padding: var(--space-4) var(--space-4) var(--space-3);
+    padding: var(--space-4) var(--space-5) var(--space-3);
 }
 
 /* Title block - its own zone, deliberately quiet on the eyebrow so the
    title carries the hierarchy. */
 .garden-title-block {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
 }
 
 .garden-header .garden-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-size: var(--fs-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
 }
 
 .garden-title {
     font-family: var(--font-serif);
-    font-size: var(--fs-xl);
-    font-weight: 600;
+    font-size: clamp(1.7rem, 1.45rem + 1vw, 2.2rem);
+    font-weight: var(--fw-display);
     line-height: 1.15;
     letter-spacing: -0.01em;
     color: var(--text-primary);
@@ -96,7 +90,7 @@
 /* ---------- toolbar: category filters + view controls, one unit ---------- */
 
 .garden-toolbar {
-    background: var(--bg-subtle);
+    background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: var(--space-3) var(--space-4);
@@ -131,12 +125,31 @@
 }
 
 .garden-chip .badge {
-    border-radius: 999px;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition:
+        box-shadow var(--dur-fast) var(--ease-out),
+        scale var(--dur-base) var(--ease-out),
+        opacity var(--dur-fast) var(--ease-out);
+}
+
+.garden-chip .form-check-label:hover .badge {
+    box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+/* While any category is checked, unchecked chips recede so the active
+   filter set reads at a glance. */
+.garden-toolbar-filters:has(.garden-category-filter:checked) .garden-category-filter:not(:checked) ~ .form-check-label .badge {
+    opacity: 0.55;
 }
 
 .garden-category-filter:checked ~ .form-check-label .badge {
-    transform: scale(1.08);
+    scale: 1.06;
+}
+
+.garden-category-filter:focus-visible ~ .form-check-label .badge {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .garden-pinned-indicator {
@@ -163,7 +176,7 @@
 }
 
 .garden-search-group {
-    width: 190px;
+    width: 200px;
 }
 
 .garden-physics-toggle {
@@ -177,7 +190,12 @@
 }
 
 .garden-search-feedback {
-    margin-top: var(--space-2);
+    min-height: 1.25rem;
+    margin-top: var(--space-1);
+}
+
+.garden-search-feedback:not(:empty) {
+    animation: tg-fade var(--dur-base) var(--ease-out);
 }
 
 /* Growth-stage legend - the category chips and the pinned indicator each
@@ -190,7 +208,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
     padding-top: var(--space-2);
     border-top: 1px solid var(--border-color);
 }
@@ -199,13 +217,23 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-size: var(--fs-xs);
+    font-weight: 500;
 }
 
+/* The legend's plants sway gently, each on its own phase - the only
+   ambient motion on this page; the canvas nodes themselves stay still so
+   dragging, zooming and reading are never disturbed. */
 .garden-growth-legend-item img {
     display: block;
+    transform-origin: 50% 88%;
+    animation: tg-sway var(--dur-ambient) var(--ease-organic) infinite;
 }
+
+.garden-growth-legend-item:nth-of-type(2) img { animation-delay: -1.5s; }
+.garden-growth-legend-item:nth-of-type(3) img { animation-delay: -3s; }
+.garden-growth-legend-item:nth-of-type(4) img { animation-delay: -4.5s; }
 
 .garden-growth-legend-hint {
     color: var(--text-muted);
@@ -214,37 +242,14 @@
 }
 
 .garden-header .btn-outline-secondary {
-    border-radius: 999px;
-    border-color: var(--border-color);
-    color: var(--text-primary);
+    background: var(--bg-card);
 }
 
 .garden-header .btn-outline-secondary:hover {
-    background: var(--primary-color);
+    background: var(--primary-soft-bg);
     border-color: var(--primary-color);
-    color: #fff;
+    color: var(--primary-soft-text);
 }
-
-.garden-header .input-group .form-control {
-    border-radius: 999px 0 0 999px;
-}
-
-.garden-header .input-group .btn {
-    border-radius: 0 999px 999px 0;
-}
-
-/* Category badges - deliberately their own classes, not Bootstrap's
-   bg-primary/danger/success/warning/info: those utility colors are the
-   app's real semantic tokens (alerts, validation, destructive actions)
-   and a note's category has nothing to do with any of that. Colors come
-   entirely from the --category-* tokens in style.css, so light/dark
-   variants (and any future retune) live in exactly one place. */
-.badge-category-ai       { background-color: var(--category-ai-soft-bg) !important; color: var(--category-ai-soft-text) !important; }
-.badge-category-cyber    { background-color: var(--category-cyber-soft-bg) !important; color: var(--category-cyber-soft-text) !important; }
-.badge-category-se       { background-color: var(--category-se-soft-bg) !important; color: var(--category-se-soft-text) !important; }
-.badge-category-os       { background-color: var(--category-os-soft-bg) !important; color: var(--category-os-soft-text) !important; }
-.badge-category-research { background-color: var(--category-research-soft-bg) !important; color: var(--category-research-soft-text) !important; }
-.badge-category-none     { background-color: var(--neutral-soft-bg) !important; color: var(--neutral-soft-text) !important; }
 
 .garden-category-filter:checked ~ .form-check-label .badge-category-ai       { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-ai) 45%, transparent); }
 .garden-category-filter:checked ~ .form-check-label .badge-category-cyber    { box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-cyber) 45%, transparent); }
@@ -257,13 +262,36 @@
 .note-panel {
     background: var(--bg-card);
     border-left: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md);
+    box-shadow: -8px 0 24px -20px rgba(38, 51, 46, 0.35);
     height: 100%;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .panel-placeholder, .panel-content {
     height: 100%;
+}
+
+/* Entrance whenever a panel state becomes visible; main.js replays the
+   content one when switching between notes. */
+.panel-content:not(.d-none) {
+    display: flex;
+    flex-direction: column;
+    animation: tg-slide-in var(--dur-base) var(--ease-out);
+}
+
+.panel-placeholder:not(.d-none) {
+    animation: tg-fade var(--dur-base) var(--ease-out);
+}
+
+.panel-content .panel-body {
+    flex: 1 1 auto;
+}
+
+.panel-content .panel-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-card);
 }
 
 /* ---------- empty state ---------- */
@@ -276,22 +304,14 @@
     padding: var(--space-6) var(--space-5);
 }
 
-.panel-placeholder-icon {
-    width: 4.5rem;
-    height: 4.5rem;
-    border-radius: var(--radius-lg);
-    background: var(--primary-soft-bg);
-    color: var(--primary-soft-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.9rem;
-    margin-bottom: var(--space-4);
+.panel-placeholder .empty-state-art {
+    margin-inline: auto;
 }
 
 .panel-placeholder h5 {
     font-family: var(--font-serif);
-    font-weight: 600;
+    font-weight: var(--fw-heading);
+    font-size: 1.3rem;
     margin-bottom: var(--space-2);
 }
 
@@ -311,8 +331,9 @@
 
 .note-panel #panelTitle {
     font-family: var(--font-serif);
-    font-weight: 600;
-    line-height: 1.25;
+    font-weight: var(--fw-heading);
+    font-size: 1.45rem;
+    line-height: 1.2;
 }
 
 .panel-meta {
@@ -323,11 +344,12 @@
 }
 
 .panel-section + .panel-section {
-    margin-top: var(--space-4);
+    margin-top: var(--space-5);
 }
 
 .panel-section-label {
     color: var(--text-muted);
+    font-family: var(--font-sans);
     font-size: var(--fs-xs);
     font-weight: 600;
     letter-spacing: 0.06em;
@@ -335,18 +357,20 @@
     margin-bottom: var(--space-2);
 }
 
-#panelTags .badge {
-    border-radius: 999px;
+#panelTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
 }
 
 #panelConnections .connection-item {
-    padding: 0.65rem 0.85rem;
+    padding: 0.7rem 0.9rem;
     border-radius: var(--radius-md);
     background: var(--bg-secondary);
-    border-left: 3px solid var(--primary-color);
+    border-left: 2px solid var(--sage);
     margin-bottom: 0.5rem;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: var(--transition);
 }
 
 #panelConnections .connection-item:last-child {
@@ -354,14 +378,16 @@
 }
 
 #panelConnections .connection-item:hover {
-    transform: translateY(-2px);
+    translate: 0 -2px;
     box-shadow: var(--shadow-md);
-    background: var(--bg-card);
+    background: var(--primary-soft-bg);
+    border-left-color: var(--primary-color);
 }
 
-.note-panel .panel-footer .btn-primary {
-    border-radius: 999px;
-    box-shadow: var(--shadow-sm);
+#panelConnections .connection-item strong {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.05rem;
 }
 
 /* ---------- responsive ---------- */
@@ -387,9 +413,15 @@
     .note-panel {
         height: auto;
         min-height: 300px;
+        border-left: 0;
+        border-top: 1px solid var(--border-color);
     }
 
     .garden-header {
+        padding: var(--space-3);
+    }
+
+    .garden-toolbar {
         padding: var(--space-3);
     }
 
@@ -416,5 +448,13 @@
     .garden-search-group {
         width: 100%;
         flex: 1 1 auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .garden-growth-legend-item img,
+    .panel-content:not(.d-none),
+    .panel-placeholder:not(.d-none) {
+        animation: none;
     }
 }

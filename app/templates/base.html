@@ -19,7 +19,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="{{ url_for('main.dashboard') }}">
-                <i class="bi bi-flower1 me-2"></i>Thought Garden
+                <i class="bi bi-flower1 me-2" aria-hidden="true"></i>Thought Garden
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,28 +28,33 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' }}" href="{{ url_for('main.dashboard') }}">
-                            <i class="bi bi-house me-1"></i>Dashboard
+                        {% set is_active = request.endpoint == 'main.dashboard' %}
+                        <a class="nav-link {{ 'active' if is_active }}" href="{{ url_for('main.dashboard') }}" {{ 'aria-current=page' if is_active }}>
+                            <i class="bi bi-house me-1" aria-hidden="true"></i>Dashboard{% if is_active %}<span class="nav-indicator" aria-hidden="true"></span>{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.blueprint == 'notes' }}" href="{{ url_for('notes.list_notes') }}">
-                            <i class="bi bi-journal me-1"></i>Notes
+                        {% set is_active = request.blueprint == 'notes' %}
+                        <a class="nav-link {{ 'active' if is_active }}" href="{{ url_for('notes.list_notes') }}" {{ 'aria-current=page' if is_active }}>
+                            <i class="bi bi-journal me-1" aria-hidden="true"></i>Notes{% if is_active %}<span class="nav-indicator" aria-hidden="true"></span>{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.blueprint == 'garden' }}" href="{{ url_for('garden.index') }}">
-                            <i class="bi bi-diagram-3 me-1"></i>Garden
+                        {% set is_active = request.blueprint == 'garden' %}
+                        <a class="nav-link {{ 'active' if is_active }}" href="{{ url_for('garden.index') }}" {{ 'aria-current=page' if is_active }}>
+                            <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Garden{% if is_active %}<span class="nav-indicator" aria-hidden="true"></span>{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.blueprint == 'search' }}" href="{{ url_for('search.search') }}">
-                            <i class="bi bi-search me-1"></i>Search
+                        {% set is_active = request.blueprint == 'search' %}
+                        <a class="nav-link {{ 'active' if is_active }}" href="{{ url_for('search.search') }}" {{ 'aria-current=page' if is_active }}>
+                            <i class="bi bi-search me-1" aria-hidden="true"></i>Search{% if is_active %}<span class="nav-indicator" aria-hidden="true"></span>{% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.endpoint == 'main.insights' }}" href="{{ url_for('main.insights') }}">
-                            <i class="bi bi-lightbulb me-1"></i>Insights
+                        {% set is_active = request.endpoint == 'main.insights' %}
+                        <a class="nav-link {{ 'active' if is_active }}" href="{{ url_for('main.insights') }}" {{ 'aria-current=page' if is_active }}>
+                            <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Insights{% if is_active %}<span class="nav-indicator" aria-hidden="true"></span>{% endif %}
                         </a>
                     </li>
                 </ul>
@@ -77,8 +82,17 @@
             </div>
         </div>
     </nav>
+    {% else %}
+    <header class="site-header-anon">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="brand" href="{{ url_for('main.index') }}"><i class="bi bi-flower1 me-2" aria-hidden="true"></i>Thought Garden</a>
+            {% if request.endpoint != 'auth.login' %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('auth.login') }}">Sign in</a>
+            {% endif %}
+        </div>
+    </header>
     {% endif %}
-    
+
     <main class="{% block main_class %}container-fluid{% endblock %}">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}

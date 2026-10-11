@@ -1,106 +1,106 @@
 {% extends "base.html" %}
+{% from "macros/ui.html" import empty_state %}
 
 {% block title %}Insights - Thought Garden{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <h2 class="mb-4"><i class="bi bi-lightbulb me-2"></i>Knowledge Insights</h2>
-    
+<div class="container page-shell py-4 py-lg-5">
+    <div class="page-header">
+        <span class="page-eyebrow"><i class="bi bi-lightbulb" aria-hidden="true"></i>Insights</span>
+        <h1>Knowledge insights</h1>
+        <p class="text-muted mb-0">Patterns in what you write and how it connects.</p>
+    </div>
+
     {% if insights.total_notes and insights.total_notes > 0 %}
-    <div class="row g-4">
+    <div class="row g-4 stagger">
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-diagram-3 display-4 text-primary"></i>
-                    <h5 class="mt-3">Most Connected Topic</h5>
+            <div class="card insight-card h-100">
+                <div class="card-body">
+                    <div class="insight-icon" aria-hidden="true"><i class="bi bi-diagram-3"></i></div>
+                    <h2 class="section-label mb-0">Most Connected Topic</h2>
                     {% if insights.most_connected_topic %}
-                    <h3 class="text-primary">{{ insights.most_connected_topic[0] }}</h3>
-                    <p class="text-muted">{{ insights.most_connected_topic[1] }} connections</p>
+                    <p class="insight-value">{{ insights.most_connected_topic[0] }}</p>
+                    <p class="insight-detail text-muted">{{ insights.most_connected_topic[1] }} connections</p>
                     {% else %}
-                    <p class="text-muted">No connections yet</p>
+                    <p class="insight-detail text-muted">No connections yet</p>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-grid display-4 text-success"></i>
-                    <h5 class="mt-3">Largest Category</h5>
+            <div class="card insight-card h-100">
+                <div class="card-body">
+                    <div class="insight-icon" aria-hidden="true"><i class="bi bi-grid"></i></div>
+                    <h2 class="section-label mb-0">Largest Category</h2>
                     {% if insights.largest_category %}
-                    <h3 class="text-success">{{ insights.largest_category[0] }}</h3>
-                    <p class="text-muted">{{ insights.largest_category[1] }} notes</p>
+                    <p class="insight-value">{{ insights.largest_category[0] }}</p>
+                    <p class="insight-detail text-muted">{{ insights.largest_category[1] }} notes</p>
                     {% else %}
-                    <p class="text-muted">No categories yet</p>
+                    <p class="insight-detail text-muted">No categories yet</p>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-link-45deg display-4 text-info"></i>
-                    <h5 class="mt-3">Strongest Connection</h5>
+            <div class="card insight-card h-100">
+                <div class="card-body">
+                    <div class="insight-icon" aria-hidden="true"><i class="bi bi-link-45deg"></i></div>
+                    <h2 class="section-label mb-0">Strongest Connection</h2>
                     {% if insights.strongest_connection %}
-                    <h3 class="text-info">{{ (insights.strongest_connection.similarity_score * 100)|round }}%</h3>
-                    <p class="text-muted small">{{ insights.strongest_connection|relationship_label }}<br>
+                    <p class="insight-value">{{ (insights.strongest_connection.similarity_score * 100)|round }}%</p>
+                    <p class="insight-detail text-muted">{{ insights.strongest_connection|relationship_label }}<br>
                         {{ insights.strongest_connection.source_note.title[:30] }}{% if insights.strongest_connection.source_note.title|length > 30 %}...{% endif %}
                         ↔
                         {{ insights.strongest_connection.target_note.title[:30] }}{% if insights.strongest_connection.target_note.title|length > 30 %}...{% endif %}
                     </p>
                     {% else %}
-                    <p class="text-muted">No connections yet</p>
+                    <p class="insight-detail text-muted">No connections yet</p>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-exclamation-circle display-4 text-warning"></i>
-                    <h5 class="mt-3">Unconnected Notes</h5>
-                    <h3 class="text-warning">{{ insights.notes_no_connections }}</h3>
-                    <p class="text-muted">Notes without relationships</p>
+            <div class="card insight-card h-100">
+                <div class="card-body">
+                    <div class="insight-icon insight-icon-accent" aria-hidden="true"><i class="bi bi-flower2"></i></div>
+                    <h2 class="section-label mb-0">Unconnected Notes</h2>
+                    <p class="insight-value">{{ insights.notes_no_connections }}</p>
+                    <p class="insight-detail text-muted">Notes without relationships</p>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-graph-up display-4 text-purple"></i>
-                    <h5 class="mt-3">Growing Topic</h5>
+            <div class="card insight-card h-100">
+                <div class="card-body">
+                    <div class="insight-icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></div>
+                    <h2 class="section-label mb-0">Growing Topic</h2>
                     {% if insights.recently_growing %}
-                    <h3 class="text-purple">{{ insights.recently_growing[0] }}</h3>
-                    <p class="text-muted">{{ insights.recently_growing[1] }} new notes this month</p>
+                    <p class="insight-value">{{ insights.recently_growing[0] }}</p>
+                    <p class="insight-detail text-muted">{{ insights.recently_growing[1] }} new notes this month</p>
                     {% else %}
-                    <p class="text-muted">No recent activity</p>
+                    <p class="insight-detail text-muted">No recent activity</p>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-journal-text display-4 text-secondary"></i>
-                    <h5 class="mt-3">Total Knowledge</h5>
-                    <h3 class="text-secondary">{{ insights.total_notes }}</h3>
-                    <p class="text-muted">notes in your garden</p>
+            <div class="card insight-card h-100">
+                <div class="card-body">
+                    <div class="insight-icon" aria-hidden="true"><i class="bi bi-journal-text"></i></div>
+                    <h2 class="section-label mb-0">Total Knowledge</h2>
+                    <p class="insight-value">{{ insights.total_notes }}</p>
+                    <p class="insight-detail text-muted">notes in your garden</p>
                 </div>
             </div>
         </div>
     </div>
     {% else %}
-    <div class="text-center py-5">
-        <i class="bi bi-lightbulb display-1 text-muted"></i>
-        <h3 class="mt-3">No insights yet</h3>
-        <p class="text-muted">Create some notes to see insights about your knowledge garden.</p>
-        <a href="{{ url_for('notes.create') }}" class="btn btn-primary">Create First Note</a>
-    </div>
+    {{ empty_state('seed', 'No insights yet', 'Create some notes to see insights about your knowledge garden.', url_for('notes.create'), 'Create First Note', heading='h2') }}
     {% endif %}
 </div>
 {% endblock %}

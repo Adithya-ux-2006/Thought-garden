@@ -7,6 +7,15 @@ let allEdges = [];
 let selectedNode = null;
 let gardenLabelsVisible = true;
 
+// Emphasis state: a click or a search pins an emphasis (gardenSelection);
+// hovering previews a softer one only while nothing is pinned.
+let gardenSelection = null;
+let gardenHoverId = null;
+let gardenDragging = false;
+let gardenTweenFrame = null;
+const gardenNodeAlpha = new Map();
+const gardenEdgeAlpha = new Map();
+
 // Category order/slugs come from app/services/category_service.py via a JSON
 // data block in base.html, so the client list can't drift from the server's.
 function readGardenCategories() {
@@ -24,10 +33,48 @@ const GARDEN_CATEGORY_ORDER = GARDEN_CATEGORIES.map(c => c.value);
 const GARDEN_LABEL_ZOOM_THRESHOLD = 0.8;
 const GARDEN_NODE_DIM_OPACITY = 0.12;
 const GARDEN_EDGE_DIM_OPACITY = 0.08;
+const GARDEN_HOVER_NODE_DIM_OPACITY = 0.4;
+const GARDEN_HOVER_EDGE_DIM_OPACITY = 0.2;
+const GARDEN_EDGE_BASE_OPACITY = 0.6;
+// Motion budget for the canvas: emphasis fades and growth entrances are
+// per-frame DataSet updates, so very large gardens skip the tween and jump.
+const GARDEN_EMPHASIS_MS = 180;
+const GARDEN_GROW_MS = 750;
+const GARDEN_GROW_START_SCALE = 0.2;
+const GARDEN_MAX_TWEEN_ITEMS = 600;
+const GARDEN_CAMERA_ANIMATION = { duration: 500, easingFunction: 'easeInOutCubic' };
+
+function prefersReducedMotion() {
+    return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function cameraAnimation() {
+    return prefersReducedMotion() ? false : GARDEN_CAMERA_ANIMATION;
+}
+
+function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
+// Slight overshoot, so a new note "springs" up like a shoot rather than scaling linearly.
+function easeOutBack(t) {
+    const c1 = 1.4;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
 
 function themeColor(varName, fallback) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
     return value || fallback;
+}
+
+// Read at use time (not once at render) so a theme toggle recolors edges too.
+function gardenEdgeColors() {
+    return {
+        base: themeColor('--border-color', '#e2dccd'),
+        highlight: themeColor('--primary-color', '#193c32'),
+        hover: themeColor('--text-secondary', '#5c645f')
+    };
 }
 
 // themeColor() itself is theme-aware, but it's only ever read once, when a
@@ -68,7 +115,7 @@ function hexToRgba(hex, alpha) {
 // Notes in the same category start near a shared anchor on a ring, then
 // physics takes over. Cheaper and less fragile than vis clustering, which
 // would merge nodes and complicate click/highlight/search handling.
-function seedGardenPositions(nodes) {
+function seedGardenPositions(nodes, growingIds) {
     const present = [...new Set(nodes.map(n => n.category))];
     const ordered = GARDEN_CATEGORY_ORDER.filter(c => present.includes(c))
         .concat(present.filter(c => !GARDEN_CATEGORY_ORDER.includes(c)));
@@ -87,7 +134,7 @@ function seedGardenPositions(nodes) {
         const cy = ringRadius * Math.sin(angle);
         const localAngle = Math.random() * 2 * Math.PI;
         const localRadius = Math.random() * clusterSpread;
-        return {
+        const seeded = {
             ...n,
             x: cx + localRadius * Math.cos(localAngle),
             y: cy + localRadius * Math.sin(localAngle),
@@ -98,7 +145,43 @@ function seedGardenPositions(nodes) {
             // note's already-thicker ring gets thicker still on selection.
             borderWidthSelected: (n.borderWidth || 2) + 1
         };
+        // New notes start as a small seed and grow in once the layout settles.
+        if (growingIds.has(n.id)) seeded.size = (n.size || 20) * GARDEN_GROW_START_SCALE;
+        return seeded;
     });
+}
+
+// "New" means added since this browser last opened the garden for this
+// user. The very first visit only records a baseline - nothing animates.
+function gardenSeenKey() {
+    const container = document.getElementById('gardenGraph');
+    return `tg.gardenSeen.${container ? container.dataset.userId : ''}`;
+}
+
+function takeNewGardenNodeIds(nodes) {
+    let seen = null;
+    try {
+        const raw = localStorage.getItem(gardenSeenKey());
+        seen = raw ? new Set(JSON.parse(raw)) : null;
+        localStorage.setItem(gardenSeenKey(), JSON.stringify(nodes.map(n => n.id)));
+    } catch (e) {
+        return new Set();
+    }
+    if (!seen || prefersReducedMotion() || nodes.length > GARDEN_MAX_TWEEN_ITEMS) return new Set();
+    return new Set(nodes.filter(n => !seen.has(n.id)).map(n => n.id));
+}
+
+function growGardenNodes(growingIds) {
+    if (!growingIds.size || !gardenNodesDataSet) return;
+    const targets = allNodes.filter(n => growingIds.has(n.id));
+    const start = performance.now();
+    function step(now) {
+        const p = Math.min(1, (now - start) / GARDEN_GROW_MS);
+        const scale = p >= 1 ? 1 : GARDEN_GROW_START_SCALE + (1 - GARDEN_GROW_START_SCALE) * easeOutBack(p);
+        gardenNodesDataSet.update(targets.map(n => ({ id: n.id, size: (n.size || 20) * scale })));
+        if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
 }
 
 function initGarden() {
@@ -107,18 +190,16 @@ function initGarden() {
         .then(data => {
             allNodes = data.nodes;
             allEdges = data.edges;
-            renderGraph(allNodes, allEdges);
+            renderGraph(allNodes, allEdges, takeNewGardenNodeIds(allNodes));
         })
         .catch(error => console.error('Error loading garden data:', error));
 }
 
-function renderGraph(nodes, edges) {
+function renderGraph(nodes, edges, growingIds) {
     const container = document.getElementById('gardenGraph');
     if (!container) return;
 
-    const edgeBaseColor = themeColor('--border-color', '#ded9ca');
-    const edgeHighlightColor = themeColor('--primary-color', '#193c32');
-    const edgeHoverColor = themeColor('--text-secondary', '#646c67');
+    const edgeColors = gardenEdgeColors();
 
     const options = {
         nodes: {
@@ -126,14 +207,14 @@ function renderGraph(nodes, edges) {
             size: 20,
             font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 },
+            shadow: { enabled: true, color: 'rgba(38, 51, 46, 0.24)', size: 10, x: 0, y: 4 },
             // Without this, vis-network's default selection style replaces a
             // clicked node's real color/border (category ring, pinned gold
             // ring) with a flat blue highlight - wiping the exact visual
             // distinction those are there to make, on the single most common
             // interaction with the graph. The app already gives its own
-            // selection feedback (highlightGardenNeighborhood dims everything
-            // not connected), so vis's own highlight is redundant as well as
+            // selection feedback (applyGardenEmphasis dims everything not
+            // connected), so vis's own highlight is redundant as well as
             // destructive - disabled outright rather than reimplemented.
             chosen: false
         },
@@ -143,10 +224,10 @@ function renderGraph(nodes, edges) {
                 roundness: 0.5
             },
             color: {
-                color: edgeBaseColor,
-                highlight: edgeHighlightColor,
-                hover: edgeHoverColor,
-                opacity: 0.6
+                color: edgeColors.base,
+                highlight: edgeColors.highlight,
+                hover: edgeColors.hover,
+                opacity: GARDEN_EDGE_BASE_OPACITY
             },
             shadow: false
         },
@@ -176,7 +257,11 @@ function renderGraph(nodes, edges) {
     };
 
     gardenLabelsVisible = true;
-    gardenNodesDataSet = new vis.DataSet(seedGardenPositions(nodes));
+    gardenSelection = null;
+    gardenHoverId = null;
+    gardenNodeAlpha.clear();
+    gardenEdgeAlpha.clear();
+    gardenNodesDataSet = new vis.DataSet(seedGardenPositions(nodes, growingIds));
     gardenEdgesDataSet = new vis.DataSet(edges);
     // Edges arrive from the server without an id; vis.DataSet assigns one
     // on insert. Re-read them back out so later per-edge .update() calls
@@ -194,6 +279,7 @@ function renderGraph(nodes, edges) {
         gardenNetwork.setOptions({ physics: { enabled: false } });
         const toggle = document.getElementById('physicsToggle');
         if (toggle) toggle.checked = false;
+        growGardenNodes(growingIds);
     });
 
     gardenNetwork.on('zoom', function() {
@@ -202,22 +288,36 @@ function renderGraph(nodes, edges) {
 
     gardenNetwork.on('click', function(params) {
         if (params.nodes.length > 0) {
-            const nodeId = params.nodes[0];
-            showNotePanel(nodeId);
-            highlightGardenNeighborhood(nodeId, edgeHighlightColor, edgeBaseColor);
+            selectGardenNode(params.nodes[0]);
         } else {
             closePanel();
-            clearGardenHighlight(edgeBaseColor);
         }
     });
 
     gardenNetwork.on('hoverNode', function(params) {
         container.style.cursor = 'pointer';
+        if (gardenSelection || gardenDragging) return;
+        gardenHoverId = params.node;
+        applyGardenEmphasis();
     });
 
-    gardenNetwork.on('blurNode', function(params) {
+    gardenNetwork.on('blurNode', function() {
         container.style.cursor = 'default';
+        if (gardenHoverId === null) return;
+        gardenHoverId = null;
+        if (!gardenSelection && !gardenDragging) applyGardenEmphasis();
     });
+
+        // vis only fires blurNode on a canvas mousemove, so leaving the canvas
+    // straight from a node would otherwise leave the hover preview stuck.
+    container.addEventListener('mouseleave', function() {
+        if (gardenHoverId === null) return;
+        gardenHoverId = null;
+        if (!gardenSelection) applyGardenEmphasis();
+    });
+
+    gardenNetwork.on('dragStart', function() { gardenDragging = true; });
+    gardenNetwork.on('dragEnd', function() { gardenDragging = false; });
 }
 
 function updateGardenLabelVisibility() {
@@ -232,42 +332,127 @@ function updateGardenLabelVisibility() {
     })));
 }
 
-function highlightGardenNeighborhood(nodeId, edgeHighlightColor, edgeBaseColor) {
-    if (!gardenNetwork || !gardenNodesDataSet || !gardenEdgesDataSet) return;
-
-    const connected = new Set(gardenNetwork.getConnectedNodes(nodeId));
-    connected.add(nodeId);
-
-    gardenNodesDataSet.update(allNodes.map(node => ({
-        id: node.id,
-        // node.color is {background, border} (see category_service.category_color()) -
-        // dim both channels so a de-emphasized node's ring fades too, not
-        // just its fill.
-        color: connected.has(node.id) ? node.color : {
-            background: hexToRgba(node.color.background, GARDEN_NODE_DIM_OPACITY),
-            border: hexToRgba(node.color.border, GARDEN_NODE_DIM_OPACITY)
-        }
-    })));
-
-    gardenEdgesDataSet.update(allEdges.map(edge => {
-        const inFocus = edge.from === nodeId || edge.to === nodeId;
-        return {
-            id: edge.id,
-            color: {
-                color: inFocus ? edgeHighlightColor : hexToRgba(edgeBaseColor, GARDEN_EDGE_DIM_OPACITY),
-                opacity: 1
-            }
-        };
-    }));
+function neighborhoodEmphasis(nodeId, nodeDim, edgeDim) {
+    const nodes = new Set(gardenNetwork.getConnectedNodes(nodeId));
+    nodes.add(nodeId);
+    return {
+        kind: 'node',
+        nodes,
+        edgeInFocus: edge => edge.from === nodeId || edge.to === nodeId,
+        nodeDim,
+        edgeDim
+    };
 }
 
-function clearGardenHighlight(edgeBaseColor) {
-    if (!gardenNodesDataSet || !gardenEdgesDataSet) return;
-    gardenNodesDataSet.update(allNodes.map(node => ({ id: node.id, color: node.color })));
-    gardenEdgesDataSet.update(allEdges.map(edge => ({
-        id: edge.id,
-        color: { color: edgeBaseColor, opacity: 0.6 }
-    })));
+function searchEmphasis(matchIds) {
+    const nodes = new Set(matchIds);
+    return {
+        kind: 'search',
+        nodes,
+        edgeInFocus: edge => nodes.has(edge.from) && nodes.has(edge.to),
+        nodeDim: GARDEN_NODE_DIM_OPACITY,
+        edgeDim: GARDEN_EDGE_DIM_OPACITY
+    };
+}
+
+function currentGardenEmphasis() {
+    if (gardenSelection) return gardenSelection;
+    if (gardenHoverId !== null && gardenNodesDataSet.get(gardenHoverId)) {
+        return neighborhoodEmphasis(gardenHoverId, GARDEN_HOVER_NODE_DIM_OPACITY, GARDEN_HOVER_EDGE_DIM_OPACITY);
+    }
+    return null;
+}
+
+// node.color is {background, border} (see category_service.category_color()) -
+// dim both channels so a de-emphasized node's ring fades too, not just its
+// fill. Fully opaque nodes get their original color object back untouched.
+function gardenNodeColor(node, alpha) {
+    if (alpha >= 1) return node.color;
+    return {
+        background: hexToRgba(node.color.background, alpha),
+        border: hexToRgba(node.color.border, alpha)
+    };
+}
+
+// Fades every node/edge from its current opacity to the one the current
+// emphasis asks for. The last frame always lands on the exact target
+// values, so the end state is identical with or without the tween.
+function applyGardenEmphasis(animate = true) {
+    if (!gardenNetwork || !gardenNodesDataSet || !gardenEdgesDataSet) return;
+
+    const emphasis = currentGardenEmphasis();
+    const colors = gardenEdgeColors();
+    const nodePlan = allNodes.map(node => ({
+        node,
+        from: gardenNodeAlpha.has(node.id) ? gardenNodeAlpha.get(node.id) : 1,
+        to: !emphasis || emphasis.nodes.has(node.id) ? 1 : emphasis.nodeDim
+    }));
+    const edgePlan = allEdges.map(edge => {
+        const inFocus = emphasis && emphasis.edgeInFocus(edge);
+        return {
+            edge,
+            color: inFocus ? colors.highlight : colors.base,
+            from: gardenEdgeAlpha.has(edge.id) ? gardenEdgeAlpha.get(edge.id) : GARDEN_EDGE_BASE_OPACITY,
+            to: !emphasis ? GARDEN_EDGE_BASE_OPACITY : (inFocus ? 1 : emphasis.edgeDim)
+        };
+    });
+
+    function draw(t) {
+        const mix = (from, to) => (t >= 1 ? to : from + (to - from) * t);
+        gardenNodesDataSet.update(nodePlan.map(({ node, from, to }) => {
+            const alpha = mix(from, to);
+            gardenNodeAlpha.set(node.id, alpha);
+            return { id: node.id, color: gardenNodeColor(node, alpha) };
+        }));
+        gardenEdgesDataSet.update(edgePlan.map(({ edge, color, from, to }) => {
+            const alpha = mix(from, to);
+            gardenEdgeAlpha.set(edge.id, alpha);
+            return { id: edge.id, color: { color: hexToRgba(color, alpha), opacity: 1 } };
+        }));
+    }
+
+    if (gardenTweenFrame !== null) cancelAnimationFrame(gardenTweenFrame);
+    gardenTweenFrame = null;
+    const tween = animate && !prefersReducedMotion()
+        && (allNodes.length + allEdges.length) <= GARDEN_MAX_TWEEN_ITEMS;
+    if (!tween) {
+        draw(1);
+        return;
+    }
+
+    const start = performance.now();
+    function step(now) {
+        const p = Math.min(1, (now - start) / GARDEN_EMPHASIS_MS);
+        draw(p >= 1 ? 1 : easeOutCubic(p));
+        gardenTweenFrame = p < 1 ? requestAnimationFrame(step) : null;
+    }
+    gardenTweenFrame = requestAnimationFrame(step);
+}
+
+// The panel always opens; emphasis and centering only apply when the note
+// is actually drawn (a connection can point at a category-filtered node).
+function selectGardenNode(nodeId, { center = false } = {}) {
+    const node = gardenNodesDataSet && gardenNodesDataSet.get(nodeId);
+    if (gardenNetwork && node) {
+        gardenSelection = neighborhoodEmphasis(nodeId, GARDEN_NODE_DIM_OPACITY, GARDEN_EDGE_DIM_OPACITY);
+        applyGardenEmphasis();
+        if (center && !node.hidden) {
+            gardenNetwork.focus(nodeId, { scale: gardenNetwork.getScale(), animation: cameraAnimation() });
+        }
+    }
+    showNotePanel(nodeId);
+}
+
+function refreshGardenTheme() {
+    if (gardenNetwork) {
+        const colors = gardenEdgeColors();
+        gardenNetwork.setOptions({
+            nodes: { font: gardenLabelFont() },
+            edges: { color: { highlight: colors.highlight, hover: colors.hover } }
+        });
+        applyGardenEmphasis(false);
+    }
+    if (focusNetwork) focusNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
 }
 
 function showNotePanel(nodeId) {
@@ -276,19 +461,20 @@ function showNotePanel(nodeId) {
         .then(note => {
             document.getElementById('notePanel').querySelector('.panel-placeholder').classList.add('d-none');
             const panelContent = document.getElementById('panelContent');
+            const wasOpen = selectedNode !== null;
             panelContent.classList.remove('d-none');
-            
+
             document.getElementById('panelTitle').textContent = note.title;
             const panelCategory = document.getElementById('panelCategory');
             panelCategory.textContent = note.category || 'Uncategorized';
             panelCategory.className = 'badge ' + gardenCategoryBadgeClass(note.category);
             document.getElementById('panelDate').textContent = new Date(note.created_at).toLocaleDateString();
             document.getElementById('panelPreview').textContent = note.content.substring(0, 200) + (note.content.length > 200 ? '...' : '');
-            
+
             // Note data is user content: build nodes with textContent, never HTML strings.
             document.getElementById('panelTags').replaceChildren(...note.tags.map(tag => {
                 const badge = document.createElement('span');
-                badge.className = 'badge bg-light text-dark me-1';
+                badge.className = 'badge bg-light text-dark';
                 badge.textContent = tag;
                 return badge;
             }));
@@ -302,9 +488,18 @@ function showNotePanel(nodeId) {
                 empty.textContent = 'No connections found';
                 connectionsContainer.replaceChildren(empty);
             }
-            
+
             document.getElementById('panelViewBtn').href = `/notes/${note.id}`;
             selectedNode = nodeId;
+
+            // Opening from the placeholder animates via CSS; switching from
+            // one note to another replays a shorter version of it.
+            if (wasOpen && !prefersReducedMotion()) {
+                panelContent.animate(
+                    [{ opacity: 0.2, translate: '8px 0' }, { opacity: 1, translate: '0 0' }],
+                    { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+                );
+            }
         })
         .catch(error => console.error('Error loading note:', error));
 }
@@ -313,10 +508,10 @@ function buildConnectionItem(conn) {
     const item = document.createElement('button');
     item.type = 'button';
     item.className = 'connection-item';
-    item.addEventListener('click', () => showNotePanel(conn.id));
+    item.addEventListener('click', () => selectGardenNode(conn.id, { center: true }));
 
     const row = document.createElement('div');
-    row.className = 'd-flex justify-content-between align-items-center';
+    row.className = 'd-flex justify-content-between align-items-center gap-2';
     const title = document.createElement('strong');
     title.textContent = conn.title.substring(0, 30) + (conn.title.length > 30 ? '...' : '');
     const label = document.createElement('span');
@@ -337,9 +532,15 @@ function buildConnectionItem(conn) {
 }
 
 function closePanel() {
-    document.getElementById('notePanel').querySelector('.panel-placeholder').classList.remove('d-none');
+    const panel = document.getElementById('notePanel');
+    if (!panel) return;
+    panel.querySelector('.panel-placeholder').classList.remove('d-none');
     document.getElementById('panelContent').classList.add('d-none');
     selectedNode = null;
+    if (gardenSelection && gardenSelection.kind === 'node') {
+        gardenSelection = null;
+        applyGardenEmphasis();
+    }
 }
 
 function searchNode() {
@@ -352,6 +553,10 @@ function searchNode() {
     if (!query) {
         gardenNetwork.selectNodes([]);
         if (feedback) feedback.textContent = '';
+        if (gardenSelection && gardenSelection.kind === 'search') {
+            gardenSelection = null;
+            applyGardenEmphasis();
+        }
         return;
     }
 
@@ -368,7 +573,11 @@ function searchNode() {
 
     const matchIds = matchingNodes.map(n => n.id);
     gardenNetwork.selectNodes(matchIds);
-    gardenNetwork.fit({ nodes: matchIds, animation: true });
+    // chosen:false means vis draws no selection of its own - matches stay
+    // at full strength while the rest of the garden recedes.
+    gardenSelection = searchEmphasis(matchIds);
+    applyGardenEmphasis();
+    gardenNetwork.fit({ nodes: matchIds, animation: cameraAnimation() });
     if (feedback) {
         feedback.textContent = matchIds.length === 1
             ? '1 match found.'
@@ -395,13 +604,13 @@ function applyGardenCategoryFilters() {
 
 function fitGraph() {
     if (gardenNetwork) {
-        gardenNetwork.fit({animation: true});
+        gardenNetwork.fit({ animation: cameraAnimation() });
     }
 }
 
 function resetView() {
     if (gardenNetwork) {
-        gardenNetwork.moveTo({position: {x: 0, y: 0}, scale: 1, animation: true});
+        gardenNetwork.moveTo({ position: { x: 0, y: 0 }, scale: 1, animation: cameraAnimation() });
     }
 }
 
@@ -434,7 +643,7 @@ function renderFocusGraph(container, nodes, edges) {
             shape: 'dot',
             font: gardenLabelFont(),
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(0, 0, 0, 0.28)', size: 10, x: 0, y: 4 },
+            shadow: { enabled: true, color: 'rgba(38, 51, 46, 0.24)', size: 10, x: 0, y: 4 },
             // Same reasoning as renderGraph(): don't let vis-network's default
             // selection style replace a node's real color/border on click.
             chosen: false
@@ -564,8 +773,7 @@ function initDarkMode() {
             html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
             localStorage.setItem('darkMode', !isDark);
             syncToggle();
-            if (gardenNetwork) gardenNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
-            if (focusNetwork) focusNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
+            refreshGardenTheme();
         });
     }
 }
@@ -700,6 +908,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (button) button.addEventListener('click', handler);
     });
 
+    // Escape returns the garden to its resting state.
+    if (document.getElementById('gardenGraph')) {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && selectedNode !== null) closePanel();
+        });
+    }
+
     const nodeSearch = document.getElementById('searchNode');
     if (nodeSearch) {
         nodeSearch.addEventListener('keydown', function(e) {
@@ -731,6 +946,7 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function() {
             if (form.dataset.aiProcessingSubmitted) return;
             form.dataset.aiProcessingSubmitted = 'true';
+            form.classList.add('is-submitting');
 
             const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
             if (!submitBtn) return;

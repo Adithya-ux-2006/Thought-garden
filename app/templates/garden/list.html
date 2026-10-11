@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% from "macros/ui.html" import empty_state %}
 
 {% block title %}Garden List - Thought Garden{% endblock %}
 
 {% block content %}
-<div class="container page-shell py-4">
+<div class="container page-shell py-4 py-lg-5">
     <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
         <div>
             <span class="page-eyebrow"><i class="bi bi-list-ul" aria-hidden="true"></i>Explore</span>
-            <h1 class="h2 mb-0">Knowledge Garden &mdash; list view</h1>
+            <h1>Knowledge Garden &mdash; list view</h1>
             <p class="text-muted mb-0">
                 {{ entries|length }} note{{ 's' if entries|length != 1 }},
                 {{ edge_count }} connection{{ 's' if edge_count != 1 }}
@@ -19,10 +20,10 @@
     </div>
 
     {% if entries %}
-    <ul class="list-unstyled garden-list">
+    <ul class="list-unstyled garden-list stagger">
         {% for entry in entries %}
         {% set note = entry.note %}
-        <li class="card mb-3" aria-labelledby="garden-note-{{ note.id }}">
+        <li class="card garden-list-item mb-3" aria-labelledby="garden-note-{{ note.id }}">
             <div class="card-body">
                 <div class="d-flex align-items-start gap-3">
                     <img src="{{ entry.icon }}" alt="" width="32" height="32" class="flex-shrink-0">
@@ -55,7 +56,7 @@
         {% endfor %}
     </ul>
     {% else %}
-    <p class="text-muted">No notes yet. <a href="{{ url_for('notes.create') }}">Create your first note</a>.</p>
+    {{ empty_state('seed', 'No notes yet', 'Your garden list fills in as you write.', url_for('notes.create'), 'Create your first note', heading='h2') }}
     {% endif %}
 </div>
 {% endblock %}
