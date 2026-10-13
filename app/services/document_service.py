@@ -106,30 +106,69 @@ def generate_title_from_content(content, filename):
     return name.replace('_', ' ').replace('-', ' ').title()
 
 
+# How much of the document's opening goes on the plant note itself. The
+# plant is the document's overview page; the full text stays in leaf 1.
+PLANT_EXCERPT_CHARS = 1000
+
+
+def build_plant_content(filename, part_count, excerpt):
+    """Markdown an imported doc's plant note shows before its leaf list."""
+    return (
+        f'> Imported from **{filename}** as one plant with {part_count} leaf notes.\n\n'
+        f'{excerpt}'
+    )
+
+
 def create_notes_from_document(user_id, content, filename, category=None):
     from app.models import Note, db
     from app.services import indexer
     from app.services.similarity_service import rebuild_user_graph
 
     chunks = chunk_text(content)
+    base_title = generate_title_from_content(content, filename)
+    source_type = filename.rsplit('.', 1)[1].lower()
 
     notes = []
-    for i, chunk in enumerate(chunks):
-        if len(chunks) > 1:
-            title = f"{generate_title_from_content(content, filename)} (Part {i+1})"
-        else:
-            title = generate_title_from_content(content, filename)
 
+    if len(chunks) <= 1:
+        # A short document is just a single note - no plant/leaf split.
         note = Note(
             user_id=user_id,
-            title=title,
-            content=chunk,
+            title=base_title,
+            content=chunks[0] if chunks else content,
             category=category,
-            source_type=filename.rsplit('.', 1)[1].lower(),
+            source_type=source_type,
             source_filename=filename
         )
         db.session.add(note)
         notes.append(note)
+    else:
+        plant = Note(
+            user_id=user_id,
+            title=base_title,
+            content=build_plant_content(filename, len(chunks), chunks[0][:PLANT_EXCERPT_CHARS]),
+            category=category,
+            source_type=source_type,
+            source_filename=filename
+        )
+        db.session.add(plant)
+        db.session.flush()
+
+        for i, chunk in enumerate(chunks, start=1):
+            leaf = Note(
+                user_id=user_id,
+                title=f"{base_title} (Part {i})",
+                content=chunk,
+                category=category,
+                source_type=source_type,
+                source_filename=filename,
+                parent_id=plant.id,
+                part_index=i
+            )
+            db.session.add(leaf)
+            notes.append(leaf)
+
+        notes.insert(0, plant)
 
     db.session.commit()
 

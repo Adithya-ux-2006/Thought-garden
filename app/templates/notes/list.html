@@ -97,7 +97,8 @@
     <div class="row g-4 stagger-bloom">
         {% for vm in views %}
         <div class="col-md-6 col-xl-4">
-            {% call note_card(vm, href=url_for('notes.view', note_id=vm.id)) %}
+            {% call note_card(vm, href=url_for('notes.view', note_id=vm.id),
+                              part_href=url_for('notes.view', note_id=vm.parent_id) if vm.is_part else None) %}
             <div class="dropdown">
                 <button type="button" class="btn btn-sm btn-icon tg-menu-trigger" data-bs-toggle="dropdown"
                         aria-expanded="false" aria-label="Actions for {{ vm.title }}">

@@ -50,11 +50,12 @@
 {# Notes tab: an editorial entry - category and the note's plant up top,
    title, a calm excerpt, tags, then date/reading time/stage on a rule. A
    {% call %} block becomes the actions slot in the footer. #}
-{% macro note_card(vm, href=None, tag_href=None, category_href=None, heading='h2', excerpt=170, tags=3) -%}
+{% macro note_card(vm, href=None, tag_href=None, category_href=None, heading='h2', excerpt=170, tags=3, part_href=None) -%}
 <article class="tg-note tg-note--editorial {{ vm.hue_class }}{{ ' is-pinned' if vm.is_pinned }}{{ ' is-archived' if vm.is_archived }}" data-note-id="{{ vm.id }}">
     <header class="tg-note-head">
         <div class="tg-note-kicker">
             {{ category_badge(vm) }}
+            {% if vm.is_part and part_href %}<a class="part-pill" href="{{ part_href }}" title="Part of {{ vm.parent_title }}"><i class="bi bi-journal-text" aria-hidden="true"></i>Part {{ vm.part_index }}</a>{% endif %}
             {{ markers(vm) }}
         </div>
         {{ plant(vm, 'md') }}

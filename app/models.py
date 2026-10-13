@@ -84,6 +84,26 @@ class Note(db.Model):
     is_archived = db.Column(db.Boolean, default=False)
     created_at = db.Column(UTCDateTime, default=utcnow, index=True)
     updated_at = db.Column(UTCDateTime, default=utcnow, onupdate=utcnow)
+
+    # Plant/leaf grouping: an imported multi-part document is one "plant"
+    # (parent) whose chunks are "leaves" (children with parent_id set).
+    # The garden graph and list show only plants; leaves are nested under
+    # them, so a big PDF doesn't clutter the garden with N sibling nodes.
+    # Deliberately a plain column, not a ForeignKey: SQLite cannot alter-add
+    # a self-FK, recreating `note` would cascade-delete embeddings (see the
+    # d4f6a8 migration's guard), and SQLite doesn't enforce FKs here anyway -
+    # SQLAlchemy's relationship drives both joins and delete-orphan cleanup.
+    parent_id = db.Column(db.Integer, nullable=True, index=True)
+    parent = db.relationship(
+        'Note',
+        primaryjoin='Note.parent_id == Note.id',
+        remote_side=[id],
+        foreign_keys=[parent_id],
+        backref=db.backref('leaf_notes', order_by='Note.part_index', cascade='all, delete-orphan')
+    )
+    # 1-based order within the plant, so "jump to the next leaf" survives
+    # edits that change titles. NULL for plants and standalone notes.
+    part_index = db.Column(db.Integer, nullable=True)
     
     tags = db.relationship('Tag', secondary=note_tags, lazy='subquery',
                           backref=db.backref('notes', lazy=True))

@@ -75,6 +75,10 @@ def note_view(note, stage=None, connections=None):
     flower = categories.flower(category)
     created = note.created_at
     updated = note.updated_at
+    # Plant/leaf grouping is Flask-only; a host model without these
+    # attributes (e.g. the Streamlit port) simply reports no part.
+    parent_id = getattr(note, 'parent_id', None)
+    parent = getattr(note, 'parent', None) if parent_id else None
     return {
         'id': note.id,
         'title': note.title,
@@ -103,6 +107,10 @@ def note_view(note, stage=None, connections=None):
         'is_pinned': bool(note.is_pinned),
         'is_archived': bool(note.is_archived),
         'connections': connections,
+        'is_part': bool(parent_id),
+        'parent_id': parent_id,
+        'parent_title': getattr(parent, 'title', None),
+        'part_index': getattr(note, 'part_index', None),
     }
 
 

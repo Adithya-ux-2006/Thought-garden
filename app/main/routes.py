@@ -22,7 +22,9 @@ def dashboard():
     active_notes = Note.query.filter_by(user_id=current_user.id, is_archived=False)
     stats = {
         'total_notes': active_notes.count(),
-        'documents': active_notes.filter(Note.source_type.in_(IMPORTED_SOURCE_TYPES)).count(),
+        'documents': active_notes.filter(
+            Note.source_type.in_(IMPORTED_SOURCE_TYPES), Note.parent_id.is_(None)
+        ).count(),
         'connections': Relationship.query.join(Note, Relationship.source_note_id == Note.id).filter(Note.user_id == current_user.id).count(),
         'tags': Tag.query.join(note_tags).join(Note).filter(
             Note.user_id == current_user.id, Note.is_archived == False

@@ -9,6 +9,10 @@
 <div class="container page-shell">
     <nav class="note-crumbs" aria-label="Breadcrumb">
         <a href="{{ url_for('notes.list_notes') }}"><i class="bi bi-arrow-left" aria-hidden="true"></i>Notes</a>
+        {% if note.parent %}
+        <span aria-hidden="true">/</span>
+        <a href="{{ url_for('notes.view', note_id=note.parent_id) }}">Document</a>
+        {% endif %}
         {% if note.category %}
         <span aria-hidden="true">/</span>
         <a href="{{ url_for('notes.list_notes', category=note.category) }}">{{ note.category }}</a>
@@ -69,6 +73,14 @@
                             <dd>{{ note.source_filename }}</dd>
                         </div>
                         {% endif %}
+                        {% if note.parent %}
+                        <div>
+                            <dt>Part</dt>
+                            <dd>{% if note.part_index %}{{ note.part_index }} of{% endif %}
+                                <a href="{{ url_for('notes.view', note_id=note.parent_id) }}">{{ note.parent.title }}</a>
+                            </dd>
+                        </div>
+                        {% endif %}
                     </dl>
 
                     <div class="note-toolbar">
@@ -109,7 +121,50 @@
                     </div>
                 </header>
 
+                {% if note.parent and leaves %}
+                {% set prev_leaf = leaves[leaf_index - 1] if leaf_index is not none and leaf_index > 0 %}
+                {% set next_leaf = leaves[leaf_index + 1] if leaf_index is not none and leaf_index + 1 < leaves|length %}
+                <nav class="leaf-pager" aria-label="Jump between parts of this document">
+                    {% if prev_leaf %}
+                    <a class="leaf-pager-link" href="{{ url_for('notes.view', note_id=prev_leaf.id) }}">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                        Previous part<span class="visually-hidden">: {{ prev_leaf.title }}</span>
+                    </a>
+                    {% else %}
+                    <span class="leaf-pager-link is-disabled" aria-hidden="true"><i class="bi bi-chevron-left"></i> Previous part</span>
+                    {% endif %}
+                    <a class="leaf-pager-total" href="{{ url_for('notes.view', note_id=note.parent_id) }}">
+                        Part {{ note.part_index or leaf_index + 1 }} of {{ leaves|length }} &mdash; {{ note.parent.title }}
+                    </a>
+                    {% if next_leaf %}
+                    <a class="leaf-pager-link" href="{{ url_for('notes.view', note_id=next_leaf.id) }}">
+                        Next part<span class="visually-hidden">: {{ next_leaf.title }}</span>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </a>
+                    {% else %}
+                    <span class="leaf-pager-link is-disabled" aria-hidden="true">Next part <i class="bi bi-chevron-right"></i></span>
+                    {% endif %}
+                </nav>
+                {% endif %}
+
                 <div class="note-content">{{ note.content|markdown }}</div>
+
+                {% if leaves %}
+                <section class="note-leaves" aria-labelledby="noteLeavesLabel">
+                    <h2 class="section-label" id="noteLeavesLabel"><i class="bi bi-journal-text me-2" aria-hidden="true"></i>{{ leaves|length }} leaf note{{ 's' if leaves|length != 1 }} in this plant</h2>
+                    <ol class="note-leaf-list">
+                        {% for leaf in leaves %}
+                        <li {{ 'class=is-current' if leaf.id == note.id }}>
+                            <span class="leaf-badge" aria-hidden="true">{{ leaf.part_index or loop.index }}</span>
+                            <a href="{{ url_for('notes.view', note_id=leaf.id) }}" {{ 'aria-current="page"' if leaf.id == note.id }}>
+                                {{ leaf.title }}
+                            </a>
+                            <span class="leaf-excerpt">{{ leaf.content[:90] }}{% if leaf.content|length > 90 %}&hellip;{% endif %}</span>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </section>
+                {% endif %}
 
                 {% if note.tags %}
                 <footer class="note-foot">

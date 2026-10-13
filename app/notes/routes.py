@@ -9,6 +9,7 @@ from app.services.tag_service import get_or_create_tags, prune_orphan_tags
 from app.services.knowledge_service import duplicate_candidates, make_flashcards, summarize_note
 from app.services import indexer
 from app.services.note_views import note_views, single_note_view
+from sqlalchemy.orm import joinedload
 
 
 def _report_failure(message, category='warning'):
@@ -36,7 +37,9 @@ def list_notes():
     page = request.args.get('page', 1, type=int)
     per_page = 12
     
-    query = Note.query.filter_by(user_id=current_user.id)
+    # joinedload keeps parent (plant) lookups for the "part N of" chip
+    # from becoming a query per card.
+    query = Note.query.options(joinedload(Note.parent)).filter_by(user_id=current_user.id)
     
     if request.args.get('archived'):
         query = query.filter_by(is_archived=True)
@@ -108,7 +111,17 @@ def view(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
     related = [(other, explain_connection(note, other, rel))
                for other, rel in note.get_related_notes(limit=5, min_similarity=0.0)]
-    return render_template('notes/view.html', note=note, related=related, vm=single_note_view(note))
+    # Plant/leaf context: a leaf gets a "jump between parts" pager plus a
+    # link to its plant; a plant gets its leaf list. A leaf's sibling list
+    # is its plant's leaves, so the pager and the "leaves" section both work.
+    if note.parent_id is None:
+        leaves = list(note.leaf_notes)
+        leaf_index = None
+    else:
+        leaves = list(note.parent.leaf_notes)
+        leaf_index = next((i for i, sibling in enumerate(leaves) if sibling.id == note.id), None)
+    return render_template('notes/view.html', note=note, related=related, vm=single_note_view(note),
+                           leaves=leaves, leaf_index=leaf_index)
 
 
 @bp.route('/api/suggest-tags', methods=['POST'])
@@ -175,6 +188,9 @@ def edit(note_id):
 @login_required
 def delete(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
+    # Deleting a plant (document) also deletes its leaf notes - they exist
+    # only as chunks of it. The ORM cascade on Note.leaf_notes handles the
+    # rows and their embeddings/jobs/relationships.
     db.session.delete(note)
     db.session.flush()
     prune_orphan_tags(current_user.id)
@@ -244,11 +260,14 @@ def import_document():
         
         category = request.form.get('category')
         notes = create_notes_from_document(current_user.id, content, file.filename, category)
-        
-        flash(f'Successfully imported {len(notes)} note(s) from {file.filename}', 'success')
+
         if len(notes) == 1:
+            flash(f'Imported {file.filename} as a new note.', 'success')
             return redirect(url_for('notes.view', note_id=notes[0].id))
-        return redirect(url_for('notes.list_notes'))
+
+        plant = notes[0]
+        flash(f'Imported {file.filename} as one plant with {len(notes) - 1} leaf notes.', 'success')
+        return redirect(url_for('notes.view', note_id=plant.id))
     except Exception:
         _report_failure('Could not import this document. Please check the file and try again.', 'danger')
         return redirect(url_for('notes.create'))
