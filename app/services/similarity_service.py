@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from app import db
@@ -5,11 +7,62 @@ from app.models import Note, Relationship
 from app.services.embedding_service import get_all_embeddings, cosine_similarity
 from app.services.keyword_service import extract_keywords
 from config import Config
+from tg_ui import categories as palette
 
 
 SIMILARITY_THRESHOLD = Config.SIMILARITY_THRESHOLD
 MAX_RELATED_NOTES = Config.MAX_RELATED_NOTES
 KEYWORD_THRESHOLD = Config.KEYWORD_SIMILARITY_THRESHOLD
+
+# What the user said explicitly counts alongside what the model infers:
+# embedding pairs get a bonus for shared tags and a shared category before
+# the threshold/top-N cut. Without it, two notes both tagged "Databases"
+# whose wording differs (cosine ~0.2) never connected. A shared tag is
+# worth more the rarer it is in the garden (a tag on 2 notes counts in
+# full, one on most notes - "exam prep" - barely), so broad tags don't wire
+# everything together. Tuned on a simulated 28-note study + creative
+# garden: 12 -> 32 edges, isolated notes 15 -> 4, no spurious links.
+SHARED_TAG_BONUS = 0.20
+SHARED_TAG_BONUS_CAP = 0.25
+SAME_CATEGORY_BONUS = 0.05
+
+
+def tag_weights(notes):
+    """{casefolded tag: 0..1} - inverse document frequency, normalised so a
+    tag shared by exactly two notes weighs 1.0."""
+    counts = {}
+    for note in notes:
+        for name in {t.name.casefold() for t in note.tags}:
+            counts[name] = counts.get(name, 0) + 1
+    n = len(notes)
+    if n <= 2:
+        return {name: 1.0 for name in counts}
+    scale = math.log(n / 2)
+    return {name: max(0.0, min(1.0, math.log(n / c) / scale)) for name, c in counts.items()}
+
+
+def same_category(a, b):
+    """Both notes filed under the same category - by exact text or by the
+    shared palette (a retired 'Cybersecurity' note and a 'Study' note are
+    both Study). Two notes with no category don't count."""
+    if not a or not b:
+        return False
+    if a.casefold() == b.casefold():
+        return True
+    branded = palette.resolve(a)
+    return branded is not None and branded is palette.resolve(b)
+
+
+MAX_EXPLICIT_BONUS = SHARED_TAG_BONUS_CAP + SAME_CATEGORY_BONUS
+
+
+def explicit_bonus(tags_a, category_a, tags_b, category_b, weights):
+    """Score bonus from the user's own organisation of two notes (tag sets
+    are casefolded names)."""
+    bonus = min(SHARED_TAG_BONUS * sum(weights.get(t, 0.0) for t in tags_a & tags_b), SHARED_TAG_BONUS_CAP)
+    if same_category(category_a, category_b):
+        bonus += SAME_CATEGORY_BONUS
+    return bonus
 
 
 def lightweight_similarity(note1, note2):
@@ -76,13 +129,24 @@ def rebuild_user_graph(user_id):
     if len(embedded_ids) >= 2:
         matrix = np.stack([embeddings[nid] for nid in embedded_ids])
         sims = matrix @ matrix.T
+        by_id = {n.id: n for n in notes}
+        weights = tag_weights(notes)
+        tagsets = {nid: frozenset(t.name.casefold() for t in by_id[nid].tags) for nid in embedded_ids}
+        categories = {nid: by_id[nid].category for nid in embedded_ids}
+        # Only pairs that could still reach the threshold with the largest
+        # possible bonus are scored in Python; the rest stay vectorized.
+        floor = SIMILARITY_THRESHOLD - MAX_EXPLICIT_BONUS
         for i, note_id in enumerate(embedded_ids):
             row = sims[i]
-            candidates = [
-                (embedded_ids[j], float(row[j]))
-                for j in range(len(embedded_ids))
-                if j != i and row[j] >= SIMILARITY_THRESHOLD
-            ]
+            candidates = []
+            for j in np.nonzero(row >= floor)[0]:
+                if j == i:
+                    continue
+                other_id = embedded_ids[j]
+                score = min(1.0, float(row[j]) + explicit_bonus(
+                    tagsets[note_id], categories[note_id], tagsets[other_id], categories[other_id], weights))
+                if score >= SIMILARITY_THRESHOLD:
+                    candidates.append((other_id, score))
             candidates.sort(key=lambda item: item[1], reverse=True)
             for other_id, score in candidates[:MAX_RELATED_NOTES]:
                 _consider(note_id, other_id, score, 'embedding')
