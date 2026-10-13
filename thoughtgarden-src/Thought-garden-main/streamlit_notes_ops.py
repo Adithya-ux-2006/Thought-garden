@@ -10,22 +10,15 @@ import io
 from typing import Any
 
 from streamlit_db import app_context
+from streamlit_ui import category_choices, category_label, view
 
-# Mirrors app.forms.NoteForm.category choices (value, label).
-CATEGORY_CHOICES = [
-    ("", "Select Category"),
-    ("AI", "Artificial Intelligence"),
-    ("Cybersecurity", "Cybersecurity"),
-    ("Software Engineering", "Software Engineering"),
-    ("Operating Systems", "Operating Systems"),
-    ("Research", "Research"),
-    ("Ideas", "Ideas"),
-    ("Study", "Study Material"),
-    ("Other", "Other"),
-]
-
-CATEGORY_LABELS = {value: label for value, label in CATEGORY_CHOICES}
-CATEGORY_OPTIONS = [value for value, _ in CATEGORY_CHOICES]
+# Category presets come from the palette shared with the Flask app
+# (tg_ui/categories.py, via streamlit_ui): the same branded categories,
+# each with its flower. Categories stay free text - forms also accept a
+# typed custom one, which gets the wildflower.
+CATEGORY_OPTIONS = category_choices()
+CATEGORY_LABELS = {value: category_label(value) for value in CATEGORY_OPTIONS}
+CATEGORY_CHOICES = [(value, CATEGORY_LABELS[value]) for value in CATEGORY_OPTIONS]
 
 
 def _parse_tags(tag_string: str | None) -> list[str]:
@@ -320,3 +313,18 @@ def import_document(user_id: int, upload, category: str | None) -> tuple[list[in
         return ids, None
     except Exception as exc:
         return [], f"Error importing document: {exc}"
+
+
+def note_views(notes) -> list[dict]:
+    """Shared note view models (tg_ui presenters) with each note's growth
+    stage - the same stage the garden draws for it."""
+    from app.services.growth_service import compute_growth_stage
+    from streamlit_garden_ops import _connection_counts
+
+    notes = list(notes)
+    with app_context():
+        counts = _connection_counts([n.id for n in notes])
+    return [
+        view(n, compute_growth_stage(n.created_at, counts.get(n.id, 0)), counts.get(n.id, 0))
+        for n in notes
+    ]

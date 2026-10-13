@@ -5,6 +5,12 @@ Builds the same node/edge payloads the Flask `/garden/data` and
 vendored vis-network build (inlined, no CDN, no Flask server needed).
 Growth-stage SVGs are embedded as data URIs since there is no /static
 route in the Streamlit process.
+
+Phase 6 design pass (2026-10-12): the Garden page now renders through
+streamlit_ui.garden() (the shared tg_ui garden). Payloads carry each note's
+flower (`plant`), colours come from the shared palette (tg_ui/categories.py)
+and `notes` holds what the journal side panel shows. build_html() and
+render_graph() below are the previous inline renderer, no longer called.
 """
 
 from __future__ import annotations
@@ -16,6 +22,7 @@ import os
 import streamlit as st
 
 from streamlit_db import app_context
+from streamlit_ui import palette, flowers
 
 _ROOT = os.path.dirname(os.path.abspath(__file__))
 _VIS_PATH = os.path.join(
@@ -28,24 +35,13 @@ _ICON_DIR = os.path.join(_ROOT, "app", "static", "img", "garden")
 # reasoning as Flask's PINNED_BORDER_COLOR).
 PINNED_BORDER_COLOR = "#a57834"
 
-_CATEGORY_COLORS = {
-    "AI": {"background": "#a99bea", "border": "#5c5580"},
-    "Artificial Intelligence": {"background": "#a99bea", "border": "#5c5580"},
-    "Cybersecurity": {"background": "#e58b78", "border": "#7d4c42"},
-    "Software Engineering": {"background": "#6faf8f", "border": "#3d604e"},
-    "Operating Systems": {"background": "#d9a441", "border": "#775a23"},
-    "Research": {"background": "#6f9db5", "border": "#3d5663"},
-}
-_FALLBACK_COLOR = {"background": "#d99a68", "border": "#775439"}
-
 _STAGES = ("seed", "sprout", "sapling", "tree")
 
 
 def get_category_color(category):
-    # One {background, border} pair per category: the pastel fill reads on
-    # dark, the darker border carries the boundary on light. Mirrors
-    # Flask's get_category_color() (values from --category-* in style.css).
-    return _CATEGORY_COLORS.get(category, _FALLBACK_COLOR)
+    # One {background, border} pair per category, from the palette shared
+    # with the Flask app (tg_ui/categories.py) - new categories included.
+    return palette.color(category)
 
 
 @st.cache_data(show_spinner=False)
@@ -96,6 +92,8 @@ def _node_payload(note, rel_count, *, focus=False, level=0):
         "category": note.category or "Uncategorized",
         "shape": "circularImage",
         "image": _growth_icon_uri(stage),
+        # the note's flower at this stage, relative to tg_ui/static
+        "plant": flowers.plant_filename(note.category, stage),
         "color": {"background": color["background"], "border": border},
         "borderWidth": 5 if note.is_pinned else 2,
         "size": 30 if focus else 20 + min(rel_count * 3, 30),
@@ -121,6 +119,57 @@ def _edge_payload(rel):
         "similarity": rel.similarity_score,
         "type": rel.relationship_type,
     }
+
+
+# Same idea as Flask's relationship_label(): a word, never a raw percentage.
+# This port's relationships have no `method` column, so one threshold.
+STRONG_MATCH = 0.55
+PANEL_CONTENT_CHARS = 2000
+
+
+def _why(note, other):
+    """Why two notes are linked, from what they share (no rescoring)."""
+    other_tags = {t.name.casefold() for t in other.tags}
+    shared = sorted({t.name for t in note.tags if t.name.casefold() in other_tags}, key=str.casefold)[:5]
+    parts = []
+    if shared:
+        parts.append(f"Shared tags: {', '.join(shared)}.")
+    if note.category and note.category == other.category:
+        parts.append(f"Both in {note.category}.")
+    return " ".join(parts) or "Similar overall meaning."
+
+
+def _panel_notes(notes_by_id, relationships) -> dict:
+    """What the garden's journal panel shows for each note, keyed by id
+    (the Flask page fetches the same shape from /garden/note/<id>)."""
+    linked: dict[int, list] = {nid: [] for nid in notes_by_id}
+    for rel in relationships:
+        a, b = notes_by_id.get(rel.source_note_id), notes_by_id.get(rel.target_note_id)
+        if a is None or b is None:
+            continue
+        linked[a.id].append((b, rel))
+        linked[b.id].append((a, rel))
+    out = {}
+    for nid, note in notes_by_id.items():
+        pairs = sorted(linked[nid], key=lambda item: item[1].similarity_score, reverse=True)[:10]
+        out[nid] = {
+            "id": note.id,
+            "title": note.title,
+            "content": note.content[:PANEL_CONTENT_CHARS],
+            "category": note.category,
+            "tags": [t.name for t in note.tags],
+            "is_pinned": bool(note.is_pinned),
+            "created_at": note.created_at.isoformat() if note.created_at else None,
+            "connections": [{
+                "id": other.id,
+                "title": other.title,
+                "category": other.category,
+                "similarity": rel.similarity_score,
+                "label": "Strong match" if rel.similarity_score >= STRONG_MATCH else "Related",
+                "reason": _why(note, other),
+            } for other, rel in pairs],
+        }
+    return out
 
 
 def list_categories(user_id: int) -> list[str]:
@@ -178,7 +227,13 @@ def garden_payload(user_id: int, categories=None) -> dict:
         for note in notes:
             nodes.append(_node_payload(note, counts.get(note.id, 0)))
         edges = [_edge_payload(rel) for rel in relationships]
-        return {"nodes": nodes, "edges": edges}
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "notes": _panel_notes({n.id: n for n in notes}, relationships),
+            "categories": sorted({n.category or palette.UNCATEGORIZED for n in notes}, key=str.casefold),
+            "user_id": user_id,
+        }
 
 
 def focus_payload(
@@ -193,6 +248,7 @@ def focus_payload(
             return {"nodes": [], "edges": []}
 
         per_node_limit = 10
+        kept_rels = []
         node_payloads = {}
         notes_by_id = {note.id: note}
         edges = []
@@ -255,6 +311,7 @@ def focus_payload(
                     and rel.target_note_id in notes_by_id
                 ):
                     edges.append(_edge_payload(rel))
+                    kept_rels.append(rel)
 
             frontier_notes = new_notes_by_id
 
@@ -271,7 +328,14 @@ def focus_payload(
         edges = [
             e for e in edges if e["from"] in node_payloads and e["to"] in node_payloads
         ]
-        return {"nodes": list(node_payloads.values()), "edges": edges}
+        rels = [r for r in kept_rels if r.source_note_id in node_payloads and r.target_note_id in node_payloads]
+        return {
+            "nodes": list(node_payloads.values()),
+            "edges": edges,
+            "notes": _panel_notes(notes_by_id, rels),
+            "categories": sorted({n.category or palette.UNCATEGORIZED for n in notes_by_id.values()}, key=str.casefold),
+            "user_id": user_id,
+        }
 
 
 @st.cache_resource(show_spinner=False)

@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import streamlit as st
 
+import streamlit_ui as ui
+
 from streamlit_analytics_ops import insights_data
 from streamlit_auth import current_user_id, require_auth
 
 st.set_page_config(page_title="Insights · Thought Garden", page_icon="📈", layout="wide")
 require_auth()
+ui.apply_theme()  # shared tg_ui design (must run inside the page script)
 
 user_id = current_user_id()
 if user_id is None:

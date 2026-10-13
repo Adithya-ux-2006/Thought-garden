@@ -25,10 +25,10 @@
                 <i class="bi bi-search" aria-hidden="true"></i>
                 <input type="search" class="form-control" id="librarySearch" placeholder="Filter by title or tag..." aria-label="Filter notes by title or tag" autocomplete="off">
             </div>
-            <select class="form-select" id="libraryCategory" aria-label="Filter by category">
+            <select class="form-select" id="libraryCategory" aria-label="Filter by category" data-picker-kind="category">
                 <option value="">All categories</option>
                 {% for category in entries|map(attribute='note.category')|map('default', 'Uncategorized', true)|unique|sort %}
-                <option value="{{ category }}">{{ category }}</option>
+                <option value="{{ category }}">{{ category|category_label }}</option>
                 {% endfor %}
             </select>
             <select class="form-select" id="libraryStage" aria-label="Filter by growth stage">
@@ -36,7 +36,7 @@
                 <option value="seed">Seeds</option>
                 <option value="sprout">Sprouts</option>
                 <option value="sapling">Saplings</option>
-                <option value="tree">Trees</option>
+                <option value="tree">In bloom</option>
             </select>
             <select class="form-select" id="librarySort" aria-label="Sort notes">
                 <option value="garden">Pinned, then by category</option>
@@ -69,19 +69,19 @@
             data-connections="{{ entry.connections|length }}"
             data-updated="{{ note.updated_at.isoformat() if note.updated_at else '' }}">
             <div class="library-plant stage-{{ entry.stage }}" aria-hidden="true">
-                <img src="{{ entry.icon }}" alt="" width="44" height="44">
+                <span class="tg-plant tg-plant--md {{ note.category|category_hue_class }}"><img src="{{ tg_asset(entry.plant) }}" alt="" width="64" height="64" loading="lazy"></span>
             </div>
 
             <div class="library-main">
                 <div class="library-kicker">
-                    <span class="badge {{ note.category|category_badge_class }}">{{ note.category or 'Uncategorized' }}</span>
-                    <span class="growth-pill"><span class="visually-hidden">Growth: </span>{{ entry.stage|capitalize }}</span>
+                    <span class="badge {{ note.category|category_badge_class }}">{{ note.category|category_label }}</span>
+                    <span class="growth-pill"><span class="visually-hidden">Growth: </span>{{ 'In bloom' if entry.stage == 'tree' else entry.stage|capitalize }}</span>
                     {% if note.is_pinned %}<span class="pin-pill"><i class="bi bi-star-fill" aria-hidden="true"></i> Pinned</span>{% endif %}
                 </div>
                 <h2 class="library-title" id="garden-note-{{ note.id }}">
                     <a href="{{ url_for('notes.view', note_id=note.id) }}">{{ note.title }}</a>
                 </h2>
-                <p class="library-excerpt">{{ note.content[:180] }}{% if note.content|length > 180 %}&hellip;{% endif %}</p>
+                <p class="library-excerpt">{{ note_view(note).plain|truncate(180, end='…') }}</p>
                 {% if tags_shown %}
                 <ul class="tag-list" aria-label="Tags">
                     {% for tag in tags_shown[:4] %}

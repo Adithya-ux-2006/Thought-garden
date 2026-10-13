@@ -3,296 +3,11 @@
    "The living garden": every page grows out of an immersive canopy of
    real foliage (dark emerald, atmospheric) and settles onto a mist-green
    sheet for reading and writing. Dark immersive regions carry
-   data-bs-theme="dark", so the dark token block below re-skins everything
+   data-bs-theme="dark", so the dark token block (tokens.css) re-skins everything
    inside them - buttons, forms, cards - with no per-component overrides.
    ========================================================================== */
 
-:root {
-    /* ---- core botanical palette ---- */
-    --forest-950: #092E23;     /* deep forest */
-    --forest-800: #0D4936;     /* dark emerald */
-    --emerald-700: #126B4F;    /* emerald */
-    --green-600: #21865F;      /* botanical green */
-    --leaf-500: #39A77A;       /* leaf green */
-    --mint-200: #B8E8CE;       /* soft mint */
-    --mist-50: #F0FBF4;        /* pale mist */
-
-    /* ---- gradients ---- */
-    --grad-primary: linear-gradient(115deg, #092E23 0%, #126B4F 50%, #39A77A 100%);
-    --grad-button: linear-gradient(115deg, #0D4936 0%, #126B4F 48%, #21865F 100%);
-    --grad-highlight: linear-gradient(90deg, #39A77A 0%, #B8E8CE 100%);
-    --grad-canopy:
-        linear-gradient(180deg, rgba(9, 46, 35, 0.62) 0%, rgba(9, 46, 35, 0.28) 38%, rgba(9, 46, 35, 0.9) 100%),
-        linear-gradient(115deg, rgba(9, 46, 35, 0.92) 0%, rgba(18, 107, 79, 0.38) 55%, rgba(57, 167, 122, 0.16) 100%);
-    --grad-glass: linear-gradient(135deg, rgba(57, 167, 122, 0.30) 0%, rgba(13, 73, 54, 0.52) 100%);
-    --grad-sheet: linear-gradient(180deg, #F0FBF4 0%, #EAF7EF 520px, #F0FBF4 100%);
-    --grad-card-sheen: linear-gradient(160deg, rgba(184, 232, 206, 0.22) 0%, rgba(255, 255, 255, 0) 42%);
-
-    /* ---- type ---- */
-    /* Body/UI: Times New Roman (user-mandated). It ships with Windows and
-       macOS and isn't licensed for web embedding, so it's referenced, not
-       vendored; Liberation Serif / Tinos are its metric-compatible stand-ins
-       on Linux/ChromeOS. Its x-height is small, so the scale below runs a
-       step larger than a sans would need. Headings stay EB Garamond. */
-    --font-body: 'Times New Roman', Times, 'Liberation Serif', Tinos, serif;
-    --font-display: 'EB Garamond', Garamond, 'Times New Roman', serif;
-    --font-ui-weight: 400;
-    --font-ui-strong: 700;    /* TNR has no 500/600 - ask for real bold */
-
-    --fs-xs: 0.84375rem;
-    --fs-sm: 0.9375rem;
-    --fs-base: 1.0625rem;
-    --fs-md: 1.1875rem;
-    --fs-lg: 1.375rem;
-    --fs-xl: 1.75rem;
-    --fs-display: clamp(2.8rem, 1.5rem + 4.4vw, 4.9rem);
-    --fs-h1: clamp(2.4rem, 1.7rem + 2.4vw, 3.5rem);
-    --fs-h2: clamp(1.9rem, 1.6rem + 1.1vw, 2.5rem);
-    --fs-h3: 1.7rem;
-    --fs-h4: 1.45rem;
-    --fs-h5: 1.25rem;
-    --fs-h6: 1.0625rem;
-    --lh-tight: 1.08;
-    --lh-snug: 1.28;
-    --lh-body: 1.62;
-    --tracking-display: -0.012em;
-    --tracking-label: 0.1em;
-
-    /* ---- spacing ---- */
-    --space-1: 0.25rem;
-    --space-2: 0.5rem;
-    --space-3: 0.75rem;
-    --space-4: 1rem;
-    --space-5: 1.5rem;
-    --space-6: 2rem;
-    --space-7: 2.5rem;
-    --space-8: 3rem;
-    --space-10: 4.5rem;
-
-    /* ---- layout ---- */
-    --nav-h: 4.25rem;
-    --sheet-overlap: 2.75rem;
-    --page-max: 1280px;
-
-    /* ---- surfaces + text: light (content) mode ---- */
-    --bg-primary: #F7FDF9;
-    --bg-secondary: var(--mist-50);
-    --bg-card: #FBFEFC;
-    --bg-subtle: #E3F4EA;
-    --input-bg: #FFFFFF;
-    --text-primary: #0B2A20;
-    --text-secondary: #315245;
-    --text-muted: #456658;
-    --border-color: #D2E9DC;
-    --border-soft: rgba(18, 107, 79, 0.12);
-    /* form controls need >=3:1 against their surface */
-    --border-strong: #6E9A86;
-
-    /* brand */
-    --primary-color: var(--emerald-700);
-    --primary-hover: var(--forest-800);
-    --primary-rgb: 18, 107, 79;
-    --primary-contrast: #FFFFFF;
-    --accent-color: var(--leaf-500);
-    --accent-rgb: 57, 167, 122;
-    /* text-safe shades - the raw leaf/mint are decorative (<3:1 on mist) */
-    --leaf-text: #1C6B4C;
-    --accent-text: var(--emerald-700);
-
-    /* semantic (real UI meaning - alerts, validation, destructive actions;
-       deliberately independent of the garden's category palette below) */
-    --success-color: #23874F;
-    --success-rgb: 35, 135, 79;
-    --warning-color: #B07A21;
-    --warning-rgb: 176, 122, 33;
-    --danger-color: #B3462F;
-    --danger-rgb: 179, 70, 47;
-    --info-color: #2F7B8F;
-    --info-rgb: 47, 123, 143;
-    --secondary-rgb: 69, 102, 88;
-
-    /* Knowledge Garden category palette - used for the category filter
-       chips/badges and independent from the semantic tokens above on
-       purpose: a note's category and "this is a destructive action" have no
-       relationship. Graph node fill/border colors are served separately by
-       app/services/category_service.py:category_color() since Python can't
-       read CSS custom properties. -soft-bg/-soft-text pairs are >=4.5:1. */
-    --category-ai: #a99bea;
-    --category-ai-border: #5c5580;
-    --category-ai-soft-bg: #EDEBF8;
-    --category-ai-soft-text: #4E4772;
-
-    --category-cyber: #e58b78;
-    --category-cyber-border: #7d4c42;
-    --category-cyber-soft-bg: #F8EAE4;
-    --category-cyber-soft-text: #6F4137;
-
-    --category-se: #6faf8f;
-    --category-se-border: #3d604e;
-    --category-se-soft-bg: #E1F2E8;
-    --category-se-soft-text: #2F5A44;
-
-    --category-os: #d9a441;
-    --category-os-border: #775a23;
-    --category-os-soft-bg: #F6EEDB;
-    --category-os-soft-text: #66501F;
-
-    --category-research: #6f9db5;
-    --category-research-border: #3d5663;
-    --category-research-soft-bg: #E4EEF1;
-    --category-research-soft-text: #334C59;
-
-    /* Pinned-note ring color - single value for both themes, mirrored by
-       hand in PINNED_BORDER_COLOR (app/garden/routes.py) since Python can't
-       read a CSS custom property. Must stay byte-identical to it. */
-    --pinned-color: #a57834;
-
-    /* soft (tinted) variants for badges / alerts */
-    --primary-soft-bg: #DDF1E5;
-    --primary-soft-text: #0D4936;
-    --mint-soft-bg: #DFF3E7;
-    --accent-soft-bg: #DDF3E6;
-    --accent-soft-text: #0D4936;
-    --success-soft-bg: #E0F3E6;
-    --success-soft-text: #1D6B40;
-    --warning-soft-bg: #F8EDD6;
-    --warning-soft-text: #7D5718;
-    --danger-soft-bg: #F8E3DD;
-    --danger-soft-text: #883423;
-    --info-soft-bg: #DFEEF1;
-    --info-soft-text: #285F6E;
-    --neutral-soft-bg: #E4EFE8;
-    --neutral-soft-text: #3A574B;
-
-    /* glass (used on canopy/immersive regions) */
-    --glass-bg: rgba(13, 73, 54, 0.38);
-    --glass-bg-strong: rgba(9, 46, 35, 0.62);
-    --glass-border: rgba(184, 232, 206, 0.2);
-    --glass-blur: 18px;
-
-    /* elevation - green-tinted, diffuse */
-    --shadow-sm: 0 1px 2px rgba(9, 46, 35, 0.06), 0 3px 10px -4px rgba(9, 46, 35, 0.08);
-    --shadow-md: 0 16px 34px -18px rgba(9, 46, 35, 0.32), 0 3px 8px rgba(9, 46, 35, 0.05);
-    --shadow-lg: 0 30px 64px -28px rgba(9, 46, 35, 0.42), 0 6px 14px rgba(9, 46, 35, 0.06);
-    --shadow-glow: 0 10px 26px -12px rgba(18, 107, 79, 0.6);
-    --shadow-glass: 0 40px 90px -40px rgba(0, 0, 0, 0.65);
-
-    /* radii - soft, sophisticated */
-    --radius-sm: 0.5rem;
-    --radius-md: 0.8rem;
-    --radius-lg: 1.25rem;
-    --radius-xl: 1.75rem;
-    --radius-sheet: 2rem;
-    --radius-pill: 999px;
-
-    /* ---- motion ---- */
-    --dur-fast: 180ms;       /* hover, press, focus */
-    --dur-base: 320ms;       /* state changes: panels, dropdowns, chips */
-    --dur-enter: 620ms;      /* section entrance */
-    --dur-slow: 900ms;       /* hero / immersive entrances */
-    --dur-ambient: 7s;       /* swaying plants */
-    --dur-drift: 26s;        /* gradient light, foliage drift */
-    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-    --ease-organic: cubic-bezier(0.45, 0.05, 0.55, 0.95);
-    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --stagger-step: 55ms;
-
-    /* Named properties rather than `all`, so layout never animates. */
-    --transition:
-        color var(--dur-fast) var(--ease-out),
-        background-color var(--dur-fast) var(--ease-out),
-        background-position var(--dur-base) var(--ease-out),
-        border-color var(--dur-fast) var(--ease-out),
-        box-shadow var(--dur-base) var(--ease-out),
-        opacity var(--dur-fast) var(--ease-out),
-        translate var(--dur-base) var(--ease-out),
-        scale var(--dur-fast) var(--ease-out);
-}
-
-/* Dark mode AND every immersive region (canopy, nav, garden, auth). */
-[data-bs-theme="dark"] {
-    --bg-primary: #0A2A20;
-    --bg-secondary: #071F18;
-    --bg-card: #0C2C22;
-    --bg-subtle: #12382C;
-    --input-bg: rgba(240, 251, 244, 0.06);
-    --text-primary: #EAF7F0;
-    --text-secondary: #B6D8C8;
-    --text-muted: #98BFAE;
-    --border-color: #1E4A3B;
-    --border-soft: rgba(184, 232, 206, 0.12);
-    --border-strong: #5F8D79;
-
-    --primary-color: #5CC499;
-    --primary-hover: #7FD6B1;
-    --primary-rgb: 92, 196, 153;
-    --primary-contrast: #052016;
-    --accent-color: #8FDDB8;
-    --accent-rgb: 143, 221, 184;
-    --leaf-text: #8FDDB8;
-    --accent-text: #B8E8CE;
-
-    --grad-button: linear-gradient(115deg, #39A77A 0%, #5CC499 55%, #8FDDB8 100%);
-    --grad-sheet: linear-gradient(180deg, #08231A 0%, #071F18 600px);
-    --grad-card-sheen: linear-gradient(160deg, rgba(184, 232, 206, 0.06) 0%, rgba(255, 255, 255, 0) 45%);
-
-    --success-color: #6fcf92;
-    --success-rgb: 111, 207, 146;
-    --warning-color: #e3b866;
-    --warning-rgb: 227, 184, 102;
-    --danger-color: #ec9480;
-    --danger-rgb: 236, 148, 128;
-    --info-color: #83cfe0;
-    --info-rgb: 131, 207, 224;
-    --secondary-rgb: 182, 216, 200;
-
-    --category-ai: #b3a7ec;
-    --category-ai-border: #b3a7ec;
-    --category-ai-soft-bg: #2F3446;
-    --category-ai-soft-text: #CBC2F4;
-
-    --category-cyber: #e89888;
-    --category-cyber-border: #e89888;
-    --category-cyber-soft-bg: #41332E;
-    --category-cyber-soft-text: #F0B1A3;
-
-    --category-se: #80b89c;
-    --category-se-border: #80b89c;
-    --category-se-soft-bg: #1E4434;
-    --category-se-soft-text: #A6D9BE;
-
-    --category-os: #ddae57;
-    --category-os-border: #ddae57;
-    --category-os-soft-bg: #3D3922;
-    --category-os-soft-text: #EDC678;
-
-    --category-research: #80a8bd;
-    --category-research-border: #80a8bd;
-    --category-research-soft-bg: #213C40;
-    --category-research-soft-text: #A9CADB;
-
-    --primary-soft-bg: #17463A;
-    --primary-soft-text: #A6E8C7;
-    --mint-soft-bg: #15412F;
-    --accent-soft-bg: #15412F;
-    --accent-soft-text: #B8E8CE;
-    --success-soft-bg: #173E29;
-    --success-soft-text: #94DDB0;
-    --warning-soft-bg: #3B311C;
-    --warning-soft-text: #E8C47D;
-    --danger-soft-bg: #3D241E;
-    --danger-soft-text: #F0A896;
-    --info-soft-bg: #193A41;
-    --info-soft-text: #97D6E6;
-    --neutral-soft-bg: #193D31;
-    --neutral-soft-text: #BDDCCC;
-
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --shadow-md: 0 16px 34px -18px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 30px 64px -28px rgba(0, 0, 0, 0.8), 0 6px 14px rgba(0, 0, 0, 0.25);
-    --shadow-glow: 0 10px 28px -12px rgba(92, 196, 153, 0.55);
-}
+/* Tokens: tokens.css (+ categories.css). Badges, categories and tags: labels.css. */
 
 /* ==========================================================================
    Bootstrap variable remap — reroutes every .bg-*/.text-*/.btn-*/.border-*
@@ -1604,189 +1319,6 @@ form.is-submitting [type="submit"] {
 }
 
 /* ==========================================================================
-   Badges, categories and tags
-   Two tiers, so a note's labels read in order of importance:
-   - category: a tinted, small-caps label led by a dot in the category's
-     garden hue (the same hue as its node in the graph);
-   - tag: a quiet outlined "#tag" pill, clickable wherever it filters.
-   Status badges (Strong match, Related...) stay soft semantic pills.
-   ========================================================================== */
-
-.badge {
-    font-family: var(--font-body);
-    font-weight: var(--font-ui-strong);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.02em;
-    line-height: 1.2;
-    padding: 0.36em 0.8em;
-    border-radius: var(--radius-pill);
-    border: 1px solid transparent;
-}
-
-.badge.bg-primary, .badge.text-bg-primary { background-color: var(--primary-soft-bg) !important; color: var(--primary-soft-text) !important; }
-.badge.bg-success, .badge.text-bg-success { background-color: var(--success-soft-bg) !important; color: var(--success-soft-text) !important; }
-.badge.bg-info, .badge.text-bg-info { background-color: var(--info-soft-bg) !important; color: var(--info-soft-text) !important; }
-.badge.bg-warning, .badge.text-bg-warning { background-color: var(--warning-soft-bg) !important; color: var(--warning-soft-text) !important; }
-.badge.bg-danger, .badge.text-bg-danger { background-color: var(--danger-soft-bg) !important; color: var(--danger-soft-text) !important; }
-.badge.bg-secondary, .badge.text-bg-secondary { background-color: var(--neutral-soft-bg) !important; color: var(--neutral-soft-text) !important; }
-
-/* ---- tags ---- */
-
-.tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-/* .badge.bg-light is the older tag markup still used on a few pages and by
-   main.js; it gets exactly the same look as .tag. */
-.tag,
-.badge.bg-light,
-.badge.bg-light.text-dark {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.2em 0.75em 0.22em 0.62em;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-pill);
-    background-color: color-mix(in srgb, var(--bg-card) 70%, transparent) !important;
-    color: var(--text-secondary) !important;
-    font-family: var(--font-body);
-    font-size: var(--fs-sm);
-    font-weight: var(--font-ui-weight);
-    letter-spacing: 0.01em;
-    line-height: 1.35;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.tag::before,
-.badge.bg-light::before {
-    content: "#";
-    margin-right: 0.12em;
-    color: var(--leaf-text);
-    opacity: 0.75;
-}
-
-/* "+3" overflow counters and link counts aren't tags */
-.tag.tag-more::before,
-.badge.bg-light.badge-count::before {
-    content: none;
-}
-
-.tag.tag-more {
-    color: var(--text-muted) !important;
-    border-style: dashed;
-}
-
-a.tag,
-a.badge {
-    transition:
-        color var(--dur-fast) var(--ease-out),
-        background-color var(--dur-fast) var(--ease-out),
-        border-color var(--dur-fast) var(--ease-out),
-        box-shadow var(--dur-base) var(--ease-out),
-        translate var(--dur-base) var(--ease-spring);
-}
-
-a.tag:hover,
-a.badge.bg-light:hover {
-    border-color: var(--leaf-500);
-    background-color: var(--mint-soft-bg) !important;
-    color: var(--text-primary) !important;
-    translate: 0 -1px;
-    box-shadow: 0 6px 14px -10px rgba(var(--primary-rgb), 0.8);
-}
-
-a.tag:active,
-a.badge.bg-light:active {
-    translate: 0 0;
-}
-
-/* the tag currently filtering a list */
-.tag.is-active,
-a.tag[aria-current] {
-    border-color: var(--primary-color);
-    background-color: var(--primary-soft-bg) !important;
-    color: var(--primary-soft-text) !important;
-}
-
-/* ---- categories ---- */
-
-/* Deliberately their own classes, not Bootstrap's bg-primary/danger/...
-   (those are the app's real semantic tokens). Colors come entirely from
-   the --category-* tokens; used on every page as well as the garden. */
-.badge-category-ai       { --cat-hue: var(--category-ai);       --cat-bg: var(--category-ai-soft-bg);       --cat-text: var(--category-ai-soft-text); }
-.badge-category-cyber    { --cat-hue: var(--category-cyber);    --cat-bg: var(--category-cyber-soft-bg);    --cat-text: var(--category-cyber-soft-text); }
-.badge-category-se       { --cat-hue: var(--category-se);       --cat-bg: var(--category-se-soft-bg);       --cat-text: var(--category-se-soft-text); }
-.badge-category-os       { --cat-hue: var(--category-os);       --cat-bg: var(--category-os-soft-bg);       --cat-text: var(--category-os-soft-text); }
-.badge-category-research { --cat-hue: var(--category-research); --cat-bg: var(--category-research-soft-bg); --cat-text: var(--category-research-soft-text); }
-.badge-category-none     { --cat-hue: var(--text-muted);        --cat-bg: var(--neutral-soft-bg);           --cat-text: var(--neutral-soft-text); }
-
-.badge[class*="badge-category-"] {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--cat-bg) !important;
-    color: var(--cat-text) !important;
-    border-color: color-mix(in srgb, var(--cat-hue) 34%, transparent);
-    font-size: 0.78rem;
-    font-weight: var(--font-ui-strong);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0.38em 0.85em 0.34em 0.75em;
-}
-
-/* a small dot in the category's own garden hue leads each category label */
-[class*="badge-category-"]::before {
-    content: "";
-    display: inline-block;
-    flex: none;
-    width: 0.5em;
-    height: 0.5em;
-    margin-right: 0.5em;
-    border-radius: 50%;
-    background: var(--cat-hue, currentColor);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat-hue, currentColor) 22%, transparent);
-}
-
-a:has(> .badge[class*="badge-category-"]),
-a.badge[class*="badge-category-"] {
-    text-decoration: none;
-}
-
-a:hover > .badge[class*="badge-category-"],
-a.badge[class*="badge-category-"]:hover {
-    border-color: var(--cat-hue);
-}
-
-/* ---- small inline markers ---- */
-
-.growth-pill,
-.pin-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3em;
-    font-size: var(--fs-sm);
-    font-style: italic;
-    color: var(--text-muted);
-}
-
-.pin-pill {
-    font-style: normal;
-    color: var(--pinned-text, #8a6326);
-}
-
-.pin-pill i {
-    color: var(--pinned-color);
-}
-
-[data-bs-theme="dark"] .pin-pill {
-    --pinned-text: #e1b874;
-}
-
-/* ==========================================================================
    Lists, dropdowns, pagination, modals
    ========================================================================== */
 
@@ -1804,53 +1336,519 @@ a.badge[class*="badge-category-"]:hover {
     background-color: var(--bg-subtle);
 }
 
-.dropdown-menu {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+/* ---- menus: Bootstrap dropdowns and the picker share one surface ---- */
+
+.dropdown-menu,
+.tg-picker-menu {
+    --menu-bg: color-mix(in srgb, var(--bg-card) 96%, var(--mint-200));
+    --menu-hover: color-mix(in srgb, var(--mint-200) 38%, var(--bg-card));
+    --menu-active: var(--primary-soft-bg);
+    background-color: var(--menu-bg);
+    background-image: linear-gradient(180deg, rgba(184, 232, 206, 0.16), rgba(184, 232, 206, 0) 3.5rem);
+    border: 1px solid color-mix(in srgb, var(--leaf-500) 22%, var(--border-soft));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
     padding: 0.4rem;
     font-family: var(--font-body);
+    color: var(--text-primary);
 }
 
-[data-bs-theme="dark"] .dropdown-menu {
-    background-color: rgba(9, 40, 30, 0.95);
+[data-bs-theme="dark"] .dropdown-menu,
+.tg-picker-menu[data-bs-theme="dark"] {
+    --menu-bg: rgba(9, 40, 30, 0.96);
+    --menu-hover: rgba(57, 167, 122, 0.16);
+    --menu-active: rgba(92, 196, 153, 0.2);
+    background-image: linear-gradient(180deg, rgba(184, 232, 206, 0.07), rgba(184, 232, 206, 0) 3.5rem);
+    border-color: rgba(184, 232, 206, 0.16);
+    box-shadow: 0 28px 60px -24px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(184, 232, 206, 0.05) inset;
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
 }
 
+@keyframes tg-menu-in {
+    from { opacity: 0; translate: 0 -6px; scale: 0.96; }
+}
+
+@keyframes tg-menu-in-up {
+    from { opacity: 0; translate: 0 6px; scale: 0.96; }
+}
+
 .dropdown-menu.show {
-    animation: tg-pop var(--dur-fast) var(--ease-out) backwards;
+    animation: tg-menu-in var(--dur-base) var(--ease-out) backwards;
+    transform-origin: top right;
+}
+
+.dropdown-menu-start.show,
+.dropdown-menu:not(.dropdown-menu-end).show {
+    transform-origin: top left;
+}
+
+/* a raised card keeps its open menu above the cards that follow it */
+.tg-note:has(.dropdown-menu.show),
+.note-card:has(.dropdown-menu.show) {
+    z-index: 5;
+}
+
+.dropdown-header {
+    padding: 0.45rem 0.8rem 0.3rem;
+    margin: 0;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: var(--font-ui-strong);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
 }
 
 .dropdown-item {
-    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border-radius: var(--radius-md);
     font-size: var(--fs-sm);
-    padding: 0.55rem 0.8rem;
+    padding: 0.5rem 0.8rem 0.5rem 0.55rem;
     color: var(--text-primary);
     transition: var(--transition);
 }
 
-.dropdown-item i {
-    color: var(--text-muted);
+/* each action's icon sits in a small leaf-tinted well */
+.dropdown-item > i:first-child {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: 0 !important;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mint-200) 30%, transparent);
+    color: var(--leaf-text);
+    font-size: 0.9rem;
+    transition: var(--transition);
 }
 
-.dropdown-item:hover, .dropdown-item:focus {
-    background-color: var(--bg-subtle);
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--menu-hover);
     color: var(--text-primary);
 }
 
-.dropdown-item.text-danger i {
-    color: inherit;
+.dropdown-item:hover > i:first-child,
+.dropdown-item:focus > i:first-child {
+    background: var(--grad-button);
+    color: var(--primary-contrast);
+    scale: 1.06;
 }
 
-.dropdown-item.text-danger:hover {
+.dropdown-item:focus-visible {
+    outline: 2px solid rgba(var(--primary-rgb), 0.55);
+    outline-offset: -2px;
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: var(--menu-active);
+    color: var(--primary-soft-text);
+}
+
+.dropdown-item.text-danger > i:first-child {
+    background: color-mix(in srgb, var(--danger-color) 14%, transparent);
+    color: var(--danger-color);
+}
+
+.dropdown-item.text-danger:hover,
+.dropdown-item.text-danger:focus {
     background-color: var(--danger-soft-bg);
     color: var(--danger-color) !important;
 }
 
+.dropdown-item.text-danger:hover > i:first-child,
+.dropdown-item.text-danger:focus > i:first-child {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+.dropdown-menu form {
+    margin: 0;
+}
+
+.dropdown-menu button.dropdown-item {
+    width: 100%;
+    text-align: left;
+}
+
 .dropdown-divider {
+    margin: 0.35rem 0.5rem;
     border-color: var(--border-soft);
+    opacity: 1;
+}
+
+/* the "..." trigger on a note entry */
+.tg-menu-trigger {
+    width: 2.1rem;
+    height: 2.1rem;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.tg-menu-trigger:hover,
+.tg-menu-trigger[aria-expanded="true"] {
+    color: var(--primary-color);
+    background: var(--mint-soft-bg);
+    border-color: color-mix(in srgb, var(--leaf-500) 30%, transparent);
+}
+
+/* ---- picker: an enhanced <select> (main.js initPickers) ---- */
+
+.tg-picker {
+    position: relative;
+    min-width: 0;
+}
+
+.tg-picker-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    min-height: calc(1.5em + 0.875rem + 2px);
+    padding: 0.4rem 0.85rem 0.4rem 0.75rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: var(--fs-base);
+    text-align: left;
+    transition: var(--transition);
+}
+
+.tg-picker--sm .tg-picker-trigger {
+    min-height: 2.15rem;
+    padding: 0.25rem 0.75rem 0.25rem 0.55rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-sm);
+}
+
+.tg-picker-trigger:hover {
+    border-color: var(--leaf-500);
+}
+
+.tg-picker-trigger:focus-visible,
+.tg-picker.is-open .tg-picker-trigger {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.22rem rgba(var(--primary-rgb), 0.22);
+}
+
+.tg-picker-trigger.is-invalid {
+    border-color: var(--danger-color);
+}
+
+.tg-picker-trigger.is-placeholder .tg-picker-text {
+    color: var(--text-muted);
+}
+
+.tg-picker-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.tg-picker-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tg-picker-chevron {
+    flex: none;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    transition: rotate var(--dur-base) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.tg-picker.is-open .tg-picker-chevron {
+    rotate: 180deg;
+    color: var(--primary-color);
+}
+
+.tg-picker-menu {
+    position: fixed;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: tg-menu-in var(--dur-base) var(--ease-out) backwards;
+    transform-origin: top left;
+}
+
+.tg-picker-menu.is-up {
+    animation-name: tg-menu-in-up;
+    transform-origin: bottom left;
+}
+
+.tg-picker-menu[hidden] {
+    display: none;
+}
+
+.tg-picker-search {
+    position: relative;
+    flex: none;
+    padding: 0.2rem 0.2rem 0.45rem;
+    border-bottom: 1px solid var(--border-soft);
+    margin-bottom: 0.3rem;
+}
+
+.tg-picker-search i {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    translate: 0 -55%;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.tg-picker-search input {
+    width: 100%;
+    padding: 0.45rem 0.75rem 0.45rem 2.1rem;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--input-bg) 80%, transparent);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+}
+
+.tg-picker-search input:focus {
+    outline: none;
+    border-color: var(--leaf-500);
+    box-shadow: 0 0 0 0.18rem rgba(var(--primary-rgb), 0.2);
+}
+
+.tg-picker-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    outline: none;
+}
+
+.tg-picker-group {
+    padding: 0.55rem 0.7rem 0.25rem;
+    color: var(--text-muted);
+    font-weight: var(--font-ui-strong);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.tg-picker-group:not(:first-child) {
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--border-soft);
+}
+
+.tg-picker-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.42rem 0.6rem;
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.tg-picker-option.is-active {
+    background: var(--menu-hover);
+}
+
+.tg-picker-option[aria-selected="true"] {
+    color: var(--primary-soft-text);
+    font-weight: var(--font-ui-strong);
+}
+
+.tg-picker-option.is-empty .tg-picker-label {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.tg-picker-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tg-picker-check {
+    flex: none;
+    opacity: 0;
+    color: var(--primary-color);
+    scale: 0.6;
+    transition: opacity var(--dur-fast) var(--ease-out), scale var(--dur-base) var(--ease-spring);
+}
+
+.tg-picker-option[aria-selected="true"] .tg-picker-check {
+    opacity: 1;
+    scale: 1;
+}
+
+.tg-picker-plant {
+    flex: none;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px rgba(var(--primary-rgb), 0.25);
+}
+
+.tg-picker-value .tg-picker-plant {
+    width: 1.45rem;
+    height: 1.45rem;
+}
+
+.tg-picker-hash {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 1.45rem;
+    height: 1.45rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mint-200) 35%, transparent);
+    color: var(--leaf-text);
+    font-size: 0.85rem;
+}
+
+.tg-picker-create {
+    margin-top: 0.25rem;
+    border: 1px dashed color-mix(in srgb, var(--leaf-500) 50%, transparent);
+    color: var(--leaf-text);
+}
+
+.tg-picker-create i {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--mint-soft-bg);
+}
+
+.tg-picker-empty {
+    margin: 0;
+    padding: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+}
+
+/* ---- tag field: #tag chips + an entry (main.js initTagInputs) ---- */
+
+.tg-tags-field {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: calc(1.5em + 0.875rem + 2px);
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--input-bg);
+    cursor: text;
+    transition: var(--transition);
+}
+
+.tg-tags-field:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.22rem rgba(var(--primary-rgb), 0.22);
+}
+
+.tg-tags-chips {
+    display: contents;
+    list-style: none;
+}
+
+.tg-tag-chip {
+    gap: 0.15rem;
+    padding-right: 0.25rem !important;
+    animation: tg-pop var(--dur-base) var(--ease-spring) backwards;
+}
+
+.tg-tag-remove {
+    display: inline-grid;
+    place-items: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.tg-tag-remove:hover,
+.tg-tag-remove:focus-visible {
+    background: var(--danger-soft-bg);
+    color: var(--danger-color);
+    outline: none;
+}
+
+.tg-tags-entry {
+    flex: 1 1 8rem;
+    min-width: 8rem;
+    padding: 0.2rem 0.3rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: var(--fs-base);
+}
+
+.tg-tags-entry:focus {
+    outline: none;
+}
+
+.tg-tags-suggest {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 14rem;
+    margin: 0;
+    padding: 0.35rem;
+    list-style: none;
+    background: var(--bg-card);
+    border: 1px solid color-mix(in srgb, var(--leaf-500) 22%, var(--border-soft));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    animation: tg-menu-in var(--dur-base) var(--ease-out) backwards;
+}
+
+.tg-tags-option {
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    cursor: pointer;
+}
+
+.tg-tags-option::before {
+    content: "#";
+    margin-right: 0.15em;
+    color: var(--leaf-text);
+}
+
+.tg-tags-option:hover,
+.tg-tags-option.is-active {
+    background: color-mix(in srgb, var(--mint-200) 38%, var(--bg-card));
 }
 
 .pagination {
@@ -1942,21 +1940,12 @@ a.badge[class*="badge-category-"]:hover {
     margin-bottom: var(--space-3);
 }
 
-/* soil line */
-.empty-state-art::after {
-    content: "";
-    position: absolute;
-    left: 22%;
-    right: 22%;
-    bottom: 18%;
-    height: 1px;
-    background: var(--leaf-500);
-    opacity: 0.6;
-}
-
+/* the plant medallion, breathing in its pool of light */
 .empty-state-art img {
-    width: 56%;
+    width: 74%;
     height: auto;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 3.5px rgba(57, 167, 122, 0.45), 0 14px 24px -14px rgba(9, 46, 35, 0.6);
     transform-origin: 50% 88%;
     animation: tg-sway var(--dur-ambient) var(--ease-organic) infinite;
 }
@@ -2159,6 +2148,38 @@ a.badge[class*="badge-category-"]:hover {
 
 .link-row .bi-arrow-right {
     color: var(--leaf-500);
+}
+
+/* sidebar lists on the dashboard: each row led by its flower */
+.dash-flower-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.dash-flower-row .tg-plant {
+    --plant-size: 2.1rem;
+}
+
+.dash-flower-row:hover .tg-plant img {
+    animation: tg-plant-sway 1.6s var(--ease-organic) 1;
+}
+
+.dash-flower-row:hover .dash-flower-title {
+    color: var(--primary-color);
+}
+
+.dash-flower-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 1.08rem;
+    transition: color var(--dur-fast) var(--ease-out);
 }
 
 /* ==========================================================================
@@ -2514,6 +2535,16 @@ button.connection-item:focus-visible {
 
 .note-foot .section-label {
     margin: 0;
+}
+
+/* the note's flower, pressed into the page's top corner */
+.note-head {
+    position: relative;
+}
+
+.note-plant {
+    float: right;
+    margin: -0.25rem 0 var(--space-3) var(--space-4);
 }
 
 /* ---- related knowledge: each connection opens like a page turning ---- */
@@ -3391,15 +3422,9 @@ button.connection-item:focus-visible {
     place-items: center;
     width: 3.5rem;
     height: 3.5rem;
-    border-radius: 50%;
-    background: radial-gradient(circle at 50% 68%, var(--mint-soft-bg), transparent 72%);
-    border: 1px solid var(--border-soft);
 }
 
 .library-plant img {
-    width: 2.4rem;
-    height: auto;
-    transform-origin: 50% 88%;
     transition: rotate var(--dur-base) var(--ease-spring), scale var(--dur-base) var(--ease-spring);
 }
 

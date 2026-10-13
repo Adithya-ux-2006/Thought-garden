@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!-- The Streamlit garden component's page (streamlit_ui.garden() in the
+     Streamlit port). Streamlit serves this directory as the component's
+     root, so the garden loads exactly the stylesheets, scripts and flower
+     art the Flask garden page uses. The Flask app never links here. -->
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Garden</title>
+    <link href="vendor/fonts/fonts.css" rel="stylesheet">
+    <link href="vendor/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/tokens.css" rel="stylesheet">
+    <link href="css/categories.css" rel="stylesheet">
+    <link href="css/labels.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/notes.css" rel="stylesheet">
+    <link href="css/garden.css" rel="stylesheet">
+    <link href="css/garden-embed.css" rel="stylesheet">
+</head>
+<body class="tg-embed" data-bs-theme="dark">
+    <div class="container-fluid garden-container" id="gardenRoot" data-bs-theme="dark"></div>
+    <script type="application/json" id="gardenCategories">[]</script>
+    <script src="js/garden-component.js"></script>
+</body>
+</html>

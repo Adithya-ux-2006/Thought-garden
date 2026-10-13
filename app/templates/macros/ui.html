@@ -1,9 +1,9 @@
-{# Empty state: one growth-stage plant (seed/sprout/sapling/tree), a headline,
+{# Empty state: one growth-stage wildflower (seed/sprout/sapling/tree), a headline,
    a line of guidance and an optional action. `small` is for sidebar cards. #}
 {% macro empty_state(stage, title, text, action_url=None, action_label=None, small=False, heading='h3') %}
 <div class="empty-state{{ ' empty-state-sm' if small }}">
     <div class="empty-state-art" aria-hidden="true">
-        <img src="{{ url_for('static', filename='img/garden/' ~ stage ~ '.svg') }}" alt="" width="64" height="64">
+        <img src="{{ url_for('static', filename='img/plants/wildflower-' ~ stage ~ '.svg') }}" alt="" width="64" height="64">
     </div>
     <{{ heading }} class="{{ 'h6' if small else 'h4' }}">{{ title }}</{{ heading }}>
     <p class="{{ 'small ' if small }}text-muted mb-0">{{ text }}</p>

@@ -1,6 +1,7 @@
-"""Runs main.js's garden note panel in Node against a minimal fake DOM and
-checks that user-controlled note data is rendered as text, never parsed as
-HTML. Skipped when Node isn't installed."""
+"""Runs the garden note panel (tg_ui/static/js/garden-graph.js, shared by the
+Flask garden page and the Streamlit garden component) in Node against a
+minimal fake DOM and checks that user-controlled note data is rendered as
+text, never parsed as HTML. Skipped when Node isn't installed."""
 
 import json
 import os
@@ -9,7 +10,8 @@ import subprocess
 
 import pytest
 
-MAIN_JS = os.path.join(os.path.dirname(__file__), '..', 'app', 'static', 'js', 'main.js')
+JS_DIR = os.path.join(os.path.dirname(__file__), '..', 'tg_ui', 'static', 'js')
+SCRIPTS = [os.path.join(JS_DIR, name) for name in ('tg-core.js', 'garden-graph.js')]
 NODE = shutil.which('node')
 
 PAYLOAD = '<img src=x onerror=alert(1)>'
@@ -25,7 +27,7 @@ class El {
   constructor(tag, id) {
     this.tagName = tag; this.id = id; this.children = []; this._text = '';
     this.className = ''; this.listeners = {}; this.style = {}; this.href = '';
-    this.classList = { add() {}, remove() {} };
+    this.classList = { add() {}, remove() {}, toggle() {} };
   }
   set innerHTML(v) { htmlWrites.push(String(v)); this.children = []; this._text = ''; }
   get innerHTML() { return ''; }
@@ -53,7 +55,7 @@ const ctx = vm.createContext({
   localStorage: { getItem() { return null; }, setItem() {} },
   getComputedStyle: () => ({ getPropertyValue: () => '' }),
 });
-vm.runInContext(fs.readFileSync(process.argv[2], 'utf8'), ctx);
+for (const file of process.argv.slice(2)) vm.runInContext(fs.readFileSync(file, 'utf8'), ctx);
 
 const tick = () => new Promise(r => setImmediate(r));
 function findWithListener(el) {
@@ -83,7 +85,7 @@ def _render_panel(note):
     if NODE is None:
         pytest.skip('Node.js not installed')
     proc = subprocess.run(
-        [NODE, '-e', HARNESS, json.dumps(note), os.path.abspath(MAIN_JS)],
+        [NODE, '-e', HARNESS, json.dumps(note), *map(os.path.abspath, SCRIPTS)],
         capture_output=True, text=True, timeout=30,
     )
     assert proc.returncode == 0, proc.stderr
@@ -119,7 +121,8 @@ def test_panel_connection_click_opens_that_note():
     ]))
 
     assert result['fetched'] == ['/garden/note/1', '/garden/note/7']
-    assert 'Uncategorized' in result['connectionsText']
+    # a missing category reads as "Wild thoughts"
+    assert 'Wild thoughts' in result['connectionsText']
 
 
 def test_panel_without_connections_shows_empty_message():

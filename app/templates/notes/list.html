@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "tg/notes.html" import note_card %}
 {% from "macros/ui.html" import empty_state %}
 
 {% block title %}Notes - Thought Garden{% endblock %}
@@ -23,7 +24,7 @@
             </div>
             <div class="hero-actions">
                 <a href="{{ url_for('notes.create') }}" class="btn btn-light">
-                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Note
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Plant a thought
                 </a>
                 <a href="{{ url_for('notes.duplicates') }}" class="btn btn-glass">
                     <i class="bi bi-files me-1" aria-hidden="true"></i>Duplicates
@@ -45,16 +46,16 @@
             {% if filters.pinned %}<input type="hidden" name="pinned" value="{{ filters.pinned }}">{% endif %}
             {% if filters.archived %}<input type="hidden" name="archived" value="{{ filters.archived }}">{% endif %}
             <span class="hero-filters-sep" aria-hidden="true"></span>
-            <select name="category" class="form-select form-select-sm w-auto" aria-label="Filter by category" data-autosubmit>
+            <select name="category" class="form-select form-select-sm w-auto" aria-label="Filter by category" data-autosubmit data-picker-kind="category">
                 <option value="">All categories</option>
                 {% for cat in categories %}
-                <option value="{{ cat }}" {{ 'selected' if filters.category == cat }}>{{ cat }}</option>
+                <option value="{{ cat }}" {{ 'selected' if filters.category == cat }}>{{ cat|category_label }}</option>
                 {% endfor %}
             </select>
-            <select name="tag" class="form-select form-select-sm w-auto" aria-label="Filter by tag" data-autosubmit>
+            <select name="tag" class="form-select form-select-sm w-auto" aria-label="Filter by tag" data-autosubmit data-picker-kind="tag">
                 <option value="">All tags</option>
                 {% for tag in tags %}
-                <option value="{{ tag.name }}" {{ 'selected' if filters.tag == tag.name }}>#{{ tag.name }}</option>
+                <option value="{{ tag.name }}" {{ 'selected' if filters.tag == tag.name }}>{{ tag.name }}</option>
                 {% endfor %}
             </select>
             <noscript><button type="submit" class="btn btn-sm btn-glass">Apply</button></noscript>
@@ -94,73 +95,41 @@
 
     {% if notes.items %}
     <div class="row g-4 stagger-bloom">
-        {% for note in notes.items %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card note-card h-100 {{ 'is-pinned' if note.is_pinned }}">
-                <div class="card-body">
-                    <div class="note-card-kicker">
-                        <span class="badge {{ note.category|category_badge_class }}">{{ note.category or 'Uncategorized' }}</span>
-                        {% if note.is_pinned %}
-                        <span class="pin-pill"><i class="bi bi-pin-fill" aria-hidden="true"></i><span class="visually-hidden">Pinned</span></span>
-                        {% endif %}
-                        {% if note.is_archived %}
-                        <span class="growth-pill"><i class="bi bi-archive" aria-hidden="true"></i>Archived</span>
-                        {% endif %}
-                    </div>
-                    <h2 class="card-title h5">
-                        <a href="{{ url_for('notes.view', note_id=note.id) }}" class="text-decoration-none stretched-link">
-                            {{ note.title }}
-                        </a>
-                    </h2>
-                    <p class="card-text text-muted small">
-                        {{ note.content[:150] }}{% if note.content|length > 150 %}...{% endif %}
-                    </p>
-                    {% set tags_shown = note.tags|display_tags(note.category) %}
-                    {% if tags_shown %}
-                    <div class="tag-list mb-3">
-                        {% for tag in tags_shown[:3] %}
-                        <span class="tag">{{ tag.name }}</span>
-                        {% endfor %}
-                        {% if tags_shown|length > 3 %}
-                        <span class="tag tag-more">+{{ tags_shown|length - 3 }}</span>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    <div class="note-card-foot">
-                        <small class="text-muted">
-                            <i class="bi bi-clock me-1" aria-hidden="true"></i>{{ note.updated_at.strftime('%b %d, %Y') }}
-                        </small>
-                        <div class="dropdown">
-                            <button type="button" class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown"
-                                    aria-expanded="false" aria-label="Actions for {{ note.title }}">
-                                <i class="bi bi-three-dots" aria-hidden="true"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ url_for('notes.edit', note_id=note.id) }}"><i class="bi bi-pencil me-2" aria-hidden="true"></i>Edit</a></li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('notes.pin', note_id=note.id) }}" class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="dropdown-item"><i class="bi bi-pin me-2" aria-hidden="true"></i>{{ 'Unpin' if note.is_pinned else 'Pin' }}</button>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('notes.archive', note_id=note.id) }}" class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="dropdown-item"><i class="bi bi-archive me-2" aria-hidden="true"></i>{{ 'Unarchive' if note.is_archived else 'Archive' }}</button>
-                                    </form>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('notes.delete', note_id=note.id) }}" class="d-inline" data-confirm="Delete this note?">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2" aria-hidden="true"></i>Delete</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+        {% for vm in views %}
+        <div class="col-md-6 col-xl-4">
+            {% call note_card(vm, href=url_for('notes.view', note_id=vm.id)) %}
+            <div class="dropdown">
+                <button type="button" class="btn btn-sm btn-icon tg-menu-trigger" data-bs-toggle="dropdown"
+                        aria-expanded="false" aria-label="Actions for {{ vm.title }}">
+                    <i class="bi bi-three-dots" aria-hidden="true"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><h3 class="dropdown-header">This note</h3></li>
+                    <li><a class="dropdown-item" href="{{ url_for('notes.view', note_id=vm.id) }}"><i class="bi bi-book" aria-hidden="true"></i>Open</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('notes.edit', note_id=vm.id) }}"><i class="bi bi-pencil" aria-hidden="true"></i>Edit</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('garden.focus', note_id=vm.id) }}"><i class="bi bi-bullseye" aria-hidden="true"></i>Focus in garden</a></li>
+                    <li>
+                        <form method="POST" action="{{ url_for('notes.pin', note_id=vm.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="dropdown-item"><i class="bi bi-pin{{ '-fill' if vm.is_pinned }}" aria-hidden="true"></i>{{ 'Unpin' if vm.is_pinned else 'Pin' }}</button>
+                        </form>
+                    </li>
+                    <li>
+                        <form method="POST" action="{{ url_for('notes.archive', note_id=vm.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="dropdown-item"><i class="bi bi-archive" aria-hidden="true"></i>{{ 'Unarchive' if vm.is_archived else 'Archive' }}</button>
+                        </form>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="POST" action="{{ url_for('notes.delete', note_id=vm.id) }}" data-confirm="Delete this note?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash" aria-hidden="true"></i>Delete</button>
+                        </form>
+                    </li>
+                </ul>
             </div>
+            {% endcall %}
         </div>
         {% endfor %}
     </div>

@@ -1,0 +1,499 @@
+/* ==========================================================================
+   Notes - one visual language for a note wherever it appears
+   Rendered from tg_ui/templates/tg/notes.html by both frontends:
+   - .tg-note--editorial  Notes tab entries (a page from a collection)
+   - .tg-note--compact    dashboard rows (the same entry, pressed small)
+   - .tg-journal          one note opened like a journal page (garden panel,
+                          Streamlit note view)
+   - .tg-plant            the note's flower at its growth stage
+   Self-contained on purpose: the Streamlit port loads this without
+   Bootstrap or style.css, so nothing here leans on either. Category colour
+   arrives as --cat-hue/--cat-bg/--cat-text from a .tg-hue-* class.
+   ========================================================================== */
+
+/* ---------- the plant: a small botanical medallion ---------- */
+
+.tg-plant {
+    --plant-size: 3.25rem;
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: var(--plant-size);
+    height: var(--plant-size);
+    border-radius: 50%;
+    background: #0a3124;
+    box-shadow:
+        0 0 0 2px var(--bg-card, #fbfefc),
+        0 0 0 3.5px color-mix(in srgb, var(--cat-hue, #39a77a) 80%, transparent),
+        0 10px 18px -10px rgba(9, 46, 35, 0.55);
+}
+
+.tg-plant img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform-origin: 50% 85%;
+}
+
+.tg-plant--sm { --plant-size: 2.6rem; }
+.tg-plant--md { --plant-size: 3.25rem; }
+.tg-plant--lg { --plant-size: 4.75rem; }
+
+/* the plant leans with the pointer, like something alive */
+@keyframes tg-plant-sway {
+    0%, 100% { rotate: 0deg; }
+    30% { rotate: -4deg; }
+    70% { rotate: 3deg; }
+}
+
+.tg-note:hover .tg-plant img,
+.tg-plant:hover img {
+    animation: tg-plant-sway 1.6s var(--ease-organic, ease-in-out) 1;
+}
+
+/* ---------- shared entry surface ---------- */
+
+.tg-note {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: var(--text-primary);
+    background-color: var(--bg-card);
+    background-image: var(--grad-card-sheen);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+/* a hairline in the note's own hue grows across the top on hover; gold when pinned */
+.tg-note::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--space-5);
+    right: var(--space-5);
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: linear-gradient(90deg, var(--cat-hue, var(--leaf-500)), color-mix(in srgb, var(--cat-hue, var(--leaf-500)) 15%, var(--mint-200)));
+    transform-origin: left center;
+    scale: 0 1;
+    transition: scale var(--dur-base) var(--ease-out);
+    pointer-events: none;
+}
+
+.tg-note.is-pinned::before {
+    background: linear-gradient(90deg, var(--pinned-color), #d8b26c);
+    scale: 1 1;
+}
+
+/* only entries you can open respond to the pointer */
+.tg-note:has(.stretched-link):hover {
+    translate: 0 -4px;
+    box-shadow: var(--shadow-md);
+    border-color: color-mix(in srgb, var(--cat-hue, var(--leaf-500)) 45%, transparent);
+}
+
+.tg-note:has(.stretched-link):hover::before {
+    scale: 1 1;
+}
+
+.tg-note:has(.stretched-link):active {
+    translate: 0 -1px;
+    transition-duration: 90ms;
+}
+
+.tg-note.is-archived {
+    background-image: none;
+    border-style: dashed;
+}
+
+.tg-note.is-archived .tg-plant {
+    filter: saturate(0.45);
+}
+
+.tg-note .stretched-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+}
+
+.tg-note .stretched-link:focus-visible {
+    outline: none;
+}
+
+.tg-note:has(.stretched-link:focus-visible) {
+    box-shadow: var(--shadow-md), 0 0 0 3px rgba(var(--primary-rgb), 0.35);
+}
+
+.tg-note-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: var(--tracking-display);
+    color: var(--text-primary);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+}
+
+.tg-note-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.tg-note-title a:hover {
+    color: var(--primary-color);
+}
+
+.tg-note-excerpt {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.62;
+    overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+}
+
+.tg-note-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.tg-note-meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+    line-height: 1.3;
+}
+
+.tg-sep {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+}
+
+.tg-stage {
+    font-style: italic;
+    color: var(--leaf-text);
+}
+
+.tg-note-actions {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.tg-note .tag-list {
+    position: relative;
+    z-index: 2;
+}
+
+/* ---------- Notes tab: editorial entries ---------- */
+
+.tg-note--editorial {
+    height: 100%;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--space-5) var(--space-4);
+}
+
+.tg-note--editorial .tg-note-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.tg-note--editorial .tg-note-kicker {
+    padding-top: 0.2rem;
+}
+
+/* the plant sits in the corner like a pressed-flower seal */
+.tg-note--editorial .tg-plant {
+    margin: -0.35rem -0.25rem 0 0;
+}
+
+.tg-note--editorial .tg-note-title {
+    font-size: 1.45rem;
+    line-height: 1.2;
+}
+
+.tg-note--editorial .tg-note-excerpt {
+    font-size: var(--fs-base);
+}
+
+.tg-note--editorial .tg-note-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-soft);
+}
+
+/* ---------- Dashboard: compact rows ---------- */
+
+.tg-note--compact {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+    border-radius: var(--radius-md);
+}
+
+.tg-note--compact::before {
+    left: var(--space-4);
+    right: var(--space-4);
+}
+
+.tg-note--compact .tg-note-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.tg-note--compact .tg-note-kicker {
+    gap: 0.45em;
+    margin: 0 0 0.1rem;
+    font-size: var(--fs-xs);
+}
+
+.tg-note--compact .tg-note-meta {
+    font-size: var(--fs-xs);
+}
+
+.tg-note--compact .tg-note-meta::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+}
+
+.tg-note--compact .tg-note-title {
+    font-size: 1.2rem;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tg-note--compact .tg-note-excerpt {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.tg-cat-dot {
+    display: inline-block;
+    flex: none;
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background: var(--cat-hue, var(--text-muted));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat-hue, currentColor) 22%, transparent);
+}
+
+.tg-cat-name {
+    color: var(--cat-text, var(--text-secondary));
+    font-family: var(--font-body);
+    font-weight: var(--font-ui-strong);
+    font-size: 0.74rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+/* a stack of rows reads as one list */
+.tg-note-stack {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* rows laid out side by side on wider screens */
+.tg-note-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tg-note-grid > li,
+.tg-note-stack > li {
+    display: flex;
+    min-width: 0;
+}
+
+.tg-note-grid .tg-note,
+.tg-note-stack .tg-note {
+    flex: 1;
+}
+
+/* ---------- a journal page ---------- */
+
+.tg-journal {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+    color: var(--text-primary);
+}
+
+.tg-journal-head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+}
+
+.tg-journal-heading {
+    min-width: 0;
+}
+
+.tg-journal-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-2);
+}
+
+.tg-journal-title {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.6rem, 1.25rem + 1vw, 2.15rem);
+    line-height: 1.12;
+    letter-spacing: var(--tracking-display);
+    color: var(--text-primary);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+}
+
+.tg-section-label {
+    margin: 0 0 var(--space-2);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: var(--font-ui-strong);
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.tg-journal-body {
+    font-family: var(--font-body);
+    font-size: var(--fs-md);
+    line-height: 1.72;
+    color: var(--text-primary);
+    overflow-wrap: break-word;
+}
+
+.tg-journal-body > p {
+    margin: 0 0 var(--space-3);
+}
+
+/* the opening letter of a page, set in the display face */
+.tg-journal-body > p:first-child::first-letter {
+    float: left;
+    margin: 0.08em 0.1em 0 0;
+    font-family: var(--font-display);
+    font-size: 3.15em;
+    line-height: 0.82;
+    color: var(--leaf-text);
+}
+
+/* ---------- flower key (garden legends) ---------- */
+
+.tg-flower-key {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: var(--space-2) var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tg-flower-key li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: var(--space-2);
+    align-items: center;
+    min-width: 0;
+    font-size: var(--fs-sm);
+    line-height: 1.2;
+}
+
+.tg-flower-key img {
+    grid-row: span 2;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--cat-hue) 80%, transparent);
+}
+
+.tg-flower-key span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tg-flower-name {
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-style: italic;
+}
+
+/* ---------- motion ---------- */
+
+@keyframes tg-note-in {
+    from { opacity: 0; translate: 0 6px; }
+}
+
+.tg-journal {
+    animation: tg-note-in var(--dur-enter, 620ms) var(--ease-out, ease-out) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tg-note,
+    .tg-note::before,
+    .tg-journal {
+        transition: none;
+        animation: none;
+    }
+
+    .tg-note:hover .tg-plant img,
+    .tg-plant:hover img {
+        animation: none;
+    }
+
+    .tg-note:has(.stretched-link):hover {
+        translate: none;
+    }
+}

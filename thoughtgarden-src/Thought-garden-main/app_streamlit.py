@@ -14,6 +14,7 @@ import streamlit as st
 
 from streamlit_auth import current_user_id, logout, require_auth
 from streamlit_state import init_state
+from streamlit_ui import apply_theme
 
 st.set_page_config(
     page_title="Thought Garden",
@@ -31,13 +32,15 @@ _PAGES = {
     "Profile": "streamlit_pages/6_Profile.py",
 }
 
+# Material Symbols ship with Streamlit (no CDN); line icons like the
+# Flask navbar's Bootstrap Icons rather than emoji.
 _ICONS = {
-    "Dashboard": "🏠",
-    "Notes": "📝",
-    "Garden": "🌿",
-    "Search": "🔍",
-    "Insights": "📈",
-    "Profile": "👤",
+    "Dashboard": ":material/home:",
+    "Notes": ":material/menu_book:",
+    "Garden": ":material/local_florist:",
+    "Search": ":material/search:",
+    "Insights": ":material/lightbulb:",
+    "Profile": ":material/person:",
 }
 
 
@@ -46,17 +49,15 @@ def _build_navigation():
         st.Page(_PAGES[name], title=name, icon=_ICONS[name], default=(name == "Dashboard"))
         for name in _PAGES
     ]
-    return st.navigation(pages)
+    # A bar across the top, like the Flask app's navbar (and no second copy
+    # of the page list in the sidebar, which st.navigation + page_link gave).
+    return st.navigation(pages, position="top")
 
 
 def _sidebar_nav() -> None:
-    """Shared sidebar shell (replaces base.html navbar)."""
+    """Shared sidebar shell: brand, session, garden counts, log out."""
     st.sidebar.title("🌱 Thought Garden")
-
-    # page_link entries for quick jump (navigation itself owns active state)
-    for name, path in _PAGES.items():
-        st.sidebar.page_link(path, label=name, icon=_ICONS[name])
-
+    st.sidebar.caption("Where your thoughts take root.")
     st.sidebar.divider()
     uid = current_user_id()
     if uid is not None:
@@ -68,11 +69,18 @@ def _sidebar_nav() -> None:
 
 def main() -> None:
     init_state()
+    # The shared tg_ui design for the password gate. Each page applies it
+    # again inside its own script: the page run replaces anything placed in
+    # the (style-only) event container before nav.run().
+    apply_theme()
     if not require_auth():
         return
 
     # Process-level startup (first-run user + relationship backfill) once
     # we're past the gate so a brand-new database still unlocks.
+    nav = _build_navigation()
+
+    _sidebar_nav()
     try:
         from streamlit_db import run_startup_once
 
@@ -86,12 +94,6 @@ def main() -> None:
     except Exception as exc:  # surface startup failures instead of blank page
         st.sidebar.error(f"Startup issue: {exc}")
 
-    # st.navigation must run before any st.sidebar.page_link(): page_link
-    # resolves its target from the page registry that st.navigation populates
-    # (missing registry entry -> KeyError 'url_pathname' on first run).
-    nav = _build_navigation()
-
-    _sidebar_nav()
 
     nav.run()
 

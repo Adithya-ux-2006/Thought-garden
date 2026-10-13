@@ -6,8 +6,11 @@ from app.services.growth_service import compute_growth_stage, growth_icon_filena
 from app.services.similarity_service import explain_connection, relationship_label
 from app.services.category_service import category_color, garden_category_metadata
 from sqlalchemy import func
+from tg_ui import categories as tg_categories
+from tg_ui.flowers import plant_filename
+from tg_ui.presenters import flower_key
 
-# Matches --pinned-color in app/static/css/style.css (also used by the
+# Matches --pinned-color in tg_ui/static/css/tokens.css (also used by the
 # garden legend's pinned swatch, so the two stay in sync) - CSS can't be
 # read from here, so it's mirrored by hand, same as category_service.category_color().
 # It's a darkened (0.9x) derivative of --warning-color: the raw token was
@@ -23,10 +26,28 @@ def growth_icon_url(stage):
     return url_for('static', filename=f'img/garden/{growth_icon_filename(stage)}')
 
 
+def _present_categories(user_id):
+    """The categories actually growing in a user's garden (chips, legend),
+    in palette order then custom ones, plus the most common category's
+    flower to illustrate the growth path."""
+    rows = db.session.query(Note.category, func.count(Note.id)).filter(
+        Note.user_id == user_id, Note.is_archived == False  # noqa: E712
+    ).group_by(Note.category).all()
+    present = {}
+    for category, count in rows:
+        key = category or tg_categories.UNCATEGORIZED
+        present[key] = present.get(key, 0) + count
+    cats = [m for m in garden_category_metadata(sorted(present, key=str.casefold)) if m['value'] in present]
+    common = max(present, key=present.get) if present else None
+    return cats, tg_categories.flower(common) if common else 'wildflower'
+
+
 @bp.route('/')
 @login_required
 def index():
-    return render_template('garden/index.html', categories=garden_category_metadata())
+    cats, growth_flower = _present_categories(current_user.id)
+    return render_template('garden/index.html', categories=cats,
+                           flowers=flower_key(c['value'] for c in cats), growth_flower=growth_flower)
 
 
 def _visible_garden(user_id):
@@ -80,6 +101,9 @@ def data():
             'category': note.category or 'Uncategorized',
             'shape': 'circularImage',
             'image': growth_icon_url(stage),
+            # the note's flower at this stage, relative to /static
+            'plant': plant_filename(note.category, stage),
+            'flower': tg_categories.flower(note.category),
             'color': {'background': color['background'], 'border': border},
             'borderWidth': 5 if note.is_pinned else 2,
             'size': 20 + min(rel_count * 3, 30),
@@ -130,6 +154,7 @@ def list_view():
             'note': note,
             'stage': stage,
             'icon': growth_icon_url(stage),
+            'plant': plant_filename(note.category, stage),
             'connections': [(other, why) for other, why, _ in linked],
         })
 
@@ -271,6 +296,7 @@ def focus_data(note_id):
         border = PINNED_BORDER_COLOR if n.is_pinned else payload['color']['border']
         payload['shape'] = 'circularImage'
         payload['image'] = growth_icon_url(stage)
+        payload['plant'] = plant_filename(n.category, stage)
         payload['stage'] = stage
         payload['is_pinned'] = n.is_pinned
         payload['color'] = {'background': payload['color']['background'], 'border': border}

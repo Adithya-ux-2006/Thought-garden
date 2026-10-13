@@ -64,7 +64,7 @@
   {
     "title": "Intrusion Detection Systems",
     "content": "Intrusion detection systems (IDS) are devices or software applications that monitor a network or systems for malicious activity or policy violations. They are a key part of network security infrastructure. IDS can detect various types of attacks including port scanning, denial of service attacks, and malware infections. Modern IDS use machine learning algorithms to improve detection accuracy.",
-    "category": "Cybersecurity",
+    "category": "Study",
     "tags": [
       "Intrusion Detection",
       "Cybersecurity",
@@ -74,7 +74,7 @@
   {
     "title": "Network Security Fundamentals",
     "content": "Network security involves policies, practices, and devices designed to protect the integrity, confidentiality, and availability of computer networks and data. It includes both hardware and software technologies. Effective network security targets a variety of threats and stops them from entering or spreading on a network. Common measures include firewalls, encryption, and access controls.",
-    "category": "Cybersecurity",
+    "category": "Study",
     "tags": [
       "Network Security",
       "Cybersecurity",
@@ -84,7 +84,7 @@
   {
     "title": "Adaptive Threat Detection",
     "content": "Adaptive threat detection is an approach to cybersecurity that uses artificial intelligence and machine learning to identify and respond to evolving threats. It continuously learns from network traffic and user behavior to detect anomalies and potential security breaches. This approach is particularly effective against advanced persistent threats and zero-day attacks.",
-    "category": "Cybersecurity",
+    "category": "Study",
     "tags": [
       "Cybersecurity",
       "Machine Learning",
@@ -94,7 +94,7 @@
   {
     "title": "Agile Software Development",
     "content": "Agile software development is an approach to software development under which requirements and solutions evolve through the collaborative effort of self-organizing and cross-functional teams. It promotes adaptive planning, evolutionary development, early delivery, and continuous improvement. Agile encourages rapid and flexible response to change.",
-    "category": "Software Engineering",
+    "category": "Study",
     "tags": [
       "Agile",
       "Software Engineering"
@@ -103,7 +103,7 @@
   {
     "title": "Software Requirements Engineering",
     "content": "Software requirements engineering is the process of determining, analyzing, documenting, validating, and managing the needs and requirements of software systems. It involves elicitation, analysis, specification, and verification of requirements. Good requirements engineering is crucial for successful software projects as it ensures the final product meets user needs.",
-    "category": "Software Engineering",
+    "category": "Study",
     "tags": [
       "Software Engineering",
       "Agile"
@@ -112,7 +112,7 @@
   {
     "title": "Software Testing Strategies",
     "content": "Software testing is an investigation conducted to provide stakeholders with information about the quality of the product or service under test. Testing strategies include unit testing, integration testing, system testing, and acceptance testing. Modern approaches also include test-driven development (TDD) and behavior-driven development (BDD).",
-    "category": "Software Engineering",
+    "category": "Study",
     "tags": [
       "Testing",
       "Software Engineering"
@@ -121,7 +121,7 @@
   {
     "title": "CPU Scheduling Algorithms",
     "content": "CPU scheduling is the process of selecting a process from the ready queue and allocating the CPU to it. Various scheduling algorithms exist including First-Come-First-Served (FCFS), Shortest Job Next (SJN), Round Robin (RR), and Priority Scheduling. The choice of algorithm affects system performance, response time, and throughput.",
-    "category": "Operating Systems",
+    "category": "Study",
     "tags": [
       "CPU Scheduling",
       "Operating Systems",
@@ -131,7 +131,7 @@
   {
     "title": "Process Management in Operating Systems",
     "content": "Process management in operating systems involves managing processes from creation to termination. It includes process scheduling, synchronization, and communication. An operating system manages multiple processes simultaneously, ensuring they share resources efficiently and don't interfere with each other. Key concepts include process states, context switching, and inter-process communication.",
-    "category": "Operating Systems",
+    "category": "Study",
     "tags": [
       "Process Management",
       "Operating Systems",
@@ -141,7 +141,7 @@
   {
     "title": "Deadlock Prevention and Avoidance",
     "content": "A deadlock is a situation where two or more processes are unable to proceed because each is waiting for a resource held by another. Deadlock prevention involves designing systems to eliminate one of the four necessary conditions: mutual exclusion, hold and wait, no preemption, and circular wait. Deadlock avoidance uses algorithms like Banker's algorithm to dynamically check resource allocation.",
-    "category": "Operating Systems",
+    "category": "Study",
     "tags": [
       "Deadlocks",
       "Operating Systems",

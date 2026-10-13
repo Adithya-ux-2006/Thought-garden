@@ -1,3 +1,31 @@
+// The Knowledge Garden graph: the full garden (vis-network canvas, halos,
+// growth, breeze, the journal side panel) and the focus view. Shared by the
+// Flask garden pages and the Streamlit garden component - both load
+// tg-core.js, vis-network and this file, then call bootGarden()/initFocusGraph().
+// Data and navigation go through `gardenHost`, so neither frontend's URLs
+// are baked in here.
+
+// Where the garden gets its data and where its links lead. These defaults
+// are the Flask app's routes; the Streamlit component passes its own host to
+// configureGarden() (inline data, and actions sent back to Python instead of
+// links followed).
+let gardenHost = {
+    loadGraph: () => fetch('/garden/data').then(response => response.json()),
+    loadNote: id => fetch(`/garden/note/${id}`).then(response => response.json()),
+    asset: path => `/static/${path}`,
+    links: {
+        open: id => `/notes/${id}`,
+        edit: id => `/notes/${id}/edit`,
+        focus: id => `/garden/focus/${id}`
+    },
+    // (action, noteId) => void. When set, garden links call it instead of navigating.
+    navigate: null
+};
+
+function configureGarden(host) {
+    gardenHost = Object.assign({}, gardenHost, host);
+}
+
 let gardenNetwork = null;
 let focusNetwork = null;
 let gardenNodesDataSet = null;
@@ -16,19 +44,6 @@ let gardenTweenFrame = null;
 const gardenNodeAlpha = new Map();
 const gardenEdgeAlpha = new Map();
 
-// Category order/slugs come from app/services/category_service.py via a JSON
-// data block in base.html, so the client list can't drift from the server's.
-function readGardenCategories() {
-    const el = document.getElementById('gardenCategories');
-    if (!el) return [];
-    try {
-        return JSON.parse(el.textContent) || [];
-    } catch (e) {
-        return [];
-    }
-}
-
-const GARDEN_CATEGORIES = readGardenCategories();
 const GARDEN_CATEGORY_ORDER = GARDEN_CATEGORIES.map(c => c.value);
 const GARDEN_LABEL_ZOOM_THRESHOLD = 0.8;
 const GARDEN_NODE_DIM_OPACITY = 0.12;
@@ -49,10 +64,6 @@ const GARDEN_FIT_MARGIN = 0.86;
 const GARDEN_ZOOM_STEP = 1.3;
 const GARDEN_HINT_MS = 9000;
 
-function prefersReducedMotion() {
-    return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-}
-
 function cameraAnimation() {
     return prefersReducedMotion() ? false : GARDEN_CAMERA_ANIMATION;
 }
@@ -66,11 +77,6 @@ function easeOutBack(t) {
     const c1 = 1.4;
     const c3 = c1 + 1;
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-}
-
-function themeColor(varName, fallback, el = document.documentElement) {
-    const value = getComputedStyle(el).getPropertyValue(varName).trim();
-    return value || fallback;
 }
 
 // The garden is an always-dark environment (data-bs-theme="dark" on its
@@ -105,24 +111,6 @@ function gardenLabelFont() {
     };
 }
 
-const GARDEN_CATEGORY_BADGE_CLASS = Object.fromEntries(
-    GARDEN_CATEGORIES.map(c => [c.value, `badge-category-${c.slug}`])
-);
-
-function gardenCategoryBadgeClass(category) {
-    return GARDEN_CATEGORY_BADGE_CLASS[category] || 'badge-category-none';
-}
-
-function hexToRgba(hex, alpha) {
-    const clean = hex.replace('#', '');
-    const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
-    const num = parseInt(full, 16);
-    const r = (num >> 16) & 255;
-    const g = (num >> 8) & 255;
-    const b = num & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 // Notes in the same category start near a shared anchor on a ring, then
 // physics takes over. Cheaper and less fragile than vis clustering, which
 // would merge nodes and complicate click/highlight/search handling.
@@ -154,7 +142,9 @@ function seedGardenPositions(nodes, growingIds) {
             // borderWidthSelected still needs computing client-side, kept
             // relative to whatever borderWidth the payload set so a pinned
             // note's already-thicker ring gets thicker still on selection.
-            borderWidthSelected: (n.borderWidth || 2) + 1
+            borderWidthSelected: (n.borderWidth || 2) + 1,
+            // the note's flower at its growth stage (tg_ui/static/img/plants)
+            image: n.plant ? gardenHost.asset(n.plant) : n.image
         };
         // New notes start as a small seed and grow in once the layout settles.
         if (growingIds.has(n.id)) seeded.size = (n.size || 20) * GARDEN_GROW_START_SCALE;
@@ -235,7 +225,8 @@ const GARDEN_RIPPLE_MS = 1500;
 const GARDEN_BREEZE_IDLE_MS = 5000;
 const GARDEN_BREEZE_SETTLE_MS = 6000;
 const GARDEN_BREEZE_EVERY_MS = 7000;
-const GARDEN_BREEZE_MS = 1200;
+const GARDEN_BREEZE_MS = 2200;
+const GARDEN_BREEZE_LEAN = 6;
 const GARDEN_MAX_AMBIENT_NODES = 200;
 
 let gardenFlow = null;
@@ -278,6 +269,12 @@ function gardenEdgePoint(edge, t) {
     return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
+// The note's own category hue (its node fill), for its selection halo.
+function gardenNodeRgb(node) {
+    const background = node.color && node.color.background;
+    return /^#[0-9a-f]{3,6}$/i.test(background || '') ? hexToRgb(background) : '143, 221, 184';
+}
+
 function drawGardenAtmosphere(ctx) {
     if (!gardenNetwork) return;
     const now = performance.now();
@@ -310,7 +307,7 @@ function drawGardenAtmosphere(ctx) {
     if (gardenSelection && gardenSelection.kind === 'node' && positions[gardenSelection.nodeId]) {
         const n = gardenNodeById(gardenSelection.nodeId);
         const breathing = gardenFlow ? 0.12 * Math.sin((now - gardenFlow.start) / 260) : 0;
-        if (n) gardenGlow(ctx, positions[n.id].x, positions[n.id].y, (n.size || 20), 2.6, '143, 221, 184', 0.5 + breathing);
+        if (n) gardenGlow(ctx, positions[n.id].x, positions[n.id].y, (n.size || 20), 2.6, gardenNodeRgb(n), 0.5 + breathing);
     }
 
     // light flowing along the selected note's connections
@@ -383,8 +380,10 @@ function startGardenFlow(nodeId) {
     runGardenAtmosphere();
 }
 
-// Idle breeze: after a quiet moment, a few plants lean gently, then settle.
-// Any pointer or key activity ends it instantly and restores exact sizes.
+// Idle breeze: after a quiet moment, a few plants sway - a lean, a smaller
+// lean back, then still, like stems in a gust - and swell a touch. Any
+// pointer or key activity ends it instantly and restores exact positions
+// and sizes.
 function gardenBreezeAllowed() {
     const now = performance.now();
     return Boolean(gardenNetwork && gardenSettledAt && !gardenBreeze && !gardenGrowing && !gardenDragging
@@ -399,15 +398,20 @@ function startGardenBreeze() {
     const pool = allNodes.filter(n => !gardenHiddenIds.has(n.id));
     const targets = pool.sort(() => Math.random() - 0.5).slice(0, 3);
     if (!targets.length) return;
+    const home = gardenNetwork.getPositions(targets.map(n => n.id));
     const start = performance.now();
-    gardenBreeze = { targets, frame: null };
+    gardenBreeze = { targets, home, frame: null };
     function step(now) {
         if (!gardenBreeze) return;
         const p = Math.min(1, (now - start) / GARDEN_BREEZE_MS);
-        gardenNodesDataSet.update(targets.map((n, i) => {
-            const local = Math.min(1, Math.max(0, p * 1.4 - i * 0.2));
-            return { id: n.id, size: (n.size || 20) * (1 + 0.07 * Math.sin(Math.PI * local)) };
-        }));
+        const locals = targets.map((n, i) => Math.min(1, Math.max(0, p * 1.4 - i * 0.2)));
+        targets.forEach((n, i) => {
+            const lean = Math.sin(locals[i] * Math.PI * 2) * (1 - locals[i]) * GARDEN_BREEZE_LEAN;
+            if (home[n.id]) gardenNetwork.moveNode(n.id, home[n.id].x + lean, home[n.id].y - Math.abs(lean) * 0.2);
+        });
+        gardenNodesDataSet.update(targets.map((n, i) => (
+            { id: n.id, size: (n.size || 20) * (1 + 0.05 * Math.sin(Math.PI * locals[i])) }
+        )));
         if (p < 1) {
             gardenBreeze.frame = requestAnimationFrame(step);
         } else {
@@ -420,6 +424,10 @@ function startGardenBreeze() {
 function endGardenBreeze() {
     if (!gardenBreeze) return;
     if (gardenBreeze.frame) cancelAnimationFrame(gardenBreeze.frame);
+    const home = gardenBreeze.home || {};
+    gardenBreeze.targets.forEach(n => {
+        if (home[n.id]) gardenNetwork.moveNode(n.id, home[n.id].x, home[n.id].y);
+    });
     gardenNodesDataSet.update(gardenBreeze.targets.map(n => ({ id: n.id, size: n.size || 20 })));
     gardenBreeze = null;
     if (gardenNetwork) gardenNetwork.redraw();
@@ -437,8 +445,7 @@ function initGardenAmbience() {
 }
 
 function initGarden() {
-    fetch('/garden/data')
-        .then(response => response.json())
+    gardenHost.loadGraph()
         .then(data => {
             allNodes = data.nodes;
             allEdges = data.edges;
@@ -655,6 +662,12 @@ function gardenNodeColor(node, alpha) {
     };
 }
 
+// The plant image fades with its ring, but never vanishes: a dimmed garden
+// still reads as a garden.
+function gardenNodeOpacity(alpha) {
+    return alpha >= 1 ? 1 : 0.22 + 0.78 * alpha;
+}
+
 // Fades every node/edge from its current opacity to the one the current
 // emphasis asks for. The last frame always lands on the exact target
 // values, so the end state is identical with or without the tween.
@@ -683,7 +696,7 @@ function applyGardenEmphasis(animate = true) {
         gardenNodesDataSet.update(nodePlan.map(({ node, from, to }) => {
             const alpha = mix(from, to);
             gardenNodeAlpha.set(node.id, alpha);
-            return { id: node.id, color: gardenNodeColor(node, alpha) };
+            return { id: node.id, color: gardenNodeColor(node, alpha), opacity: gardenNodeOpacity(alpha) };
         }));
         gardenEdgesDataSet.update(edgePlan.map(({ edge, color, from, to }) => {
             const alpha = mix(from, to);
@@ -737,81 +750,149 @@ function refreshGardenTheme() {
     if (focusNetwork) focusNetwork.setOptions({ nodes: { font: gardenLabelFont() } });
 }
 
+const GARDEN_STAGE_LABELS = { seed: 'Seed', sprout: 'Sprout', sapling: 'Sapling', tree: 'In bloom' };
+const GARDEN_PREVIEW_CHARS = 520;
+
 function showNotePanel(nodeId) {
-    fetch(`/garden/note/${nodeId}`)
-        .then(response => response.json())
-        .then(note => {
-            document.getElementById('notePanel').querySelector('.panel-placeholder').classList.add('d-none');
-            const panelContent = document.getElementById('panelContent');
-            const wasOpen = selectedNode !== null;
-            panelContent.classList.remove('d-none');
-
-            document.getElementById('panelTitle').textContent = note.title;
-            const panelCategory = document.getElementById('panelCategory');
-            panelCategory.textContent = note.category || 'Uncategorized';
-            panelCategory.className = 'badge ' + gardenCategoryBadgeClass(note.category);
-            document.getElementById('panelDate').textContent = new Date(note.created_at).toLocaleDateString();
-            document.getElementById('panelPreview').textContent = note.content.substring(0, 200) + (note.content.length > 200 ? '...' : '');
-
-            // Note data is user content: build nodes with textContent, never HTML strings.
-            document.getElementById('panelTags').replaceChildren(...note.tags.map(tag => {
-                const badge = document.createElement('span');
-                badge.className = 'tag';
-                badge.textContent = tag;
-                return badge;
-            }));
-
-            const connectionsContainer = document.getElementById('panelConnections');
-            if (note.connections.length > 0) {
-                connectionsContainer.replaceChildren(...note.connections.map(buildConnectionItem));
-            } else {
-                const empty = document.createElement('p');
-                empty.className = 'text-muted small';
-                empty.textContent = 'No connections found';
-                connectionsContainer.replaceChildren(empty);
-            }
-
-            document.getElementById('panelViewBtn').href = `/notes/${note.id}`;
-            const focusBtn = document.getElementById('panelFocusBtn');
-            if (focusBtn) focusBtn.href = `/garden/focus/${note.id}`;
-            selectedNode = nodeId;
-
-            // Opening from the placeholder animates via CSS; switching from
-            // one note to another replays a shorter version of it.
-            if (wasOpen && !prefersReducedMotion()) {
-                panelContent.animate(
-                    [{ opacity: 0.2, translate: '8px 0' }, { opacity: 1, translate: '0 0' }],
-                    { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
-                );
-            }
-        })
+    gardenHost.loadNote(nodeId)
+        .then(note => renderNotePanel(nodeId, note))
         .catch(error => console.error('Error loading note:', error));
 }
 
+function formatGardenDate(iso) {
+    const date = new Date(iso);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// The opening paragraphs of a note as plain text, up to a page's worth.
+function previewParagraphs(markdown) {
+    const out = [];
+    let used = 0;
+    for (const block of String(markdown || '').split(/\n\s*\n/)) {
+        const text = plainText(block).replace(/\s+/g, ' ').trim();
+        if (!text) continue;
+        const room = GARDEN_PREVIEW_CHARS - used;
+        if (room < 40) break;
+        out.push(text.length > room ? `${text.slice(0, room).replace(/\s+\S*$/, '')}…` : text);
+        used += text.length;
+    }
+    return out;
+}
+
+// Points a panel action at a note: a real link on the Flask pages, an
+// action handed to gardenHost.navigate in the Streamlit component.
+function setGardenLink(elementId, action, noteId) {
+    const link = document.getElementById(elementId);
+    if (!link) return;
+    const url = gardenHost.links[action];
+    link.href = url ? url(noteId) : '#';
+    link.dataset.noteId = noteId;
+}
+
+// The selected note, opened like a page in a journal: its plant, title,
+// when it was planted and how long it reads, then its opening lines, tags
+// and the thoughts it connects to. Note data is user content: every string
+// goes in through textContent, never as HTML.
+function renderNotePanel(nodeId, note) {
+    document.getElementById('notePanel').querySelector('.panel-placeholder').classList.add('d-none');
+    const panelContent = document.getElementById('panelContent');
+    const wasOpen = selectedNode !== null;
+    panelContent.classList.remove('d-none');
+    const node = gardenNodeById(nodeId) || {};
+
+    document.getElementById('panelTitle').textContent = note.title;
+    const panelCategory = document.getElementById('panelCategory');
+    panelCategory.textContent = categoryLabel(note.category);
+    panelCategory.className = 'badge ' + gardenCategoryBadgeClass(note.category);
+
+    const plant = document.getElementById('panelPlant');
+    if (plant) {
+        plant.className = `tg-plant tg-plant--lg tg-hue-${gardenCategorySlug(note.category)}`;
+        const img = plant.querySelector('img');
+        const src = note.plant || node.plant;
+        if (img && src) img.src = gardenHost.asset(src);
+    }
+    const pinned = document.getElementById('panelPinned');
+    if (pinned) pinned.classList.toggle('d-none', !(note.is_pinned || node.is_pinned));
+
+    const meta = document.getElementById('panelMeta');
+    if (meta) {
+        const parts = [];
+        if (note.created_at) parts.push(`Planted ${formatGardenDate(note.created_at)}`);
+        parts.push(`${readingMinutes(note.content)} min read`);
+        const stage = note.stage || node.stage;
+        if (stage && GARDEN_STAGE_LABELS[stage]) parts.push(GARDEN_STAGE_LABELS[stage]);
+        meta.replaceChildren();
+        parts.forEach((text, i) => {
+            if (i) meta.appendChild(tgEl('span', 'tg-sep'));
+            meta.appendChild(tgEl('span', i === 2 ? 'tg-stage' : null, text));
+        });
+    }
+
+    const preview = document.getElementById('panelPreview');
+    const paragraphs = previewParagraphs(note.content);
+    preview.replaceChildren(...(paragraphs.length
+        ? paragraphs.map(text => tgEl('p', null, text))
+        : [tgEl('p', 'text-muted', 'This page is still blank.')]));
+
+    const tags = note.tags || [];
+    document.getElementById('panelTags').replaceChildren(...tags.map(tag => {
+        const item = tgEl('li');
+        item.appendChild(tgEl('span', 'tag', tag));
+        return item;
+    }));
+    const tagsSection = document.getElementById('panelTagsSection');
+    if (tagsSection) tagsSection.classList.toggle('d-none', tags.length === 0);
+
+    const connectionsContainer = document.getElementById('panelConnections');
+    const count = document.getElementById('panelConnectionCount');
+    if (count) count.textContent = note.connections.length ? String(note.connections.length) : '';
+    if (note.connections.length > 0) {
+        connectionsContainer.replaceChildren(...note.connections.map(buildConnectionItem));
+    } else {
+        connectionsContainer.replaceChildren(tgEl('p', 'text-muted small mb-0',
+            'No connections found yet - it will find its neighbours as the garden grows.'));
+    }
+
+    setGardenLink('panelViewBtn', 'open', note.id);
+    setGardenLink('panelEditBtn', 'edit', note.id);
+    setGardenLink('panelFocusBtn', 'focus', note.id);
+    selectedNode = nodeId;
+
+    // Opening from the placeholder animates via CSS; switching from one note
+    // to another turns the page with a shorter version of it.
+    if (wasOpen && !prefersReducedMotion() && panelContent.animate) {
+        panelContent.animate(
+            [{ opacity: 0.2, translate: '10px 0' }, { opacity: 1, translate: '0 0' }],
+            { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+        );
+    }
+}
+
 function buildConnectionItem(conn) {
-    const item = document.createElement('button');
+    const item = tgEl('button', 'connection-item');
     item.type = 'button';
-    item.className = 'connection-item';
     item.addEventListener('click', () => selectGardenNode(conn.id, { center: true }));
 
-    const row = document.createElement('div');
-    row.className = 'd-flex justify-content-between align-items-center gap-2';
-    const title = document.createElement('strong');
-    title.textContent = conn.title.substring(0, 30) + (conn.title.length > 30 ? '...' : '');
-    const label = document.createElement('span');
-    label.className = 'badge bg-' + (conn.label === 'Strong match' ? 'success' : 'secondary');
-    label.textContent = conn.label;
-    row.append(title, label);
+    const other = gardenNodeById(conn.id);
+    if (other && other.plant) {
+        const img = tgEl('img', 'connection-plant');
+        img.src = gardenHost.asset(other.plant);
+        img.alt = '';
+        img.width = 64;
+        img.height = 64;
+        item.appendChild(img);
+    }
 
-    const reason = document.createElement('small');
-    reason.className = 'connection-reason d-block';
-    reason.textContent = conn.reason;
-
-    const category = document.createElement('small');
-    category.className = 'text-muted';
-    category.textContent = conn.category || 'Uncategorized';
-
-    item.append(row, reason, category);
+    const body = tgEl('span', 'connection-body');
+    const row = tgEl('span', 'connection-top');
+    const title = conn.title.length > 48 ? `${conn.title.substring(0, 48)}…` : conn.title;
+    row.append(tgEl('strong', 'connection-title', title),
+        tgEl('span', 'badge bg-' + (conn.label === 'Strong match' ? 'success' : 'secondary'), conn.label));
+    body.append(row,
+        tgEl('small', 'connection-reason', conn.reason),
+        tgEl('small', 'connection-category', categoryLabel(conn.category)));
+    item.appendChild(body);
     return item;
 }
 
@@ -1045,365 +1126,18 @@ function renderFocusGraph(container, nodes, edges) {
     };
     
     const dataset = {
-        nodes: new vis.DataSet(nodes),
+        nodes: new vis.DataSet(nodes.map(n => (n.plant ? { ...n, image: gardenHost.asset(n.plant) } : n))),
         edges: new vis.DataSet(edges)
     };
 
     focusNetwork = new vis.Network(container, dataset, options);
 }
 
-function initSearchAutocomplete() {
-    const input = document.getElementById('q');
-    const box = document.getElementById('searchSuggestions');
-    if (!input || !box) return;
+// ---------------------------------------------------------------------------
+// Wiring - shared by the Flask garden page and the Streamlit component
+// ---------------------------------------------------------------------------
 
-    let debounceTimer = null;
-
-    function hideSuggestions() {
-        box.style.display = 'none';
-        box.innerHTML = '';
-    }
-
-    function renderSuggestions(suggestions) {
-        box.innerHTML = '';
-        suggestions.forEach(function(note) {
-            // Note titles/categories are user content: textContent, never innerHTML.
-            const item = document.createElement('button');
-            item.type = 'button';
-            item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-
-            const title = document.createElement('span');
-            title.textContent = note.title;
-            item.appendChild(title);
-
-            if (note.category) {
-                const badge = document.createElement('span');
-                badge.className = 'badge ms-2 ' + gardenCategoryBadgeClass(note.category);
-                badge.textContent = note.category;
-                item.appendChild(badge);
-            }
-
-            item.addEventListener('click', function() {
-                window.location.href = `/notes/${note.id}`;
-            });
-
-            box.appendChild(item);
-        });
-        box.style.display = suggestions.length ? 'block' : 'none';
-    }
-
-    input.addEventListener('input', function() {
-        const q = input.value.trim();
-        clearTimeout(debounceTimer);
-        if (q.length < 2) {
-            hideSuggestions();
-            return;
-        }
-        debounceTimer = setTimeout(function() {
-            fetch(`/search/api/suggest?q=${encodeURIComponent(q)}`)
-                .then(response => response.json())
-                .then(renderSuggestions)
-                .catch(error => console.error('Error fetching search suggestions:', error));
-        }, 200);
-    });
-
-    document.addEventListener('click', function(e) {
-        if (e.target !== input && !box.contains(e.target)) {
-            hideSuggestions();
-        }
-    });
-
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') hideSuggestions();
-    });
-}
-
-function initDarkMode() {
-    const toggle = document.getElementById('darkModeToggle');
-    const icon = document.getElementById('darkModeIcon');
-    const html = document.documentElement;
-
-    // theme-init.js already applied the saved theme; only sync the control.
-    function syncToggle() {
-        const isDark = html.getAttribute('data-bs-theme') === 'dark';
-        if (icon) icon.className = isDark ? 'bi bi-sun' : 'bi bi-moon';
-        if (toggle) toggle.setAttribute('aria-pressed', String(isDark));
-    }
-    syncToggle();
-
-    if (toggle) {
-        toggle.addEventListener('click', function() {
-            const isDark = html.getAttribute('data-bs-theme') === 'dark';
-            html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
-            localStorage.setItem('darkMode', !isDark);
-            syncToggle();
-            refreshGardenTheme();
-        });
-    }
-}
-
-function initFlashAutoDismiss() {
-    const alerts = document.querySelectorAll('.alert[data-autodismiss]');
-    if (!alerts.length) return;
-    setTimeout(function() {
-        alerts.forEach(function(alert) {
-            if (window.bootstrap && bootstrap.Alert) {
-                bootstrap.Alert.getOrCreateInstance(alert).close();
-            } else {
-                alert.remove();
-            }
-        });
-    }, 5000);
-}
-
-function csrfToken() {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.content : '';
-}
-
-function initTagSuggestions() {
-    const button = document.getElementById('suggestTagsButton');
-    const region = document.getElementById('tagSuggestions');
-    const form = button && button.closest('form');
-    if (!form || !region) return;
-    const tagsInput = form.querySelector('[name="tags"]');
-    const titleInput = form.querySelector('[name="title"]');
-    const contentInput = form.querySelector('[name="content"]');
-
-    function currentTags() {
-        return tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
-    }
-
-    function addTag(name, chip) {
-        const tags = currentTags();
-        if (!tags.some(t => t.toLowerCase() === name.toLowerCase())) tags.push(name);
-        tagsInput.value = tags.join(', ');
-        chip.remove();
-        if (!region.querySelector('button')) region.replaceChildren();
-        tagsInput.focus();
-    }
-
-    function render(suggestions) {
-        region.replaceChildren();
-        if (!suggestions.length) {
-            const empty = document.createElement('small');
-            empty.className = 'text-muted';
-            empty.textContent = 'No tag suggestions yet.';
-            region.appendChild(empty);
-            return;
-        }
-        const label = document.createElement('small');
-        label.className = 'text-muted me-1';
-        label.textContent = 'Suggested:';
-        region.appendChild(label);
-        suggestions.forEach(function(name) {
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            chip.className = 'btn btn-sm btn-outline-primary tag-suggestion me-1 mb-1';
-            chip.textContent = name;
-            chip.setAttribute('aria-label', `Add tag ${name}`);
-            chip.addEventListener('click', () => addTag(name, chip));
-            region.appendChild(chip);
-        });
-    }
-
-    button.addEventListener('click', function() {
-        const body = {
-            title: titleInput ? titleInput.value : '',
-            content: contentInput ? contentInput.value : '',
-            tags: tagsInput.value,
-        };
-        if (button.dataset.noteId) body.note_id = Number(button.dataset.noteId);
-        button.disabled = true;
-        fetch(button.dataset.suggestUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
-            body: JSON.stringify(body),
-        })
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return response.json();
-            })
-            .then(data => render(data.suggestions || []))
-            .catch(error => {
-                console.error('Error fetching tag suggestions:', error);
-                region.replaceChildren();
-                const failed = document.createElement('small');
-                failed.className = 'text-danger';
-                failed.textContent = 'Could not load tag suggestions.';
-                region.appendChild(failed);
-            })
-            .finally(() => { button.disabled = false; });
-    });
-}
-
-// Moving between related notes: the page you're leaving lifts away before
-// the next one blooms in. Plain left-clicks only; modified clicks (new tab
-// etc.) and reduced motion navigate immediately.
-function initNoteTransitions() {
-    const article = document.querySelector('.note-article');
-    if (!article) return;
-    document.addEventListener('click', function(e) {
-        const link = e.target.closest('a[data-note-link]');
-        if (!link || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-        if (prefersReducedMotion()) return;
-        e.preventDefault();
-        let gone = false;
-        const go = () => {
-            if (gone) return;
-            gone = true;
-            window.location.href = link.href;
-        };
-        article.animate([{ opacity: 1, translate: '0 0' }, { opacity: 0, translate: '0 -12px' }],
-            { duration: 200, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' }).onfinish = go;
-        setTimeout(go, 400);
-    });
-    // Coming back via the back/forward cache: undo the fade.
-    window.addEventListener('pageshow', function(e) {
-        if (e.persisted) article.getAnimations().forEach(a => a.cancel());
-    });
-}
-
-// Garden list view: filter and sort the rendered rows in place - no new
-// requests, the server already sent every visible note. Rows that move
-// glide to their new place (FLIP); rows that reappear fade up.
-const LIBRARY_STAGE_RANK = { seed: 0, sprout: 1, sapling: 2, tree: 3 };
-const LIBRARY_SORTS = {
-    garden: (a, b) => a.dataset.order - b.dataset.order,
-    title: (a, b) => a.dataset.title.localeCompare(b.dataset.title),
-    connections: (a, b) => b.dataset.connections - a.dataset.connections || a.dataset.order - b.dataset.order,
-    growth: (a, b) => LIBRARY_STAGE_RANK[b.dataset.stage] - LIBRARY_STAGE_RANK[a.dataset.stage]
-        || b.dataset.connections - a.dataset.connections,
-    recent: (a, b) => b.dataset.updated.localeCompare(a.dataset.updated)
-};
-
-function initLibrary() {
-    const list = document.getElementById('library');
-    const form = document.getElementById('libraryControls');
-    if (!list || !form) return;
-
-    const rows = Array.from(list.children);
-    const search = document.getElementById('librarySearch');
-    const category = document.getElementById('libraryCategory');
-    const stage = document.getElementById('libraryStage');
-    const sort = document.getElementById('librarySort');
-    const count = document.getElementById('libraryCount');
-    const noMatch = document.getElementById('libraryNoMatch');
-    const noun = n => `note${n === 1 ? '' : 's'}`;
-
-    function apply(animate = true) {
-        const query = search.value.trim().toLowerCase();
-        const before = new Map(rows.filter(r => !r.hidden).map(r => [r, r.getBoundingClientRect().top]));
-
-        let shown = 0;
-        rows.forEach(row => {
-            const match = (!query || row.dataset.title.includes(query) || row.dataset.tags.includes(query))
-                && (!category.value || row.dataset.category === category.value)
-                && (!stage.value || row.dataset.stage === stage.value);
-            row.hidden = !match;
-            if (match) shown++;
-        });
-        rows.slice().sort(LIBRARY_SORTS[sort.value] || LIBRARY_SORTS.garden).forEach(row => list.appendChild(row));
-
-        const total = document.createElement('strong');
-        total.textContent = shown;
-        count.replaceChildren(...(shown === rows.length
-            ? [total, ` ${noun(shown)}`]
-            : ['Showing ', total, ` of ${rows.length} ${noun(rows.length)}`]));
-        list.classList.toggle('d-none', shown === 0);
-        noMatch.classList.toggle('d-none', shown > 0);
-
-        if (!animate || prefersReducedMotion()) return;
-        rows.forEach(row => {
-            if (row.hidden) return;
-            const top = row.getBoundingClientRect().top;
-            if (!before.has(row)) {
-                row.animate([{ opacity: 0, translate: '0 10px' }, { opacity: 1, translate: '0 0' }],
-                    { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
-            } else if (Math.abs(before.get(row) - top) > 1) {
-                row.animate([{ translate: `0 ${before.get(row) - top}px` }, { translate: '0 0' }],
-                    { duration: 460, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
-            }
-        });
-    }
-
-    form.addEventListener('submit', e => e.preventDefault());
-    search.addEventListener('input', () => apply());
-    [category, stage, sort].forEach(control => control.addEventListener('change', () => apply()));
-    document.getElementById('libraryReset').addEventListener('click', () => {
-        form.reset();
-        apply();
-        search.focus();
-    });
-    apply(false);
-}
-
-// Canopy foliage drifts a little slower than the page as you scroll, and
-// the hero leaf leans toward the pointer. Desktop pointers only; off under
-// reduced motion.
-function initParallax() {
-    if (prefersReducedMotion()) return;
-    const bg = document.querySelector('.canopy-bg');
-    const canopy = document.querySelector('.canopy');
-    if (bg && canopy && !document.body.classList.contains('page-immersive')) {
-        let queued = false;
-        const update = () => {
-            queued = false;
-            const y = window.scrollY;
-            if (y > canopy.offsetHeight + 200) return;
-            bg.style.setProperty('--parallax', `${(y * 0.28).toFixed(1)}px`);
-        };
-        window.addEventListener('scroll', () => {
-            if (!queued) {
-                queued = true;
-                requestAnimationFrame(update);
-            }
-        }, { passive: true });
-    }
-
-    const leaf = document.querySelector('[data-parallax-leaf] img');
-    if (leaf && window.matchMedia('(pointer: fine)').matches) {
-        let frame = null;
-        window.addEventListener('pointermove', event => {
-            if (frame) return;
-            frame = requestAnimationFrame(() => {
-                frame = null;
-                const x = event.clientX / window.innerWidth - 0.5;
-                const y = event.clientY / window.innerHeight - 0.5;
-                leaf.style.setProperty('--leaf-x', `${(x * -22).toFixed(1)}px`);
-                leaf.style.setProperty('--leaf-y', `${(y * -14).toFixed(1)}px`);
-            });
-        }, { passive: true });
-    }
-}
-
-function initConfirmForms() {
-    document.querySelectorAll('form[data-confirm]').forEach(function(form) {
-        form.addEventListener('submit', function(event) {
-            if (!window.confirm(form.dataset.confirm)) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-            }
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    initConfirmForms();
-    initDarkMode();
-    initSearchAutocomplete();
-    initTagSuggestions();
-
-    if (document.getElementById('gardenGraph')) {
-        initGarden();
-        initGardenAmbience();
-        initGardenChrome();
-    }
-    
-    if (document.getElementById('focusGraph')) {
-        initFocusGraph();
-    }
-    
+function wireGardenControls() {
     [
         ['searchNodeButton', searchNode],
         ['fitGraphButton', fitGraph],
@@ -1418,11 +1152,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Escape returns the garden to its resting state.
-    if (document.getElementById('gardenGraph')) {
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && selectedNode !== null) closePanel();
-        });
-    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && selectedNode !== null) closePanel();
+    });
 
     const nodeSearch = document.getElementById('searchNode');
     if (nodeSearch) {
@@ -1434,47 +1166,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    document.querySelectorAll('select[data-autosubmit]').forEach(function(select) {
-        select.addEventListener('change', () => select.form.submit());
-    });
-
     const physicsToggle = document.getElementById('physicsToggle');
-    if (physicsToggle) {
-        physicsToggle.addEventListener('change', togglePhysics);
-    }
+    if (physicsToggle) physicsToggle.addEventListener('change', togglePhysics);
 
     document.querySelectorAll('.garden-category-filter').forEach(function(checkbox) {
         checkbox.addEventListener('change', applyGardenCategoryFilters);
     });
 
-    initFlashAutoDismiss();
-    initParallax();
-    initLibrary();
-    initNoteTransitions();
-
-    // Saving/importing blocks on relationship scoring, so show progress and
-    // disable the submit button (which also prevents double submits).
-    document.querySelectorAll('form[data-ai-processing]').forEach(function(form) {
-        form.addEventListener('submit', function() {
-            if (form.dataset.aiProcessingSubmitted) return;
-            form.dataset.aiProcessingSubmitted = 'true';
-            form.classList.add('is-submitting');
-
-            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
-            if (!submitBtn) return;
-
-            const loadingText = submitBtn.dataset.loadingText || 'Processing...';
-            submitBtn.disabled = true;
-
-            if (submitBtn.tagName === 'BUTTON') {
-                const spinner = document.createElement('span');
-                spinner.className = 'spinner-border spinner-border-sm me-2';
-                spinner.setAttribute('aria-hidden', 'true');
-                submitBtn.replaceChildren(spinner, document.createTextNode(loadingText));
-            } else {
-                submitBtn.dataset.originalValue = submitBtn.value;
-                submitBtn.value = loadingText;
-            }
-        });
+    // Links marked data-garden-action (open/edit/focus/list/create) go to
+    // gardenHost.navigate when the host has one; otherwise they stay links.
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('[data-garden-action]');
+        if (!link || !gardenHost.navigate) return;
+        e.preventDefault();
+        const id = link.dataset.noteId ? Number(link.dataset.noteId) : null;
+        gardenHost.navigate(link.dataset.gardenAction, id);
     });
-});
+}
+
+function bootGarden() {
+    if (!document.getElementById('gardenGraph')) return;
+    initGarden();
+    initGardenAmbience();
+    initGardenChrome();
+    wireGardenControls();
+}

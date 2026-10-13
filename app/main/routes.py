@@ -6,6 +6,7 @@ from app.models import Note, Tag, Relationship, db, note_tags
 from app.services.document_service import ALLOWED_EXTENSIONS as IMPORTED_SOURCE_TYPES
 from app.services.knowledge_service import export_garden, garden_health
 from sqlalchemy import func, or_
+from app.services.note_views import note_views
 
 
 @bp.route('/')
@@ -60,6 +61,10 @@ def dashboard():
     return render_template('main/dashboard.html',
                            stats=stats,
                            recent_notes=recent_notes,
+                           recent_views=note_views(recent_notes),
+                           connected_views=note_views(note for note, _count in most_connected),
+                           orphan_views=note_views(orphan_notes),
+                           rediscover_views=note_views(rediscover),
                            most_connected=most_connected,
                            categories=categories,
                            recent_connections=recent_connections,

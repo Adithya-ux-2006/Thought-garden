@@ -22,11 +22,11 @@
                         </div>
                         <div class="col-md-2">
                             {{ form.category.label(class="form-label") }}
-                            {{ form.category(class="form-select") }}
+                            {{ form.category(class="form-select", **{'data-picker-kind': 'category'}) }}
                         </div>
                         <div class="col-md-2">
                             {{ form.tag.label(class="form-label") }}
-                            {{ form.tag(class="form-select") }}
+                            {{ form.tag(class="form-select", **{'data-picker-kind': 'tag'}) }}
                         </div>
                         <div class="col-md-2">
                             {{ form.source_type.label(class="form-label") }}
@@ -70,7 +70,8 @@
             <div class="result-list stagger-slide">
                 {% for note in results %}
                 <div class="card card-interactive result-item p-3 p-md-4">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <span class="tg-plant tg-plant--md {{ note.category|category_hue_class }} d-none d-sm-inline-grid"><img src="{{ tg_asset(note.category|plant_path) }}" alt="" width="64" height="64" loading="lazy"></span>
                         <div class="flex-grow-1">
                             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                                 <h2 class="h5 mb-0">
@@ -78,9 +79,7 @@
                                         {{ note.title }}
                                     </a>
                                 </h2>
-                                {% if note.category %}
-                                <span class="badge {{ note.category|category_badge_class }}">{{ note.category }}</span>
-                                {% endif %}
+                                <span class="badge {{ note.category|category_badge_class }}">{{ note.category|category_label }}</span>
                                 {% if note.source_type != 'manual' %}
                                 <span class="badge bg-secondary">{{ note.source_type }}</span>
                                 {% endif %}

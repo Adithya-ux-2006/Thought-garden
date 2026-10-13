@@ -10,6 +10,7 @@ from __future__ import annotations
 import streamlit as st
 
 import streamlit_notes_ops as ops
+import streamlit_ui as ui
 from streamlit_auth import current_user_id, require_auth
 from streamlit_state import (
     KEY_SEARCH_CATEGORY,
@@ -25,6 +26,7 @@ from streamlit_widgets import PER_PAGE
 
 st.set_page_config(page_title="Search · Thought Garden", page_icon="🔍", layout="wide")
 require_auth()
+ui.apply_theme()  # shared tg_ui design (must run inside the page script)
 init_state()
 
 user_id = current_user_id()
@@ -67,7 +69,7 @@ def _run_search(query: str, category: str, tag: str, source: str, mode: str):
             )
 
 
-st.title("Search")
+ui.hero("Search", "Search your knowledge", "Keywords and meaning together - ask a question or type a phrase.")
 
 categories, tags = ops.list_filter_choices(user_id)
 sources = ["", "manual", "document"]
@@ -91,14 +93,14 @@ with st.container(border=True):
             category = st.selectbox(
                 "Category",
                 [""] + categories,
-                format_func=lambda x: x or "All Categories",
+                format_func=lambda x: ui.category_label(x) if x else "All categories",
                 key=KEY_SEARCH_CATEGORY,
             )
         with f2:
             tag = st.selectbox(
                 "Tag",
                 [""] + tags,
-                format_func=lambda x: x or "All Tags",
+                format_func=lambda x: f"#{x}" if x else "All tags",
                 key=KEY_SEARCH_TAG,
             )
         with f3:
@@ -148,23 +150,19 @@ st.caption(f"{total} result{'s' if total != 1 else ''} for “{query or 'filters
 if not pagination.items:
     st.info("No notes match.")
 else:
-    for note in pagination.items:
-        with st.container(border=True):
-            st.markdown(f"**{note.title}**")
-            preview = note.content[:220] + ("..." if len(note.content) > 220 else "")
-            st.caption(preview)
-            badges = []
-            if note.category:
-                badges.append(note.category)
-            badges += [t.name for t in note.tags[:4]]
-            if badges:
-                st.caption(" · ".join(badges))
-            if st.button("Open", key=f"search_open_{note.id}"):
-                open_note(note.id)
-                try:
-                    st.switch_page("streamlit_pages/2_Notes.py")
-                except Exception:
-                    st.info("Open Notes in the sidebar to view this note.")
+    # Results as the shared compact note rows (tg_ui), each with Open.
+    for note, vm in zip(pagination.items, ops.note_views(pagination.items)):
+        with st.container(key=f"tgnote-search-{note.id}"):
+            c1, c2 = st.columns([7, 1], vertical_alignment="center")
+            with c1:
+                ui.note_row(vm, excerpt=180)
+            with c2, st.container(key=f"tgacts-search-{note.id}"):
+                if st.button("Open", key=f"search_open_{note.id}", use_container_width=True):
+                    open_note(note.id)
+                    try:
+                        st.switch_page("streamlit_pages/2_Notes.py")
+                    except Exception:
+                        st.info("Open Notes in the sidebar to view this note.")
 
     st.divider()
     c1, c2, c3 = st.columns([1, 2, 1])

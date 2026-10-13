@@ -7,6 +7,8 @@ from typing import Callable, Iterable, Sequence
 
 import streamlit as st
 
+import streamlit_ui as ui
+
 from streamlit_state import (
     KEY_CONFIRM_ACTION,
     KEY_CONFIRM_NOTE_ID,
@@ -23,34 +25,24 @@ def parse_tags(tag_string: str | None) -> list[str]:
     return [t.strip() for t in tag_string.split(",") if t.strip()]
 
 
-def note_card(note, *, on_open: Callable[[int], None], on_pin: Callable[[int], None] | None = None) -> None:
-    """Render one note card. on_open/on_pin receive note.id."""
-    pinned = "📌 " if note.is_pinned else ""
-    updated = note.updated_at.strftime("%b %d, %Y") if note.updated_at else ""
-
-    with st.container(border=True):
-        c1, c2 = st.columns([4, 1])
-        with c1:
-            st.markdown(f"**{pinned}{note.title}**")
-            preview = note.content[:150] + ("..." if len(note.content) > 150 else "")
-            st.caption(preview)
-            badges = []
-            if note.category:
-                badges.append(note.category)
-            for t in note.tags[:3]:
-                badges.append(t.name)
-            if len(note.tags) > 3:
-                badges.append(f"+{len(note.tags) - 3}")
-            if badges:
-                st.caption(" · ".join(badges))
-            st.caption(updated)
-        with c2:
-            if st.button("Open", key=f"open_{note.id}", use_container_width=True):
-                on_open(note.id)
+def note_card(note, *, on_open: Callable[[int], None], on_pin: Callable[[int], None] | None = None,
+              vm: dict | None = None) -> None:
+    """Render one note as the shared editorial entry (tg_ui, same as the
+    Flask Notes tab) with its actions underneath. on_open/on_pin receive
+    note.id; `vm` is its streamlit_ui view model (built here if omitted)."""
+    vm = vm or ui.view(note)
+    with st.container(key=f"tgnote-{note.id}"):
+        ui.note_card(vm)
+        with st.container(key=f"tgacts-{note.id}"):
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("Open", key=f"open_{note.id}", icon=":material/menu_book:", use_container_width=True):
+                    on_open(note.id)
             if on_pin is not None:
-                label = "Unpin" if note.is_pinned else "Pin"
-                if st.button(label, key=f"pin_{note.id}", use_container_width=True):
-                    on_pin(note.id)
+                with c2:
+                    label = "Unpin" if note.is_pinned else "Pin"
+                    if st.button(label, key=f"pin_{note.id}", icon=":material/push_pin:", use_container_width=True):
+                        on_pin(note.id)
 
 
 def render_pagination(total: int, per_page: int = PER_PAGE) -> None:

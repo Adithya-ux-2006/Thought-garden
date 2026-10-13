@@ -1,0 +1,192 @@
+{# The Knowledge Garden, shared by the Flask garden page and the Streamlit
+   garden component: header (title, live stats, find), category chips, the
+   clearing (graph, dock, legend, hint, empty state) and the journal panel.
+   garden-graph.js drives every id/class here.
+
+   cats    - tg_ui.categories.metadata(): the categories in this garden
+   flowers - tg_ui.presenters.flower_key(): one legend row per flower
+   links   - {'list': url|None, 'create': url|None}; with no url the link
+             carries only data-garden-action for the host to handle.
+   user_id - keys the browser's "seen plants" memory (new-growth animation). #}
+{% from "tg/notes.html" import flower_key %}
+
+{% macro garden(cats, flowers, links, user_id='', growth_flower='wildflower', heading='Knowledge Garden') -%}
+<div class="row g-0">
+    <div class="col-lg-9">
+        <header class="garden-header">
+            <div class="garden-header-top">
+                <div class="garden-title-block">
+                    <span class="page-eyebrow garden-eyebrow"><i class="bi bi-flower1" aria-hidden="true"></i>My garden</span>
+                    <h1 class="garden-title">{{ heading }}</h1>
+                    <p class="garden-stats" id="gardenStats" aria-live="polite"></p>
+                </div>
+
+                <div class="garden-find" role="search">
+                    <div class="garden-search-group">
+                        <i class="bi bi-search garden-search-icon" aria-hidden="true"></i>
+                        <input type="search" class="form-control" id="searchNode" placeholder="Find a plant by title..." aria-label="Find a note in the graph" autocomplete="off">
+                        <button class="btn btn-light" type="button" id="searchNodeButton" aria-label="Find note">
+                            <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="searchFeedback" class="garden-search-feedback" aria-live="polite"></div>
+                </div>
+            </div>
+
+            {% if cats %}
+            <div class="garden-filterbar" role="group" aria-labelledby="gardenFilterLabel">
+                <span class="garden-toolbar-label" id="gardenFilterLabel"><i class="bi bi-funnel" aria-hidden="true"></i>Show</span>
+                <div class="garden-chips">
+                    {% for cat in cats %}
+                    <div class="form-check garden-chip">
+                        <input class="form-check-input garden-category-filter" type="checkbox" id="filter-{{ loop.index }}" value="{{ cat.value }}">
+                        <label class="form-check-label" for="filter-{{ loop.index }}" title="{{ cat.label }}">
+                            <span class="badge badge-category-{{ cat.slug }}">{{ cat.short_label }}<i class="bi bi-check-lg garden-chip-check" aria-hidden="true"></i></span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-sm btn-link garden-clear-filters" id="clearCategoryFilters">
+                    <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Clear
+                </button>
+            </div>
+            {% endif %}
+        </header>
+
+        {% if links.list %}
+        <p class="visually-hidden">The graph is a visual canvas. The <a href="{{ links.list }}">list view</a> shows the same notes and connections as text.</p>
+        {% endif %}
+        <div class="garden-stage">
+            <div id="gardenGraph" class="garden-graph" data-user-id="{{ user_id }}" role="img" aria-label="Knowledge graph of your notes, drawn as a garden of flowers.{{ ' Use the list view for a text alternative.' if links.list }}"></div>
+            <div class="garden-fireflies" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+            <!-- view controls: a floating dock on the clearing's edge -->
+            <div class="garden-dock" role="group" aria-label="Garden view">
+                <button type="button" class="garden-dock-btn" id="zoomInButton" aria-label="Zoom in" data-tip="Zoom in">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="garden-dock-btn" id="zoomOutButton" aria-label="Zoom out" data-tip="Zoom out">
+                    <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                </button>
+                <span class="garden-dock-sep" aria-hidden="true"></span>
+                <button type="button" class="garden-dock-btn" id="fitGraphButton" aria-label="Fit to view" data-tip="Fit every plant in view">
+                    <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="garden-dock-btn" id="resetViewButton" aria-label="Reset view" data-tip="Reset view">
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                </button>
+                <label class="garden-dock-btn garden-dock-toggle" data-tip="Physics: let the plants drift">
+                    <input type="checkbox" id="physicsToggle" checked>
+                    <i class="bi bi-wind" aria-hidden="true"></i>
+                    <span class="visually-hidden">Physics</span>
+                </label>
+                {% if links.list %}
+                <span class="garden-dock-sep" aria-hidden="true"></span>
+                <a href="{{ links.list }}" class="garden-dock-btn" id="gardenListLink" data-tip="List view">
+                    <i class="bi bi-list-ul" aria-hidden="true"></i>
+                    <span class="visually-hidden">List view</span>
+                </a>
+                {% endif %}
+            </div>
+
+            <details class="garden-legend" id="gardenLegend">
+                <summary><i class="bi bi-info-circle" aria-hidden="true"></i>Reading the garden</summary>
+                <div class="garden-legend-body">
+                    <span class="garden-toolbar-label">Growth</span>
+                    <ol class="garden-growth-legend">
+                        {% for stage, label in [('seed', 'Seed'), ('sprout', 'Sprout'), ('sapling', 'Sapling'), ('tree', 'In bloom')] %}
+                        <li class="garden-growth-legend-item">
+                            <img src="{{ tg_asset('img/plants/' ~ growth_flower ~ '-' ~ stage ~ '.svg') }}" alt="" width="64" height="64">{{ label }}
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    <p class="garden-growth-legend-hint">Notes grow with age &amp; connections, then bloom into their category's flower.</p>
+                    {% if flowers %}
+                    <details class="garden-flower-key">
+                        <summary><span class="garden-toolbar-label">Which flower is which</span><span class="garden-flower-count">{{ flowers|length }}</span></summary>
+                        {{ flower_key(flowers) }}
+                    </details>
+                    {% endif %}
+                    <ul class="garden-key">
+                        <li><span class="garden-key-ring" aria-hidden="true"></span>Pinned note</li>
+                        <li><span class="garden-key-line" aria-hidden="true"></span>Connection &mdash; thicker is stronger</li>
+                    </ul>
+                </div>
+            </details>
+
+            <p class="garden-hint" id="gardenHint" aria-hidden="true">
+                <i class="bi bi-hand-index" aria-hidden="true"></i>Click a plant &middot; drag to pan &middot; scroll to zoom
+            </p>
+
+            <div class="garden-empty d-none" id="gardenEmpty">
+                <div class="empty-state-art" aria-hidden="true">
+                    <img src="{{ tg_asset('img/plants/wildflower-seed.svg') }}" alt="" width="64" height="64">
+                </div>
+                <h2>Your garden is waiting</h2>
+                <p>Every thought you write becomes a plant here, and related ideas grow connections between them.</p>
+                <a href="{{ links.create or '#' }}" class="btn btn-light" data-garden-action="create"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Plant a thought</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <aside class="note-panel h-100" id="notePanel" aria-label="Note details">
+            <div class="panel-placeholder text-center">
+                <div class="empty-state-art" aria-hidden="true">
+                    <img src="{{ tg_asset('img/plants/' ~ growth_flower ~ '-sprout.svg') }}" alt="" width="64" height="64">
+                </div>
+                <h2 class="panel-placeholder-title">Choose a plant</h2>
+                <p class="text-muted">Select any flower in the garden to open its page: a preview, its tags and the thoughts it is connected to.</p>
+                <p class="panel-placeholder-hint text-muted small">Plants cluster by category; lines show discovered connections.</p>
+            </div>
+
+            <div class="panel-content d-none" id="panelContent">
+                <button type="button" class="btn btn-sm btn-link panel-close" id="closePanelButton" aria-label="Close note details">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+                <div class="panel-body">
+                    <article class="tg-journal panel-journal" aria-labelledby="panelTitle">
+                        <header class="tg-journal-head">
+                            <span class="tg-plant tg-plant--lg" id="panelPlant"><img src="{{ tg_asset('img/plants/wildflower-tree.svg') }}" alt="" width="64" height="64"></span>
+                            <div class="tg-journal-heading">
+                                <p class="tg-journal-kicker">
+                                    <span class="badge" id="panelCategory"></span>
+                                    <span class="pin-pill d-none" id="panelPinned"><i class="bi bi-pin-fill" aria-hidden="true"></i>Pinned</span>
+                                </p>
+                                <h2 class="tg-journal-title" id="panelTitle"></h2>
+                                <p class="tg-note-meta" id="panelMeta"></p>
+                            </div>
+                        </header>
+
+                        <section class="panel-section">
+                            <h3 class="tg-section-label">From the page</h3>
+                            <div class="tg-journal-body panel-preview" id="panelPreview"></div>
+                        </section>
+
+                        <section class="panel-section" id="panelTagsSection">
+                            <h3 class="tg-section-label">Filed under</h3>
+                            <ul class="tag-list" id="panelTags"></ul>
+                        </section>
+
+                        <section class="panel-section">
+                            <h3 class="tg-section-label">Connected thoughts <span class="panel-count" id="panelConnectionCount"></span></h3>
+                            <div id="panelConnections"></div>
+                        </section>
+                    </article>
+                </div>
+                <div class="panel-footer">
+                    <a href="#" class="btn btn-light flex-grow-1" id="panelViewBtn" data-garden-action="open">
+                        <i class="bi bi-book me-1" aria-hidden="true"></i>Open note
+                    </a>
+                    <a href="#" class="btn btn-glass btn-icon" id="panelEditBtn" data-garden-action="edit" aria-label="Edit this note" title="Edit">
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                    </a>
+                    <a href="#" class="btn btn-glass btn-icon" id="panelFocusBtn" data-garden-action="focus" aria-label="Focus this note in the graph" title="Focus in graph">
+                        <i class="bi bi-bullseye" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+{%- endmacro %}

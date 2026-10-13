@@ -11,7 +11,12 @@
     <link href="{{ url_for('static', filename='vendor/fonts/fonts.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/bootstrap/5.3.3/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css') }}" rel="stylesheet">
+    {# Shared with the Streamlit port (tg_ui): tokens, category palette, labels, notes. #}
+    <link href="{{ url_for('static', filename='css/tokens.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/categories.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/labels.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/notes.css') }}" rel="stylesheet">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -121,8 +126,9 @@
     {% endif %}
 
     <script src="{{ url_for('static', filename='vendor/bootstrap/5.3.3/js/bootstrap.bundle.min.js') }}"></script>
-    {% block vendor_js %}{% endblock %}
     <script type="application/json" id="gardenCategories">{{ GARDEN_CATEGORIES|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/tg-core.js') }}"></script>
+    {% block vendor_js %}{% endblock %}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>

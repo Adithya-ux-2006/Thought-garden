@@ -50,7 +50,7 @@ class NoteForm(FlaskForm):
     # patching the choices list per-request before validating.
     category = SelectField('Category', choices=note_form_choices(),
                             validators=[Optional()], validate_choice=False)
-    tags = StringField('Tags (comma-separated)', validators=[Optional()])
+    tags = StringField('Tags', validators=[Optional()])
     is_pinned = BooleanField('Pin this note')
     submit = SubmitField('Save Note')
 

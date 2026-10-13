@@ -1,0 +1,180 @@
+/* Shared by the Flask pages and the Streamlit port; loaded right before
+   style.css, where this section used to sit (nothing earlier in style.css
+   styles badges or tags, so the cascade is unchanged). */
+/* ==========================================================================
+   Badges, categories and tags
+   Two tiers, so a note's labels read in order of importance:
+   - category: a tinted, small-caps label led by a dot in the category's
+     garden hue (the same hue as its node in the graph);
+   - tag: a quiet outlined "#tag" pill, clickable wherever it filters.
+   Status badges (Strong match, Related...) stay soft semantic pills.
+   ========================================================================== */
+
+.badge {
+    font-family: var(--font-body);
+    font-weight: var(--font-ui-strong);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    padding: 0.36em 0.8em;
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+}
+
+.badge.bg-primary, .badge.text-bg-primary { background-color: var(--primary-soft-bg) !important; color: var(--primary-soft-text) !important; }
+.badge.bg-success, .badge.text-bg-success { background-color: var(--success-soft-bg) !important; color: var(--success-soft-text) !important; }
+.badge.bg-info, .badge.text-bg-info { background-color: var(--info-soft-bg) !important; color: var(--info-soft-text) !important; }
+.badge.bg-warning, .badge.text-bg-warning { background-color: var(--warning-soft-bg) !important; color: var(--warning-soft-text) !important; }
+.badge.bg-danger, .badge.text-bg-danger { background-color: var(--danger-soft-bg) !important; color: var(--danger-soft-text) !important; }
+.badge.bg-secondary, .badge.text-bg-secondary { background-color: var(--neutral-soft-bg) !important; color: var(--neutral-soft-text) !important; }
+
+/* ---- tags ---- */
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* .badge.bg-light is the older tag markup still used on a few pages and by
+   main.js; it gets exactly the same look as .tag. */
+.tag,
+.badge.bg-light,
+.badge.bg-light.text-dark {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2em 0.75em 0.22em 0.62em;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--bg-card) 70%, transparent) !important;
+    color: var(--text-secondary) !important;
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+    font-weight: var(--font-ui-weight);
+    letter-spacing: 0.01em;
+    line-height: 1.35;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tag::before,
+.badge.bg-light::before {
+    content: "#";
+    margin-right: 0.12em;
+    color: var(--leaf-text);
+    opacity: 0.75;
+}
+
+/* "+3" overflow counters and link counts aren't tags */
+.tag.tag-more::before,
+.badge.bg-light.badge-count::before {
+    content: none;
+}
+
+.tag.tag-more {
+    color: var(--text-muted) !important;
+    border-style: dashed;
+}
+
+a.tag,
+a.badge {
+    transition:
+        color var(--dur-fast) var(--ease-out),
+        background-color var(--dur-fast) var(--ease-out),
+        border-color var(--dur-fast) var(--ease-out),
+        box-shadow var(--dur-base) var(--ease-out),
+        translate var(--dur-base) var(--ease-spring);
+}
+
+a.tag:hover,
+a.badge.bg-light:hover {
+    border-color: var(--leaf-500);
+    background-color: var(--mint-soft-bg) !important;
+    color: var(--text-primary) !important;
+    translate: 0 -1px;
+    box-shadow: 0 6px 14px -10px rgba(var(--primary-rgb), 0.8);
+}
+
+a.tag:active,
+a.badge.bg-light:active {
+    translate: 0 0;
+}
+
+/* the tag currently filtering a list */
+.tag.is-active,
+a.tag[aria-current] {
+    border-color: var(--primary-color);
+    background-color: var(--primary-soft-bg) !important;
+    color: var(--primary-soft-text) !important;
+}
+
+/* ---- categories ---- */
+
+/* Deliberately their own classes, not Bootstrap's bg-primary/danger/...
+   (those are the app's real semantic tokens). Colors come entirely from
+   the --category-* tokens; used on every page as well as the garden. */
+/* per-category --cat-hue/--cat-bg/--cat-text classes: categories.css */
+
+.badge[class*="badge-category-"] {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--cat-bg) !important;
+    color: var(--cat-text) !important;
+    border-color: color-mix(in srgb, var(--cat-hue) 34%, transparent);
+    font-size: 0.78rem;
+    font-weight: var(--font-ui-strong);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.38em 0.85em 0.34em 0.75em;
+}
+
+/* a small dot in the category's own garden hue leads each category label */
+[class*="badge-category-"]::before {
+    content: "";
+    display: inline-block;
+    flex: none;
+    width: 0.5em;
+    height: 0.5em;
+    margin-right: 0.5em;
+    border-radius: 50%;
+    background: var(--cat-hue, currentColor);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat-hue, currentColor) 22%, transparent);
+}
+
+a:has(> .badge[class*="badge-category-"]),
+a.badge[class*="badge-category-"] {
+    text-decoration: none;
+}
+
+a:hover > .badge[class*="badge-category-"],
+a.badge[class*="badge-category-"]:hover {
+    border-color: var(--cat-hue);
+}
+
+/* ---- small inline markers ---- */
+
+.growth-pill,
+.pin-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    font-size: var(--fs-sm);
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.pin-pill {
+    font-style: normal;
+    color: var(--pinned-text, #8a6326);
+}
+
+.pin-pill i {
+    color: var(--pinned-color);
+}
+
+[data-bs-theme="dark"] .pin-pill {
+    --pinned-text: #e1b874;
+}

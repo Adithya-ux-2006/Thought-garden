@@ -11,7 +11,7 @@
             <div class="col-lg-8">
         <div class="hero-inner">
             <div class="hero-reveal">
-                <span class="page-eyebrow"><i class="bi bi-plus-circle" aria-hidden="true"></i>New note</span>
+                <span class="page-eyebrow"><i class="bi bi-flower1" aria-hidden="true"></i>Plant a thought</span>
                 <h1>Plant a new idea</h1>
                 <p>Write freely &mdash; connections to your other notes are found when you save.</p>
             </div>
@@ -42,7 +42,7 @@
                         
                         <div class="mb-3">
                             {{ form.content.label(class="form-label") }}
-                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows="10", placeholder="Write your thoughts...") }}
+                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows="10", placeholder="A story idea, an observation, a question worth keeping…") }}
                             {% for error in form.content.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                             {% endfor %}
@@ -51,12 +51,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.category.label(class="form-label") }}
-                                {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                                {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else ""), **{'data-picker-kind': 'category', 'data-picker-custom': ''}) }}
+                                <div class="form-text">A broad area &mdash; it decides the note's flower. Type to create your own.</div>
                             </div>
                             <div class="col-md-6">
                                 {{ form.tags.label(class="form-label") }}
-                                {{ form.tags(class="form-control" + (" is-invalid" if form.tags.errors else ""), placeholder="AI, Research, Ideas") }}
-                                <div class="form-text">Separate tags with commas</div>
+                                {{ form.tags(class="form-control" + (" is-invalid" if form.tags.errors else ""), placeholder="story idea, reflection, worth exploring", **{'data-tag-input': ''}) }}
+                                <div class="form-text">Themes, moods or context &mdash; press Enter or a comma after each.</div>
+                                <script type="application/json" id="userTags">{{ user_tags|tojson }}</script>
                                 {% with note_id = None %}{% include "notes/_tag_suggestions.html" %}{% endwith %}
                             </div>
                         </div>

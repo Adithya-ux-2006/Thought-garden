@@ -32,9 +32,11 @@ from streamlit_widgets import (
     render_pagination,
 )
 import streamlit_notes_ops as ops
+import streamlit_ui as ui
 
 st.set_page_config(page_title="Notes · Thought Garden", page_icon="📝", layout="wide")
 require_auth()
+ui.apply_theme()  # shared tg_ui design (must run inside the page script)
 init_state()
 
 user_id = current_user_id()
@@ -82,13 +84,14 @@ def _do_archive(note_id: int) -> None:
 # ── LIST ─────────────────────────────────────────────────────────────
 
 def render_list() -> None:
-    st.title("Your notes")
+    ui.hero("Notes", "Your collection of growing ideas",
+            "Every entry carries its flower: the category it belongs to, grown as far as the note has.")
 
     c_back = st.container()
     with c_back:
         col_a, col_b = st.columns([4, 1])
         with col_b:
-            if st.button("+ New note", type="primary", use_container_width=True):
+            if st.button("Plant a thought", type="primary", icon=":material/add:", use_container_width=True):
                 reset_notes_nav("create")
                 st.rerun()
 
@@ -112,7 +115,7 @@ def render_list() -> None:
             st.selectbox(
                 "Category",
                 [""] + categories,
-                format_func=lambda x: x or "All Categories",
+                format_func=lambda x: ui.category_label(x) if x else "All categories",
                 key=KEY_NOTES_CATEGORY,
                 on_change=_filter_changed,
             )
@@ -120,7 +123,7 @@ def render_list() -> None:
             st.selectbox(
                 "Tag",
                 [""] + tags,
-                format_func=lambda x: x or "All Tags",
+                format_func=lambda x: f"#{x}" if x else "All tags",
                 key=KEY_NOTES_TAG,
                 on_change=_filter_changed,
             )
@@ -163,11 +166,11 @@ def render_list() -> None:
             st.caption("You're viewing archived notes.")
         return
 
-    # Card grid — 3 columns
+    # Card grid — 3 columns, the shared editorial entries
     cols = st.columns(3)
-    for i, note in enumerate(items):
+    for i, (note, vm) in enumerate(zip(items, ops.note_views(items))):
         with cols[i % 3]:
-            note_card(note, on_open=open_note, on_pin=_pin_now)
+            note_card(note, on_open=open_note, on_pin=_pin_now, vm=vm)
 
     st.divider()
     render_pagination(total, PER_PAGE)
@@ -193,81 +196,75 @@ def render_view(note_id: int) -> None:
         st.rerun()
         return
 
-    st.title(("📌 " if note.is_pinned else "") + note.title)
+    vm = ops.note_views([note])[0]
+    with st.container(key="tgjournal"):
+        # The shared journal page: plant, category, title, meta, tags,
+        # then the actions and the note itself.
+        ui.journal(vm)
 
-    meta_bits = []
-    if note.category:
-        meta_bits.append(ops.CATEGORY_LABELS.get(note.category, note.category))
-    if note.source_type:
-        meta_bits.append(note.source_type)
-    if note.updated_at:
-        meta_bits.append(note.updated_at.strftime("%b %d, %Y"))
-    if note.is_archived:
-        meta_bits.append("archived")
-    st.caption(" · ".join(meta_bits))
+        # Action row
+        a1, a2, a3, a4, a5 = st.columns(5)
+        with a1:
+            if st.button("Edit", use_container_width=True):
+                reset_notes_nav("edit", note.id)
+                st.rerun()
+        with a2:
+            if st.button(("Unpin" if note.is_pinned else "Pin"), use_container_width=True):
+                _pin_now(note.id)
+        with a3:
+            label = "Unarchive" if note.is_archived else "Archive"
+            if st.button(label, use_container_width=True):
+                _request_confirm("archive", note.id)
+        with a4:
+            if st.button("Delete", use_container_width=True, type="secondary"):
+                _request_confirm("delete", note.id)
+        with a5:
+            if st.button("Focus in Graph", use_container_width=True):
+                from streamlit_state import KEY_GARDEN_FOCUS_ID, KEY_GARDEN_MODE
 
-    if note.tags:
-        st.caption("Tags: " + ", ".join(t.name for t in note.tags))
+                st.session_state[KEY_GARDEN_MODE] = "focus"
+                st.session_state[KEY_GARDEN_FOCUS_ID] = note.id
+                try:
+                    st.switch_page("streamlit_pages/3_Garden.py")
+                except Exception:
+                    st.info("Open Garden in the sidebar to focus this note.")
 
-    # Action row
-    a1, a2, a3, a4, a5 = st.columns(5)
-    with a1:
-        if st.button("Edit", use_container_width=True):
-            reset_notes_nav("edit", note.id)
-            st.rerun()
-    with a2:
-        if st.button(("Unpin" if note.is_pinned else "Pin"), use_container_width=True):
-            _pin_now(note.id)
-    with a3:
-        label = "Unarchive" if note.is_archived else "Archive"
-        if st.button(label, use_container_width=True):
-            _request_confirm("archive", note.id)
-    with a4:
-        if st.button("Delete", use_container_width=True, type="secondary"):
-            _request_confirm("delete", note.id)
-    with a5:
-        if st.button("Focus in Graph", use_container_width=True):
-            from streamlit_state import KEY_GARDEN_FOCUS_ID, KEY_GARDEN_MODE
+        # Confirm panel
+        action = st.session_state.get(KEY_CONFIRM_ACTION)
+        confirm_nid = st.session_state.get(KEY_CONFIRM_NOTE_ID)
+        if action and confirm_nid == note.id:
+            if action == "delete":
+                render_delete_archive_confirm(
+                    title=f"Delete “{note.title}”? This cannot be undone.",
+                    note_id=note.id,
+                    action="delete",
+                    on_confirm=_do_delete,
+                    on_cancel=_cancel_confirm,
+                )
+            elif action == "archive":
+                render_delete_archive_confirm(
+                    title=f"Archive “{note.title}”? Relationships for this note will be removed.",
+                    note_id=note.id,
+                    action="archive",
+                    on_confirm=_do_archive,
+                    on_cancel=_cancel_confirm,
+                )
 
-            st.session_state[KEY_GARDEN_MODE] = "focus"
-            st.session_state[KEY_GARDEN_FOCUS_ID] = note.id
-            try:
-                st.switch_page("streamlit_pages/3_Garden.py")
-            except Exception:
-                st.info("Open Garden in the sidebar to focus this note.")
-
-    # Confirm panel
-    action = st.session_state.get(KEY_CONFIRM_ACTION)
-    confirm_nid = st.session_state.get(KEY_CONFIRM_NOTE_ID)
-    if action and confirm_nid == note.id:
-        if action == "delete":
-            render_delete_archive_confirm(
-                title=f"Delete “{note.title}”? This cannot be undone.",
-                note_id=note.id,
-                action="delete",
-                on_confirm=_do_delete,
-                on_cancel=_cancel_confirm,
-            )
-        elif action == "archive":
-            render_delete_archive_confirm(
-                title=f"Archive “{note.title}”? Relationships for this note will be removed.",
-                note_id=note.id,
-                action="archive",
-                on_confirm=_do_archive,
-                on_cancel=_cancel_confirm,
-            )
-
-    st.divider()
-    st.markdown(note.content if note.content.strip() else "*Empty content*")
+        with st.container(key="tgjournal-body"):
+            st.markdown(note.content if note.content.strip() else "*Empty content*")
 
     if related:
-        st.subheader("Related notes")
-        for other, sim, rel_type in related:
-            with st.container(border=True):
-                r1, r2 = st.columns([4, 1])
+        ui.section("Connected thoughts")
+        for (other, sim, rel_type), other_vm in zip(related, ops.note_views(o for o, _s, _t in related)):
+            with st.container(border=True, key=f"tgrel-{other.id}"):
+                r1, r2 = st.columns([5, 1], vertical_alignment="center")
                 with r1:
-                    st.markdown(f"**{other.title}**")
-                    st.caption(f"{rel_type} · {sim:.0%} · {other.category or 'Uncategorized'}")
+                    label = "Strong match" if sim >= 0.55 else "Related"
+                    shared = sorted({t.name for t in note.tags} & {t.name for t in other.tags})
+                    reason = (f"Shared tags: {', '.join(shared)}." if shared
+                              else f"Both in {note.category}." if note.category and note.category == other.category
+                              else "Similar overall meaning.")
+                    ui.connection_row(other_vm, label, reason)
                 with r2:
                     if st.button("Open", key=f"rel_{other.id}", use_container_width=True):
                         open_note(other.id)
@@ -290,17 +287,29 @@ def _note_form(*, note=None, is_create: bool) -> None:
         tags_default = ", ".join(t.name for t in note.tags)
         pinned_default = bool(note.is_pinned)
 
+    # A note's own custom category stays selectable (never silently reset).
+    category_options = ui.category_choices(category_default)
+    _categories, user_tags = ops.list_filter_choices(user_id)
+    current_tags = [t.strip() for t in tags_default.split(",") if t.strip()]
+
     with st.form("note_form", clear_on_submit=False):
         title = st.text_input("Title", value=title_default, max_chars=200)
         category = st.selectbox(
             "Category",
-            ops.CATEGORY_OPTIONS,
-            index=ops.CATEGORY_OPTIONS.index(category_default)
-            if category_default in ops.CATEGORY_OPTIONS
-            else 0,
-            format_func=lambda v: ops.CATEGORY_LABELS.get(v, v),
+            category_options,
+            index=category_options.index(category_default),
+            format_func=ui.category_label,
+            accept_new_options=True,
+            help="Decides the note's flower. Type to create your own category.",
         )
-        tags = st.text_input("Tags (comma-separated)", value=tags_default)
+        tags = st.multiselect(
+            "Tags",
+            sorted(set(user_tags) | set(current_tags), key=str.casefold),
+            default=current_tags,
+            accept_new_options=True,
+            placeholder="story idea, reflection, worth exploring…",
+        )
+        tags = ", ".join(tags)
         content = st.text_area("Content", value=content_default, height=280)
         is_pinned = st.checkbox("Pin this note", value=pinned_default)
         submitted = st.form_submit_button("Save Note", type="primary")
@@ -323,7 +332,7 @@ def _note_form(*, note=None, is_create: bool) -> None:
                 user_id,
                 title=title.strip(),
                 content=content,
-                category=category,
+                category=category or "",
                 tags=tags,
                 is_pinned=is_pinned,
             )
@@ -339,7 +348,7 @@ def _note_form(*, note=None, is_create: bool) -> None:
                 note.id,
                 title=title.strip(),
                 content=content,
-                category=category,
+                category=category or "",
                 tags=tags,
                 is_pinned=is_pinned,
             )
@@ -377,7 +386,8 @@ def render_import() -> None:
 
 
 def render_create() -> None:
-    st.title("New note")
+    ui.hero("Plant a thought", "Plant a new idea",
+            "Write freely - connections to your other notes are found when you save.")
     if st.button("← Cancel"):
         back_to_list()
         st.rerun()
@@ -396,7 +406,7 @@ def render_edit(note_id: int) -> None:
         st.rerun()
         return
 
-    st.title(f"Edit: {note.title}")
+    ui.hero("Editing", note.title)
     if st.button("← Cancel"):
         reset_notes_nav("view", note.id)
         st.rerun()

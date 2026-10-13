@@ -2,12 +2,14 @@ import logging
 import uuid
 
 from flask import Flask, flash, g, jsonify, redirect, render_template, request, url_for
+from jinja2 import ChoiceLoader, FileSystemLoader
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from config import Config
+import tg_ui
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -132,7 +134,10 @@ def _set_sqlite_pragmas(dbapi_connection, connection_record):
 
 
 def create_app(config_overrides=None):
-    app = Flask(__name__, instance_relative_config=True)
+    # Static assets and the shared note macros live in tg_ui (also used by
+    # the Streamlit port); URLs stay /static/... as before.
+    app = Flask(__name__, instance_relative_config=True, static_folder=tg_ui.STATIC_DIR)
+    app.jinja_loader = ChoiceLoader([app.jinja_loader, FileSystemLoader(tg_ui.TEMPLATE_DIR)])
     app.config.from_object(Config)
 
     _configure_logging(app)
@@ -247,5 +252,14 @@ def create_app(config_overrides=None):
     from app.services.category_service import category_badge_class, garden_category_metadata
     app.template_filter('category_badge_class')(category_badge_class)
     app.jinja_env.globals['GARDEN_CATEGORIES'] = garden_category_metadata()
+
+    from tg_ui import categories as tg_categories
+    from tg_ui.presenters import note_view
+    app.template_filter('category_label')(tg_categories.display_name)
+    app.template_filter('category_hue_class')(lambda category: f'tg-hue-{tg_categories.slug(category)}')
+    app.jinja_env.globals['note_view'] = note_view
+    from tg_ui.flowers import plant_filename
+    app.template_filter('plant_path')(lambda category, stage='tree': plant_filename(category, stage))
+    app.jinja_env.globals['tg_asset'] = lambda path: url_for('static', filename=path)
 
     return app

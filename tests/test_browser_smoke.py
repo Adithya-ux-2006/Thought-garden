@@ -6,6 +6,8 @@ Skipped when Playwright or its Chromium build is not installed
 import threading
 from datetime import timedelta
 
+import re
+
 import pytest
 
 playwright_sync = pytest.importorskip('playwright.sync_api')
@@ -143,6 +145,14 @@ def _wait_for_stable_graph(page, network_var):
     if network_var == 'gardenNetwork':
         # main.js disables physics (and unticks the toggle) once stabilized.
         _wait_until(page, "document.getElementById('physicsToggle').checked === false")
+        # vis only gives a node a hit area when it draws it, and the toggle
+        # flips just before the first frame after stabilization - clicking in
+        # that one frame misses every node. Wait until each node is drawn.
+        _wait_until(page, "Object.values(gardenNetwork.body.nodes).every(n => n.shape.left !== undefined)")
+        # The legend card floats over the clearing's lower-left corner; with
+        # the randomly seeded layout a target plant can land under it, and a
+        # click there hits the legend, not the canvas. Fold it away.
+        page.evaluate("document.getElementById('gardenLegend').open = false")
     else:
         page.wait_for_timeout(1500)
 
@@ -336,9 +346,49 @@ def test_notes_list_filters_submit_on_change(ui, live):
     session = ui()
     page = session.page
     page.goto('/notes/')
-    page.get_by_label('Filter by category').select_option('AI')
+    # The <select> is enhanced into a picker (main.js initPickers): open it
+    # from its trigger, pick by keyboard, and the form still autosubmits.
+    page.get_by_role('button', name=re.compile('^Filter by category')).click()
+    page.keyboard.type('AI')
+    page.keyboard.press('Enter')
     page.wait_for_url('**/notes/?category=AI*')
-    assert page.locator('.note-card').count() == 2
+    assert page.locator('.tg-note').count() == 2
+    assert session.problems == []
+
+
+def test_category_picker_is_keyboard_operable_and_accepts_a_new_category(ui, live):
+    session = ui()
+    page = session.page
+    page.goto('/notes/create')
+    trigger = page.get_by_role('button', name=re.compile('^Category'))
+    trigger.focus()
+    page.keyboard.press('ArrowDown')
+    listbox = page.get_by_role('listbox')
+    assert listbox.is_visible()
+    page.keyboard.type('Field notes')
+    page.get_by_role('option', name=re.compile('New category')).click()
+    assert page.input_value('select[name="category"]') == 'Field notes'
+    assert not listbox.is_visible()
+    assert page.evaluate('document.activeElement.classList.contains("tg-picker-trigger")')
+    page.keyboard.press('Enter')
+    page.keyboard.press('Escape')
+    assert not listbox.is_visible()
+    assert session.problems == []
+
+
+def test_tag_field_turns_typed_tags_into_chips(ui, live):
+    session = ui()
+    page = session.page
+    page.goto('/notes/create')
+    entry = page.get_by_role('combobox', name='Add a tag')
+    entry.fill('story idea')
+    entry.press('Enter')
+    entry.type('poetry,')
+    assert page.input_value('input[name="tags"]') == 'story idea, poetry'
+    page.get_by_role('button', name='Remove tag story idea').click()
+    assert page.input_value('input[name="tags"]') == 'poetry'
+    entry.press('Backspace')
+    assert page.input_value('input[name="tags"]') == ''
     assert session.problems == []
 
 

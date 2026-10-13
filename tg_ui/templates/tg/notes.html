@@ -1,0 +1,120 @@
+{# Shared note presentation, rendered by both frontends.
+
+   Every macro takes a view model from tg_ui.presenters.note_view(). Links
+   are optional (`href`): Flask passes url_for() results, the Streamlit port
+   passes none and puts its actions in real buttons. Images go through the
+   host's `tg_asset(path)`; no inline styles or scripts (Flask's CSP forbids
+   both, Streamlit's sanitizer strips scripts). #}
+
+{% macro plant(vm, size='md') -%}
+<span class="tg-plant tg-plant--{{ size }} {{ vm.hue_class }}"
+      title="{{ vm.flower_name }}{% if vm.stage_label %} &middot; {{ vm.stage_label|lower }}{% endif %}">
+    <img src="{{ tg_asset(vm.plant) }}" alt="" width="64" height="64" loading="lazy" decoding="async">
+</span>
+{%- endmacro %}
+
+{% macro category_badge(vm, href=None) -%}
+{% if href %}<a href="{{ href }}" class="tg-cat-link" aria-label="More notes in {{ vm.category_label }}">{% endif -%}
+<span class="badge {{ vm.category_class }}">{{ vm.category_label }}</span>
+{%- if href %}</a>{% endif %}
+{%- endmacro %}
+
+{% macro tag_list(names, limit=None, href_for=None, cls='') -%}
+{% set shown = names[:limit] if limit else names %}
+{% if shown %}
+<ul class="tag-list {{ cls }}">
+    {% for name in shown %}
+    <li>{% if href_for %}<a href="{{ href_for(name) }}" class="tag">{{ name }}</a>{% else %}<span class="tag">{{ name }}</span>{% endif %}</li>
+    {% endfor %}
+    {% if limit and names|length > limit %}
+    <li><span class="tag tag-more" title="{{ names[limit:]|join(', ') }}">+{{ names|length - limit }}</span></li>
+    {% endif %}
+</ul>
+{% endif %}
+{%- endmacro %}
+
+{# "Oct 12 · 3 min read · Sapling" #}
+{% macro note_meta(vm, long_dates=False, show_stage=True) -%}
+<span class="tg-note-meta">
+    <time datetime="{{ vm.created_at.isoformat() if vm.created_at }}">{{ vm.created_label if long_dates else vm.created_short }}</time>
+    <span class="tg-sep" aria-hidden="true"></span>{{ vm.minutes }} min read
+    {%- if show_stage and vm.stage %}<span class="tg-sep" aria-hidden="true"></span><span class="tg-stage tg-stage--{{ vm.stage }}">{{ vm.stage_label }}</span>{% endif %}
+</span>
+{%- endmacro %}
+
+{% macro markers(vm) -%}
+{% if vm.is_pinned %}<span class="pin-pill"><i class="bi bi-pin-fill" aria-hidden="true"></i><span class="tg-pin-text">Pinned</span></span>{% endif %}
+{% if vm.is_archived %}<span class="growth-pill"><i class="bi bi-archive" aria-hidden="true"></i>Archived</span>{% endif %}
+{%- endmacro %}
+
+{# Notes tab: an editorial entry - category and the note's plant up top,
+   title, a calm excerpt, tags, then date/reading time/stage on a rule. A
+   {% call %} block becomes the actions slot in the footer. #}
+{% macro note_card(vm, href=None, tag_href=None, category_href=None, heading='h2', excerpt=170, tags=3) -%}
+<article class="tg-note tg-note--editorial {{ vm.hue_class }}{{ ' is-pinned' if vm.is_pinned }}{{ ' is-archived' if vm.is_archived }}" data-note-id="{{ vm.id }}">
+    <header class="tg-note-head">
+        <div class="tg-note-kicker">
+            {{ category_badge(vm) }}
+            {{ markers(vm) }}
+        </div>
+        {{ plant(vm, 'md') }}
+    </header>
+    <{{ heading }} class="tg-note-title">
+        {%- if href %}<a href="{{ href }}" class="stretched-link" data-note-link>{{ vm.title }}</a>{% else %}{{ vm.title }}{% endif -%}
+    </{{ heading }}>
+    {% if vm.plain %}<p class="tg-note-excerpt">{{ vm.plain|truncate(excerpt, end='…') }}</p>{% endif %}
+    {{ tag_list(vm.shown_tags, limit=tags, href_for=tag_href, cls='tg-note-tags') }}
+    <footer class="tg-note-foot">
+        {{ note_meta(vm) }}
+        {% if caller is defined %}<div class="tg-note-actions">{{ caller() }}</div>{% endif %}
+    </footer>
+</article>
+{%- endmacro %}
+
+{# Dashboard: the same entry pressed small - plant, kicker, title, a line. #}
+{% macro note_row(vm, href=None, heading='h3', excerpt=96, show_excerpt=True) -%}
+<article class="tg-note tg-note--compact {{ vm.hue_class }}{{ ' is-pinned' if vm.is_pinned }}" data-note-id="{{ vm.id }}">
+    {{ plant(vm, 'sm') }}
+    <div class="tg-note-body">
+        <p class="tg-note-kicker"><span class="tg-cat-dot" aria-hidden="true"></span><span class="tg-cat-name">{{ vm.category_label }}</span>{{ note_meta(vm, show_stage=False) }}</p>
+        <{{ heading }} class="tg-note-title">
+            {%- if href %}<a href="{{ href }}" class="stretched-link" data-note-link>{{ vm.title }}</a>{% else %}{{ vm.title }}{% endif -%}
+        </{{ heading }}>
+        {% if show_excerpt and vm.plain %}<p class="tg-note-excerpt">{{ vm.plain|truncate(excerpt, end='…') }}</p>{% endif %}
+    </div>
+    {% if caller is defined %}<div class="tg-note-actions">{{ caller() }}</div>{% endif %}
+</article>
+{%- endmacro %}
+
+{# A journal page: the reading view of one note (the Streamlit note page and
+   the Flask garden panel share this structure). #}
+{% macro journal(vm, body=None, excerpt=640, heading='h2') -%}
+<article class="tg-journal {{ vm.hue_class }}" data-note-id="{{ vm.id }}">
+    <header class="tg-journal-head">
+        {{ plant(vm, 'lg') }}
+        <div class="tg-journal-heading">
+            <p class="tg-journal-kicker">{{ category_badge(vm) }}{{ markers(vm) }}</p>
+            <{{ heading }} class="tg-journal-title">{{ vm.title }}</{{ heading }}>
+            {{ note_meta(vm, long_dates=True) }}
+        </div>
+    </header>
+    {% if vm.shown_tags %}
+    <div class="tg-journal-section">
+        <p class="tg-section-label">Filed under</p>
+        {{ tag_list(vm.shown_tags) }}
+    </div>
+    {% endif %}
+    <div class="tg-journal-body">
+        {% if body is not none %}{{ body }}{% elif vm.plain %}<p>{{ vm.plain|truncate(excerpt, end='…') }}</p>{% endif %}
+    </div>
+</article>
+{%- endmacro %}
+
+{# Flowers present in a garden, with the growth path - garden legends. #}
+{% macro flower_key(entries) -%}
+<ul class="tg-flower-key">
+    {% for e in entries %}
+    <li class="{{ e.hue_class }}"><img src="{{ tg_asset(e.plant) }}" alt="" width="64" height="64" loading="lazy"><span>{{ e.label }}</span><span class="tg-flower-name">{{ e.flower_name }}</span></li>
+    {% endfor %}
+</ul>
+{%- endmacro %}

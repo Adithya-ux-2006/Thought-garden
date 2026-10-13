@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "macros/ui.html" import empty_state %}
+{% from "tg/notes.html" import note_row %}
 
 {% block title %}Dashboard - Thought Garden{% endblock %}
 
@@ -10,10 +11,10 @@
             <div class="hero-reveal">
                 <span class="page-eyebrow"><i class="bi bi-flower1" aria-hidden="true"></i>Welcome back, {{ current_user.name.split(' ')[0] }}</span>
                 <h1>Where your thoughts take root.</h1>
-                <p class="lead">Your knowledge garden is growing. Plant a new idea, wander the garden, or revisit something that has been waiting for you.</p>
+                <p class="lead">Stories, observations, research and half-formed ideas all grow here. Plant something new, wander the garden, or revisit a thought that has been waiting for you.</p>
                 <div class="hero-quick-actions">
                     <a href="{{ url_for('notes.create') }}" class="btn btn-light btn-lg">
-                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Note
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Plant a thought
                     </a>
                     <a href="{{ url_for('garden.index') }}" class="btn btn-glass btn-lg">
                         <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Open the Garden
@@ -51,31 +52,15 @@
                     <h2 id="recentHeading">Recently planted</h2>
                     <a href="{{ url_for('notes.list_notes') }}" class="btn btn-sm btn-outline-secondary">View all notes</a>
                 </div>
-                {% if recent_notes %}
-                <div class="row row-cols-1 row-cols-md-2 g-3 stagger-bloom">
-                    {% for note in recent_notes %}
-                    <div class="col">
-                        <div class="card card-interactive h-100">
-                            <a href="{{ url_for('notes.view', note_id=note.id) }}" class="note-tile">
-                                <span><span class="badge {{ note.category|category_badge_class }}">{{ note.category or 'Uncategorized' }}</span></span>
-                                <h3>{{ note.title }}</h3>
-                                <p class="text-muted">{{ note.content[:110] }}{% if note.content|length > 110 %}...{% endif %}</p>
-                                <div class="note-tile-meta">
-                                    <span class="d-flex flex-wrap gap-1">
-                                        {% for tag in (note.tags|display_tags(note.category))[:2] %}
-                                        <span class="tag">{{ tag.name }}</span>
-                                        {% endfor %}
-                                    </span>
-                                    <span><i class="bi bi-clock me-1" aria-hidden="true"></i>{{ note.created_at.strftime('%b %d') }}</span>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
+                {% if recent_views %}
+                <ul class="tg-note-stack stagger-bloom" aria-label="Recently planted notes">
+                    {% for vm in recent_views %}
+                    <li>{{ note_row(vm, href=url_for('notes.view', note_id=vm.id)) }}</li>
                     {% endfor %}
-                </div>
+                </ul>
                 {% else %}
                 <div class="card">
-                    {{ empty_state('seed', 'Nothing planted yet', 'Capture a first idea and Thought Garden will start finding its neighbours.', url_for('notes.create'), 'Create First Note') }}
+                    {{ empty_state('seed', 'Nothing planted yet', 'Capture a first idea, a line of a story or a question, and Thought Garden will start finding its neighbours.', url_for('notes.create'), 'Plant a thought') }}
                 </div>
                 {% endif %}
             </section>
@@ -117,13 +102,12 @@
                     </div>
                     <div class="card-body py-2">
                         {% if most_connected %}
-                        {% for note, conn_count in most_connected %}
-                        <div class="link-row d-flex justify-content-between align-items-center gap-2">
-                            <a href="{{ url_for('notes.view', note_id=note.id) }}">
-                                {{ note.title[:30] }}{% if note.title|length > 30 %}...{% endif %}
-                            </a>
-                            <span class="badge bg-secondary flex-shrink-0">{{ conn_count }} link{{ 's' if conn_count != 1 }}</span>
-                        </div>
+                        {% for vm in connected_views %}
+                        <a class="link-row dash-flower-row" href="{{ url_for('notes.view', note_id=vm.id) }}">
+                            <span class="tg-plant tg-plant--sm {{ vm.hue_class }}"><img src="{{ tg_asset(vm.plant) }}" alt="" width="64" height="64" loading="lazy"></span>
+                            <span class="dash-flower-title">{{ vm.title }}</span>
+                            <span class="badge bg-secondary flex-shrink-0">{{ vm.connections }} link{{ 's' if vm.connections != 1 }}</span>
+                        </a>
                         {% endfor %}
                         {% else %}
                         <p class="text-muted small my-2">No connections yet.</p>
@@ -134,16 +118,15 @@
                 {% if categories %}
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="h5 mb-0"><i class="bi bi-grid me-2" aria-hidden="true"></i>Categories</h2>
+                        <h2 class="h5 mb-0"><i class="bi bi-flower3 me-2" aria-hidden="true"></i>Your flowerbeds</h2>
                     </div>
                     <div class="card-body py-2">
                         {% for category, count in categories %}
-                        <div class="link-row d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('notes.list_notes', category=category) }}">
-                                <span class="badge {{ category|category_badge_class }}">{{ category }}</span>
-                            </a>
-                            <span class="text-muted small">{{ count }} note{{ 's' if count != 1 }}</span>
-                        </div>
+                        <a class="link-row dash-flower-row" href="{{ url_for('notes.list_notes', category=category) }}">
+                            <span class="tg-plant tg-plant--sm {{ category|category_hue_class }}"><img src="{{ tg_asset(category|plant_path) }}" alt="" width="64" height="64" loading="lazy"></span>
+                            <span class="badge {{ category|category_badge_class }}">{{ category|category_label }}</span>
+                            <span class="text-muted small ms-auto">{{ count }} note{{ 's' if count != 1 }}</span>
+                        </a>
                         {% endfor %}
                     </div>
                 </div>
@@ -155,24 +138,20 @@
     {% if orphan_notes %}
     <section class="mt-5" aria-labelledby="orphanHeading">
         <div class="section-head">
-            <h2 id="orphanHeading"><i class="bi bi-flower2 me-2 text-muted" aria-hidden="true"></i>Unconnected Ideas</h2>
-            <p class="text-muted">These notes don't have connections yet. Add more content or tags to help discover relationships.</p>
+            <h2 id="orphanHeading"><i class="bi bi-flower2 me-2 text-muted" aria-hidden="true"></i>Seeds waiting for company</h2>
+            <p class="text-muted">These thoughts haven't found a neighbour yet. A few more words or a shared tag helps them connect.</p>
         </div>
-        <div class="row g-3 stagger-bloom">
-            {% for note in orphan_notes %}
-            <div class="col-md-4">
-                <div class="card card-interactive h-100">
-                    <div class="card-body">
-                        <h3 class="card-title h5">{{ note.title }}</h3>
-                        <p class="card-text small text-muted">{{ note.content[:80] }}...</p>
-                        <a href="{{ url_for('notes.edit', note_id=note.id) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-tag me-1" aria-hidden="true"></i>Add Tags
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <ul class="tg-note-grid stagger-bloom" aria-label="Unconnected notes">
+            {% for vm in orphan_views %}
+            <li>
+                {% call note_row(vm, href=url_for('notes.view', note_id=vm.id), excerpt=110) %}
+                <a href="{{ url_for('notes.edit', note_id=vm.id) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-tag me-1" aria-hidden="true"></i>Add tags
+                </a>
+                {% endcall %}
+            </li>
             {% endfor %}
-        </div>
+        </ul>
     </section>
     {% endif %}
 
@@ -180,24 +159,13 @@
     <section class="mt-5" aria-labelledby="rediscoverHeading">
         <div class="section-head">
             <h2 id="rediscoverHeading"><i class="bi bi-clock me-2 text-muted" aria-hidden="true"></i>Rediscover</h2>
-            <p class="text-muted">Older notes you haven't viewed recently.</p>
+            <p class="text-muted">Older thoughts worth another look.</p>
         </div>
-        <div class="row g-3 stagger-bloom">
-            {% for note in rediscover %}
-            <div class="col-md-4">
-                <div class="card card-interactive h-100">
-                    <div class="card-body d-flex flex-column">
-                        <h3 class="card-title h5">{{ note.title }}</h3>
-                        <p class="card-text small text-muted">{{ note.content[:80] }}...</p>
-                        <div class="d-flex justify-content-between align-items-center mt-auto gap-2">
-                            <small class="text-muted">Created {{ note.created_at.strftime('%b %d, %Y') }}</small>
-                            <a href="{{ url_for('notes.view', note_id=note.id) }}" class="btn btn-sm btn-outline-primary">View</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <ul class="tg-note-grid stagger-bloom" aria-label="Notes to rediscover">
+            {% for vm in rediscover_views %}
+            <li>{{ note_row(vm, href=url_for('notes.view', note_id=vm.id), excerpt=110) }}</li>
             {% endfor %}
-        </div>
+        </ul>
     </section>
     {% endif %}
 </div>

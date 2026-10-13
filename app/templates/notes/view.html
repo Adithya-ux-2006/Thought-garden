@@ -19,12 +19,18 @@
         <div class="col-lg-8">
             <article class="card note-article" aria-labelledby="noteTitle">
                 <header class="note-head">
+                    <span class="tg-plant tg-plant--lg note-plant {{ vm.hue_class }}" title="{{ vm.flower_name }} &middot; {{ vm.stage_label|lower }}">
+                        <img src="{{ tg_asset(vm.plant) }}" alt="" width="64" height="64">
+                    </span>
                     <div class="note-kicker">
                         {% if note.category %}
                         <a href="{{ url_for('notes.list_notes', category=note.category) }}" aria-label="More notes in {{ note.category }}">
                             <span class="badge {{ note.category|category_badge_class }}">{{ note.category }}</span>
                         </a>
+                        {% else %}
+                        <span class="badge badge-category-none">{{ vm.category_label }}</span>
                         {% endif %}
+                        <span class="growth-pill"><span class="visually-hidden">Growth: </span>{{ vm.stage_label }}</span>
                         <span class="note-source">
                             {% if note.source_type in ('manual', 'starter') %}
                             <i class="bi bi-pencil" aria-hidden="true"></i>Written note
@@ -43,6 +49,10 @@
                     <h1 class="note-article-title" id="noteTitle">{{ note.title }}</h1>
 
                     <dl class="note-meta">
+                        <div>
+                            <dt>Reading time</dt>
+                            <dd>{{ vm.minutes }} min &middot; {{ vm.words }} words</dd>
+                        </div>
                         <div>
                             <dt>Planted</dt>
                             <dd><time datetime="{{ note.created_at.isoformat() }}">{{ note.created_at.strftime('%B %d, %Y') }}</time></dd>
@@ -117,7 +127,7 @@
         <aside class="col-lg-4 note-aside" aria-label="Connections">
             <section class="card related-card" aria-labelledby="relatedHeading">
                 <div class="card-header">
-                    <h2 class="h5 mb-0" id="relatedHeading"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Related Knowledge</h2>
+                    <h2 class="h5 mb-0" id="relatedHeading"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Connected thoughts</h2>
                     {% if related %}<span class="related-count">{{ related|length }}</span>{% endif %}
                 </div>
                 <div class="card-body">
@@ -134,9 +144,7 @@
                                     <p class="connection-reason">
                                         <span class="visually-hidden">Why connected: </span>{{ why.reason }}
                                     </p>
-                                    <p class="related-excerpt">
-                                        {{ related_note.content[:120] }}{% if related_note.content|length > 120 %}&hellip;{% endif %}
-                                    </p>
+                                    <p class="related-excerpt">{{ note_view(related_note).plain|truncate(120, end='…') }}</p>
                                     <div class="related-foot">
                                         {% if related_note.tags %}
                                         <span class="tag-list">
@@ -156,7 +164,7 @@
                         {% endfor %}
                     </ol>
                     {% else %}
-                    {{ empty_state('sprout', 'No connections yet', 'Add more notes to build your knowledge garden.', small=True) }}
+                    {{ empty_state('sprout', 'No connections yet', 'Write a few more thoughts nearby and this one will find its neighbours.', small=True) }}
                     {% endif %}
                 </div>
             </section>

@@ -8,6 +8,7 @@ from app.services.similarity_service import explain_connection, rebuild_user_gra
 from app.services.tag_service import get_or_create_tags, prune_orphan_tags
 from app.services.knowledge_service import duplicate_candidates, make_flashcards, summarize_note
 from app.services import indexer
+from app.services.note_views import note_views, single_note_view
 
 
 def _report_failure(message, category='warning'):
@@ -15,6 +16,11 @@ def _report_failure(message, category='warning'):
     plus a reference that matches the request ID in the logs."""
     current_app.logger.exception(message)
     flash(f"{message} (Reference: {g.get('request_id', '-')})", category)
+
+
+def _user_tag_names():
+    """The user's existing tags, for the tag field's suggestions."""
+    return [t.name for t in Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name)]
 
 
 def parse_tags(tag_string):
@@ -55,7 +61,8 @@ def list_notes():
     
     tags = Tag.query.join(Note.tags).filter(Note.user_id == current_user.id).distinct().all()
     
-    return render_template('notes/list.html', notes=notes, categories=categories, tags=tags)
+    return render_template('notes/list.html', notes=notes, views=note_views(notes.items),
+                           categories=categories, tags=tags)
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -92,7 +99,7 @@ def create():
         flash('Note created successfully!', 'success')
         return redirect(url_for('notes.view', note_id=note.id))
 
-    return render_template('notes/create.html', form=form)
+    return render_template('notes/create.html', form=form, user_tags=_user_tag_names())
 
 
 @bp.route('/<int:note_id>')
@@ -101,7 +108,7 @@ def view(note_id):
     note = Note.query.filter_by(id=note_id, user_id=current_user.id).first_or_404()
     related = [(other, explain_connection(note, other, rel))
                for other, rel in note.get_related_notes(limit=5, min_similarity=0.0)]
-    return render_template('notes/view.html', note=note, related=related)
+    return render_template('notes/view.html', note=note, related=related, vm=single_note_view(note))
 
 
 @bp.route('/api/suggest-tags', methods=['POST'])
@@ -161,7 +168,7 @@ def edit(note_id):
         flash('Note updated successfully!', 'success')
         return redirect(url_for('notes.view', note_id=note.id))
 
-    return render_template('notes/edit.html', form=form, note=note)
+    return render_template('notes/edit.html', form=form, note=note, user_tags=_user_tag_names())
 
 
 @bp.route('/<int:note_id>/delete', methods=['POST'])

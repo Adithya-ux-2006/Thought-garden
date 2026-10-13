@@ -1,0 +1,38 @@
+/* The garden inside the Streamlit component (tg_ui/static/index.html):
+   no navbar above it and a fixed frame height from Python, so the clearing
+   fills the frame instead of the window minus the nav. */
+
+html,
+body.tg-embed {
+    margin: 0;
+    background: var(--forest-950);
+}
+
+.tg-embed .garden-container {
+    height: var(--embed-height, 760px);
+    border-radius: var(--radius-lg);
+}
+
+/* Streamlit's content column is narrower than a browser window, so the
+   journal panel gets a readable minimum instead of a quarter of it. */
+@media (min-width: 992px) {
+    .tg-embed .garden-container .col-lg-9 {
+        flex: 1 1 0;
+        width: auto;
+    }
+
+    .tg-embed .garden-container .col-lg-3 {
+        flex: 0 0 clamp(19rem, 32%, 25rem);
+        width: auto;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .tg-embed .garden-container {
+        height: auto;
+    }
+
+    .tg-embed .garden-stage {
+        height: 520px;
+    }
+}

@@ -322,11 +322,8 @@ main.garden-main {
     cursor: pointer;
 }
 
-.garden-chip .badge-category-ai       { --chip-hue: var(--category-ai); }
-.garden-chip .badge-category-cyber    { --chip-hue: var(--category-cyber); }
-.garden-chip .badge-category-se       { --chip-hue: var(--category-se); }
-.garden-chip .badge-category-os       { --chip-hue: var(--category-os); }
-.garden-chip .badge-category-research { --chip-hue: var(--category-research); }
+/* every category class (categories.css) sets --cat-hue, custom ones included */
+.garden-chip .badge[class*="badge-category-"] { --chip-hue: var(--cat-hue); }
 
 .garden-chip .badge[class*="badge-category-"] {
     position: relative;
@@ -568,7 +565,7 @@ main.garden-main {
     animation: tg-rise var(--dur-enter) var(--ease-out) 350ms backwards;
 }
 
-.garden-legend summary {
+.garden-legend > summary {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -582,16 +579,16 @@ main.garden-main {
     user-select: none;
 }
 
-.garden-legend summary::-webkit-details-marker {
+.garden-legend > summary::-webkit-details-marker {
     display: none;
 }
 
-.garden-legend summary i {
+.garden-legend > summary i {
     color: var(--mint-200);
 }
 
 /* bootstrap-icons chevron-down */
-.garden-legend summary::after {
+.garden-legend > summary::after {
     content: "\f282";
     margin-left: auto;
     font-family: bootstrap-icons;
@@ -600,20 +597,23 @@ main.garden-main {
     transition: rotate var(--dur-base) var(--ease-out);
 }
 
-.garden-legend[open] summary::after {
+.garden-legend[open] > summary::after {
     rotate: 180deg;
 }
 
-.garden-legend summary:hover {
+.garden-legend > summary:hover {
     background: rgba(184, 232, 206, 0.06);
 }
 
-.garden-legend summary:focus-visible {
+.garden-legend > summary:focus-visible {
     outline: 2px solid var(--mint-200);
     outline-offset: 2px;
 }
 
 .garden-legend-body {
+    max-height: min(26rem, 52vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 0.15rem 0.95rem 0.9rem;
 }
 
@@ -642,6 +642,9 @@ main.garden-main {
 /* the legend's plants sway gently, each on its own phase */
 .garden-growth-legend-item img {
     display: block;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
     transform-origin: 50% 88%;
     filter: drop-shadow(0 0 6px rgba(184, 232, 206, 0.35));
     animation: tg-sway var(--dur-ambient) var(--ease-organic) infinite;
@@ -657,6 +660,67 @@ main.garden-main {
     font-size: var(--fs-xs);
     font-style: italic;
     text-align: center;
+}
+
+/* which flower is which category - folded away until asked for */
+.garden-flower-key {
+    margin-top: var(--space-2);
+}
+
+.garden-flower-key summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    list-style: none;
+    cursor: pointer;
+}
+
+.garden-flower-key summary::-webkit-details-marker {
+    display: none;
+}
+
+.garden-flower-key summary::after {
+    content: "\F282";
+    margin-left: auto;
+    font-family: bootstrap-icons;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    transition: rotate var(--dur-base) var(--ease-out);
+}
+
+.garden-flower-key[open] summary::after {
+    rotate: 180deg;
+}
+
+.garden-flower-key summary .garden-toolbar-label {
+    margin: 0;
+}
+
+.garden-flower-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.3rem;
+    height: 1.3rem;
+    padding: 0 0.3rem;
+    border-radius: var(--radius-pill);
+    background: rgba(184, 232, 206, 0.14);
+    color: var(--mint-200);
+    font-size: 0.7rem;
+}
+
+.garden-flower-key summary:focus-visible {
+    outline: 2px solid var(--mint-200);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.garden-legend .tg-flower-key {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: var(--space-2) 0 var(--space-3);
+}
+
+.garden-legend .tg-flower-key li {
+    color: var(--text-secondary);
 }
 
 .garden-key {
@@ -797,31 +861,20 @@ main.garden-main {
     animation: tg-fade var(--dur-base) var(--ease-out);
 }
 
-.panel-header {
-    padding: var(--space-5) var(--space-5) var(--space-4);
-    border-bottom: 1px solid rgba(184, 232, 206, 0.12);
-}
-
-.panel-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-3);
-    margin-bottom: var(--space-3);
-}
-
-.panel-date {
-    color: var(--text-muted);
-    font-size: var(--fs-xs);
-    letter-spacing: 0.02em;
+/* the open note reads as a journal page (tg_ui notes.css .tg-journal) */
+.panel-content {
+    position: relative;
 }
 
 .panel-close {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    z-index: 2;
     display: grid;
     place-items: center;
-    width: 2rem;
-    height: 2rem;
-    margin: -0.25rem -0.5rem -0.25rem auto;
+    width: 2.1rem;
+    height: 2.1rem;
     padding: 0;
     border-radius: 50%;
     color: var(--text-muted) !important;
@@ -840,42 +893,65 @@ main.garden-main {
     rotate: 90deg;
 }
 
-.panel-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.85rem;
-    font-weight: 400;
-    line-height: 1.12;
-    color: #fff;
-    text-wrap: balance;
-}
-
 .panel-body {
     flex: 1 1 auto;
-    padding: var(--space-5);
+    padding: var(--space-6) var(--space-5) var(--space-5);
+}
+
+.panel-journal {
+    gap: 0;
+    animation: none;
+}
+
+.panel-journal .tg-journal-head {
+    padding-right: var(--space-6);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid rgba(184, 232, 206, 0.12);
+}
+
+.panel-journal .tg-plant {
+    --plant-size: 4.25rem;
+    box-shadow:
+        0 0 0 2px rgba(7, 31, 24, 0.9),
+        0 0 0 3.5px color-mix(in srgb, var(--cat-hue, #39a77a) 85%, transparent),
+        0 0 26px -4px color-mix(in srgb, var(--cat-hue, #39a77a) 55%, transparent);
+}
+
+.panel-journal .tg-journal-title {
+    font-size: 1.7rem;
+    color: #fff;
 }
 
 .panel-section + .panel-section {
     margin-top: var(--space-5);
 }
 
-.panel-section-label {
-    margin-bottom: var(--space-2);
-    color: var(--text-muted);
-    font-family: var(--font-body);
-    font-size: var(--fs-xs);
-    font-weight: var(--font-ui-strong);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+.panel-count:not(:empty) {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.45rem;
+    height: 1.45rem;
+    margin-left: 0.35rem;
+    padding: 0 0.35rem;
+    border-radius: var(--radius-pill);
+    background: rgba(184, 232, 206, 0.14);
+    color: var(--mint-200);
+    font-size: 0.72rem;
+    letter-spacing: 0;
+    vertical-align: 0.1em;
 }
 
 .panel-preview {
-    margin: 0;
     padding-left: var(--space-4);
-    border-left: 2px solid rgba(184, 232, 206, 0.28);
+    border-left: 2px solid color-mix(in srgb, var(--cat-hue, #39a77a) 45%, rgba(184, 232, 206, 0.2));
     color: var(--text-secondary);
-    font-style: italic;
+    font-size: var(--fs-base);
     line-height: 1.7;
+}
+
+.panel-journal:has(.tg-hue-none) .panel-preview {
+    border-left-color: rgba(184, 232, 206, 0.28);
 }
 
 .panel-footer {
@@ -926,27 +1002,21 @@ main.garden-main {
 
 #panelConnections .connection-item {
     position: relative;
-    padding: 0.75rem 0.95rem 0.75rem 1.2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.7rem 0.85rem;
     border-radius: var(--radius-md);
     background: rgba(240, 251, 244, 0.04);
     border: 1px solid rgba(184, 232, 206, 0.08);
     margin-bottom: 0.55rem;
+    color: inherit;
+    text-align: left;
+    font: inherit;
     cursor: pointer;
     transition: var(--transition);
     animation: tg-rise var(--dur-base) var(--ease-out) backwards;
-}
-
-/* a stem down the left edge that brightens on hover */
-#panelConnections .connection-item::before {
-    content: "";
-    position: absolute;
-    left: 0.5rem;
-    top: 0.8rem;
-    bottom: 0.8rem;
-    width: 2px;
-    border-radius: 2px;
-    background: var(--leaf-500);
-    transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 #panelConnections .connection-item:nth-child(2) { animation-delay: 50ms; }
@@ -964,19 +1034,61 @@ main.garden-main {
     box-shadow: 0 12px 26px -16px rgba(0, 0, 0, 0.9);
 }
 
-#panelConnections .connection-item:hover::before {
-    background: var(--mint-200);
+#panelConnections .connection-item:focus-visible {
+    outline: 2px solid var(--mint-200);
+    outline-offset: 2px;
 }
 
-#panelConnections .connection-item strong {
+/* the connected note's own flower, small */
+.connection-plant {
+    flex: none;
+    width: 2.1rem;
+    height: 2.1rem;
+    margin-top: 0.1rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px rgba(184, 232, 206, 0.35);
+    transition: rotate var(--dur-base) var(--ease-spring);
+}
+
+#panelConnections .connection-item:hover .connection-plant {
+    rotate: -6deg;
+}
+
+.connection-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.connection-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+#panelConnections .connection-title {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: 1.15rem;
+    font-size: 1.12rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+#panelConnections .connection-top .badge {
+    flex: none;
 }
 
 #panelConnections .connection-reason {
-    margin-block: 0.2rem 0.15rem;
     color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+#panelConnections .connection-category {
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 /* ---------- responsive ---------- */
